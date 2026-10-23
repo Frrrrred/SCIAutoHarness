@@ -11,7 +11,7 @@ import { resolveCodex, runProcess } from './lib/process.mjs';
 import os from 'node:os';
 import { EXECUTION_SUMMARY } from './lib/templates.mjs';
 
-const HELP = `Ruflo Codex native harness (local Node.js; no automatic downloads)
+const HELP = `codex-task-harness (local Node.js; no automatic downloads)
   help
   classify --intent review --stages 3 [--research] [--read-only]
   init [--project PATH]                         installation preview only
@@ -248,7 +248,7 @@ export async function main(argv=process.argv.slice(2)) {
   } else if(command==='install') result=await applyInstall(await json(requireOption(o,'plan')));
   else if(command==='rollback')result=await rollbackInstall(requireOption(o,'manifest'));
   else if(command==='doctor') {
-    const invocation=await resolveCodex(); const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'ruflo-codex-doctor-'));
+    const invocation=await resolveCodex(); const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'codex-task-harness-doctor-'));
     const versionLog=path.join(tmp,'version.txt'),helpLog=path.join(tmp,'help.txt');
     const version=await runProcess(invocation.command,[...invocation.prefix,'--version'],{cwd:project,log:versionLog,timeoutMs:10000});
     const help=await runProcess(invocation.command,[...invocation.prefix,'exec','--help'],{cwd:project,log:helpLog,timeoutMs:10000});

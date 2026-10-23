@@ -37,11 +37,11 @@ schemaVersion 仍为1；旧 begin/receipt 事件按事件顺序恢复。没有 r
 
 ### 总控模板版本
 
-contract.templateVersion 与 schemaVersion 分开：缺省或显式数值1使用冻结的v1完整模板；新draft明确写入数值2，layered/legacy的v2共用准确状态摘要。缺省只作只读解释，不补字段、不重排契约、不改旧总控或批准；v1历史的“退出0/回执即待验收”简写仅描述有资格的正常成功首次提交，实际failed、stale及重放语义仍按上文处理。新v2明确这些分支，CLI帮助沿用同一准确摘要。
+contract.templateVersion 与 schemaVersion 分开：缺省或显式数值1使用冻结的v1完整模板；显式数值2保持原v2正文；新draft明确写入数值3，使用中性的产品说明。layered/legacy的v2与v3均使用准确状态摘要。缺省只作只读解释，不补字段、不重排契约、不改旧总控或批准；v1历史的“退出0/回执即待验收”简写仅描述有资格的正常成功首次提交，实际failed、stale及重放语义仍按上文处理。v2/v3明确这些分支，CLI帮助沿用同一准确摘要。
 
-两个渲染入口与契约校验严格拒绝其他版本或类型，不从正文猜版本，也不将旧/新正文任选其一接受。总控仍须与契约所选模板全文一致，并由原审查摘要绑定。status/context对已受审未知版本保留诊断和原active身份；新正式动作失去资格，原run真实结束后仍可按原事实stale闭合。通用读取不因模板未知而封死收尾路径。
+两个渲染入口与契约校验只接受数值1、2、3，严格拒绝其他版本或类型，不从正文猜版本，也不将旧/新正文任选其一接受。总控仍须与契约所选模板全文一致，并由原审查摘要绑定。status/context对已受审未知版本保留诊断和原active身份；新正式动作失去资格，原run真实结束后仍可按原事实stale闭合。通用读取不因模板未知而封死收尾路径。
 
-未改动的v1包可以沿原批准续接approved、pending_acceptance、verified或active run，不需重审。主动改templateVersion（包括给缺省旧包补写1）属于受审文件变更：先完成pending验收、事实闭合active，再递增revision、render、完整review并等待最终用户批准；不得自动迁移、继承旧批准或重绑旧verified。异常中途改动仍保留原身份，事实收尾不恢复资格。新v2包不保证由不支持该模板版本的旧运行时无缝读取；不得删字段或伪造总控恢复旧批准，继续使用支持该版本的运行时。
+未改动的v1/v2包可以沿原批准续接approved、pending_acceptance、verified或active run，不需重审。主动改templateVersion（包括给缺省旧包补写1）属于受审文件变更：先完成pending验收、事实闭合active，再递增revision、render、完整review并等待最终用户批准；不得自动迁移、继承旧批准或重绑旧verified。异常中途改动仍保留原身份，事实收尾不恢复资格。新v3包不保证由不支持该模板版本的旧运行时无缝读取；不得删字段或伪造总控恢复旧批准，继续使用支持该版本的运行时。
 
 render 拒绝 HARNESS.md 符号链接，先校验任务范围再原子替换，硬链接不会原位改写外部目标。review/prepare-review 检查输出与包内控制、受审文档及已有回执/日志的物理文件身份；发现硬链接别名则拒绝。它们是当前文件系统上的边界检查，不是 OS 沙箱或并发恶意改链防护。
 
@@ -65,7 +65,7 @@ execution-guard 拒绝的报告保存失败时，reportError 留在尝试记录�
 
 ## 本地命令返回、续取与回交
 
-functions编排中展示完整exec返回，不能只text(result.output)。下例中的命令和目录须替换为本次已授权的真实值：
+使用宿主实际提供的命令工具，保留完整返回、退出状态和运行句柄。返回继续执行的句柄时续取同一调用，不因空输出重新启动。下方JavaScript示例仅适用于实际提供functions编排、tools.exec_command、tools.write_stdin及store/load的宿主；其他宿主使用其真实工具接口和句柄，不假定这些工具存在。示例中的命令和目录须替换为本次已授权的真实值：
 
 ```javascript
 const result = await tools.exec_command({cmd: '<本次实际命令>', workdir: '<本次绝对任务目录>', yield_time_ms: 1000, max_output_tokens: 12000});
@@ -85,7 +85,7 @@ text(continued);
 
 持续保留新的session_id，直到取得明确终态/exit_code和实际输出。若functions本身返回Script running with cell ID，先用对应wait续接该编排单元。等待服从任务总预算和中断控制，不在一次调用中无限轮询。没有句柄且结果不完整时标记未确认，先查原调用是否终止，不盲重跑prepare-review；已有当前有效review时可用 `handoff --project ABSOLUTE_PATH --id ID` 只读核对并直接输出待审Markdown，明确漂移/缺失时才修复并重审。
 
-正常最终回复保留handoffMarkdown中的链接目标字面值；E:/已是Windows绝对路径，不能改成/E:/。核对全部导航、当前ID/revision/digest和最终用户审查请求后正常回交。面板退出0、状态文件或文本生成都不替代原生实际接收与最终回交。
+正常最终回复保留handoffMarkdown中的链接目标字面值；E:/已是Windows绝对路径，不能改成/E:/。核对全部导航、当前ID/revision/digest和最终用户审查请求后正常回交。工具返回退出0、状态文件或文本生成都不替代原生实际接收与最终回交。
 
 ## 验收与局限
 
@@ -95,13 +95,15 @@ text(continued);
 
 status 重新派生当前证据状态、返回 persisted=false，不修改状态；不要只读旧 state.json 宣称当前 verified。恢复/遗留执行与语义维护见 recovery-maintenance.md。契约/附件/绑定输入实质变更需增 revision、render、review、重新批准；旧证据留存不重绑。
 
-独立 run 仅在额外模型已获授权时使用本机 Codex，默认 workspace-write/on-request、stdin EOF、真实日志；新布局使用同一阶段选择器，旧布局保持原提示结构。它不指定持久模型、不下载、不回退 Claude。超时仅按资源或 --timeout-ms 指定；只终止直接子进程，不保证脱离的孙进程结束。运行时不代替 OS 隔离、网络/安装政策或身份认证。
+独立 run 仅在额外模型已获授权时使用本机 Codex，默认 workspace-write/on-request、stdin EOF、真实日志；新布局使用同一阶段选择器，旧布局保持原提示结构。它不指定持久模型，不自动下载工具、切换执行器或启用额外模型。超时仅按资源或 --timeout-ms 指定；只终止直接子进程，不保证脱离的孙进程结束。运行时不代替 OS 隔离、网络/安装政策或身份认证。
 
 写锁只在成功获取后尝试一次正常释放。action失败且释放成功时抛原错误；action成功且释放成功时返回原结果。释放失败抛 LOCK_CLEANUP_FAILED，保留 lockPath、actionStatus、cleanupError，以及 actionError 或 completedResult。actionStatus=failed 不表示没有部分写入；completed 表示回调已完成。CLI仍非零退出，但显示原操作事实、两个错误及恢复位置。不能据非零退出自动重跑或清锁；任意结果含循环对象时仍保留原 API 对象。
 
 ## 安装与回退
 
 init 只生成项目安装预览。全局用 install-preview --codex-home <实际CODEX_HOME> --skill-root <用户.agents/skills> --out FILE。审查精确变更后 install --plan FILE；不同 skill 需显式 --replace-skill，新未知文件仍拒绝。AGENTS.override.md 遮蔽时先审查，不偷偷改它。
+
+旧安装可能含不同托管块或当前分发清单外的旧参考文件；--replace-skill不会绕过这些安全拒绝。先明确目标并人工审查处理，再生成新预览，不自动覆盖旧块、删除多余文件或迁移安装。这不影响未修改旧任务包按其原模板和批准续接。
 
 preview 在摘要/解码前拒绝符号链接、非普通文件、多硬链接或缺可靠身份的写入目标，内容相同也不豁免链接检查。计划增加 safetyVersion=1 与 beforeIdentity；apply 在写锁内重新 preview，既有文件 r+ 打开后 fstat 和路径/摘要复核，再通过原句柄写入和精确 truncate；新目标 wx 排他创建。新 skill 文件的源 mode 纳入计划并用于创建（仍受平台/umask），既有文件不主动改变 inode、mode、owner/ACL 或 NTFS 命名流；正常写入时间戳会变化。这是边界复核，不能防御所有恶意并发改链。
 

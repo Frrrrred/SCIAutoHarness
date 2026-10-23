@@ -74,19 +74,19 @@ npm run help
 ├── docs/                       使用、架构、教程对应、兼容与验证
 ├── ATTRIBUTION.md / LICENSE     来源与许可
 ├── .github/                    Windows CI 与问题模板
-└── skills/codex-task-harness/   可安装技能：27 个原始文件
+└── skills/codex-task-harness/   可安装技能与必要回归资源
     ├── SKILL.md
     ├── agents/openai.yaml
     ├── references/
     └── scripts/
 ```
 
-安装器会递归复制技能源。**只把 skills/codex-task-harness 作为技能源，不把仓库根作为技能源**，以免复制 Git 元数据、仓库文档或 CI。仓库扩展文档不改变技能的 27 个文件。
+安装器会递归复制技能源。**只把 skills/codex-task-harness 作为技能源，不把仓库根作为技能源**，以免复制 Git 元数据、仓库文档或 CI。仓库介绍和开发文档位于安装目录之外。
 
 ## 验证与使用边界
 
-- 完整主回归为 **342 项**；具体运行环境和本次结果以[验证记录](docs/VALIDATION.md)为准，远端结果看上方 Windows CI。
-- **84 项跨运行时升级回归未执行**：所需匹配的冻结外部基线已删除。现有金样和主回归不替代这套升级实测。
+- 完整主回归覆盖任务生命周期、模板兼容、异常恢复和安装回退；实际用例总数、运行环境及结果见[验证记录](docs/VALIDATION.md)，远端结果看上方 Windows CI。
+- **84 项跨运行时升级回归未执行**：所需匹配的外部冻结基线当前不可用。现有金样、主回归和其他兼容检查不替代这套升级实测。
 - 已验证环境以 Windows / Node v26.12.1 为基础；完整测试还使用 Python、pwsh 及 NTFS 链接、ACL 和命名流能力。其他系统与最低 Node 版本不作未经实测的保证。
 - 普通路线使用当前 Codex 宿主的原生工具。独立 run 需要本机 Codex 可执行文件和适用的额外模型调用授权。
 - 运行时记录批准声明和证据，不提供身份认证、OS 沙箱或自动科学正确性证明。
@@ -96,6 +96,6 @@ npm run help
 
 ## 来源与致谢
 
-本项目在既有 Ruflo/Codex 本地技能上，参考 **shareAI-lab/learn-claude-code** 的 Harness 工程原则进行工程化开发与复核。教程章节的参考关系及宿主能力边界见[对应说明](docs/LEARN_CLAUDE_CODE.md)。
+本项目参考 **shareAI-lab/learn-claude-code** 的 Harness 工程原则，面向 Codex 开发与复核。教程章节的参考关系及宿主能力边界见[对应说明](docs/LEARN_CLAUDE_CODE.md)。
 
-保留既有 ruvnet 的 MIT 版权通知；shareAI Lab 教程采用 MIT，参考许可随仓库保留。当前 CLI 中的 Ruflo 称谓也保留其来源语境。本项目不是 OpenAI、Anthropic、Ruflo 或 shareAI Lab 的官方产品，也不宣称是教程代码的直接 fork。[完整来源说明](ATTRIBUTION.md) · [贡献指南](CONTRIBUTING.md) · [安全报告](SECURITY.md)
+代码和参考材料的 MIT 通知随仓库保留。本项目不是 OpenAI 或 shareAI Lab 的官方产品，也不宣称是教程代码的直接 fork。[完整来源说明](ATTRIBUTION.md) · [贡献指南](CONTRIBUTING.md) · [安全报告](SECURITY.md)

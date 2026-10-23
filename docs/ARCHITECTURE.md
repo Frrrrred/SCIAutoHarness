@@ -57,4 +57,4 @@ verify 的失败尝试和任务当前状态也分开。一次门禁拒绝不撤�
 
 ## 兼容接口
 
-schemaVersion、templateVersion 与任务 revision 各司其职。模板缺省仅只读解释为 v1，新 draft 明确 v2；选择严格，不从正文猜测。旧包保持原批准与字节，不自动迁移。[兼容说明](COMPATIBILITY.md)解释主动改版、旧包续接与未知版本事实闭合的边界。
+schemaVersion、templateVersion 与任务 revision 各司其职。模板缺省仅只读解释为 v1，显式 v1/v2 保持冻结正文，新 draft 明确 v3；选择严格，不从正文猜测。新 v3 使用中性产品说明，执行和验收语义保持一致。旧包保持原批准与字节，不自动迁移。[兼容说明](COMPATIBILITY.md)解释主动改版、旧包续接与未知版本事实闭合的边界。

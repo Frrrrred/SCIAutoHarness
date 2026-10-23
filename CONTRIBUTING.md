@@ -29,7 +29,7 @@ npm test -- --work-root $workRoot
 if ($LASTEXITCODE -ne 0) { throw 'Main regression failed' }
 ```
 
---work-root 必须是你明确允许创建测试夹具的绝对目录。完整测试还使用 Python、pwsh、链接/ACL/NTFS 流能力，参见[验证说明](docs/VALIDATION.md)。结果在该根的 fixtures 子目录中，报告明确选择、实际总数、失败和准备重试；实际完整主套件应为 342 项。不要用筛选子集或静默跳过不支持场景冒充全套通过。
+--work-root 必须是你明确允许创建测试夹具的绝对目录。完整测试还使用 Python、pwsh、链接/ACL/NTFS 流能力，参见[验证说明](docs/VALIDATION.md)。结果在该根的 fixtures 子目录中，报告明确选择、实际总数、失败和准备重试；完整数量必须与 CI 的精确门禁一致，用例 ID 不得缺失或重复。不要用筛选子集或静默跳过不支持场景冒充全套通过。
 
 检查文档链接、公开命令和安装预览边界。涉及执行/恢复时，补覆盖完整生命周期、组合状态和故障恢复的行为证据。退出零、文件非空或正向样例不替代验收。
 

@@ -2,7 +2,7 @@
 
 [返回 README](../README.md) · [来源与许可](../ATTRIBUTION.md)
 
-本项目基于 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 的 Harness 工程原则，在既有 Ruflo/Codex 本地技能上进行工程化开发与复核。以下对应帮助理解设计取舍，不代表复制了整个教程 Agent 或实现了全部课程机制。
+本项目基于 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 的 Harness 工程原则，面向 Codex 开发与复核。以下对应帮助理解设计取舍，不代表复制了整个教程 Agent 或实现了全部课程机制。
 
 文档参考固定到 [ce8f9f186058939da54c9d6fead78dfb5d0fd6c3](https://github.com/shareAI-lab/learn-claude-code/tree/ce8f9f186058939da54c9d6fead78dfb5d0fd6c3) 的根目录 s01–s17；旧 docs/agents 的 12 课编号不同，不混用。
 
@@ -39,4 +39,4 @@
 
 ## 来源声明
 
-教程采用 MIT；[参考许可](../third_party/learn-claude-code.LICENSE)随仓库保留。现有技能的 ruvnet/MIT 来源和 CLI 中的 Ruflo 语境同样保留。该说明是设计来源声明，不是官方背书，也不是对全部代码作者或直接改编关系的补造。
+教程采用 MIT；[参考许可](../third_party/learn-claude-code.LICENSE)随仓库保留。代码的既有 MIT 版权通知见[来源与许可](../ATTRIBUTION.md)。这些说明用于准确记录设计参考和许可，不表示官方背书或直接 fork 关系。

@@ -35,14 +35,14 @@ See [GETTING_STARTED](docs/GETTING_STARTED.md) for explicit installation preview
 
 ## Evidence and compatibility
 
-The complete main regression suite contains 342 cases. [VALIDATION](docs/VALIDATION.md) reports actual local execution; [Windows CI](https://github.com/Frrrrred/codex-task-harness/actions/workflows/validate.yml) reports remote execution separately.
+The complete main suite covers task lifecycles, template compatibility, recovery and installation rollback. [VALIDATION](docs/VALIDATION.md) reports the actual case count, environment and local results; [Windows CI](https://github.com/Frrrrred/codex-task-harness/actions/workflows/validate.yml) reports remote execution separately.
 
-**The 84 cross-runtime upgrade cases were not run.** Their matching frozen external baseline was removed. Golden rendering checks and the main suite do not substitute for a real baseline-to-candidate upgrade run.
+**The 84 cross-runtime upgrade cases were not run.** Their matching external frozen baseline is currently unavailable. Golden checks, the main suite and other compatibility checks do not substitute for that upgrade suite.
 
 Windows / Node v26.12.1 is the established local validation environment. Full tests also require Python, pwsh and filesystem link/ACL/NTFS stream capabilities. Other platforms and a minimum Node version are not claimed without testing. Independent run needs a locally available Codex executable and applicable authorization; native host tools are the usual route.
 
 ## Origins
 
-This repository packages the existing Ruflo/Codex local skill and applies ideas from the learn-claude-code course. It preserves the existing ruvnet MIT notice, documents the tutorial reference and includes the shareAI Lab MIT notice. It is not a direct fork of the tutorial or an official OpenAI, Anthropic, Ruflo or shareAI Lab product.
+This Codex skill applies the Harness engineering principles taught in learn-claude-code. It preserves the required MIT notices for code and reference materials. It is not a direct fork of the tutorial or an official OpenAI or shareAI Lab product.
 
-The 27 skill files are preserved byte for byte. Repository documentation and CI live outside the installable skill. See [ATTRIBUTION](ATTRIBUTION.md), [course mapping](docs/LEARN_CLAUDE_CODE.md), [compatibility](docs/COMPATIBILITY.md), [contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md).
+Repository documentation and CI live outside the installable skill. See [ATTRIBUTION](ATTRIBUTION.md), [course mapping](docs/LEARN_CLAUDE_CODE.md), [compatibility](docs/COMPATIBILITY.md), [contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md).

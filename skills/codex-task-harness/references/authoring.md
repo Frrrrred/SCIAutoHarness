@@ -56,11 +56,11 @@ HARNESS.md 保留任务 ID/修订、总体目标/非目标、全程硬边界/权
 
 成功仅表示 pending_user_review；不证明科学内容正确，不记录用户批准。成功结果的 handoffMarkdown 已含本次 ID、revision、digest、含机器契约的完整导航、真实检查摘要及最终用户审查请求，直接据此正常最终回交；括号内链接目标逐字保留，Windows 的 E:/ 路径不补成 /E:/。详细方案留在受审文件，无需在回复里重新展开全部阶段。若发现真实缺陷，先修正并重新审查后交付。仅生成该文本仍不等于已经正常回交。写好了脚本、修改了文件或启动检查不等于完成；调用被中断而未返回时记为已启动但未完成，续接取得真实结果后再交付。独立 render、路径检查、review 接口仍可用于旧包及非机器包。
 
-调用本地命令须保留完整返回，不只输出 output；有 session_id 时续取同一会话，见 runtime.md。已有有效review但结果丢失时，先确认原调用终态，再用 `node <skill>/scripts/harness.mjs handoff --project <绝对项目目录> --id <id>` 只读重取待审Markdown，外部输入仍需显式授权的allow-root。handoff实际复核当前绑定和路径，不render、不重新review、不写状态；缺失/漂移/状态冲突则拒绝。不能因空输出重跑prepare-review，也不能以应用面板退出0或旧文本替代真实接收。
+调用本地命令须保留完整返回及原运行句柄，按宿主实际工具续取同一调用，见 runtime.md。已有有效review但结果丢失时，先确认原调用终态，再用 `node <skill>/scripts/harness.mjs handoff --project <绝对项目目录> --id <id>` 只读重取待审Markdown，外部输入仍需显式授权的allow-root。handoff实际复核当前绑定和路径，不render、不重新review、不写状态；缺失/漂移/状态冲突则拒绝。不能因空输出重跑prepare-review，也不能以工具返回退出0或旧文本替代真实接收。
 
 ## 机器管理（需要可执行状态时）
 
-新draft为两种布局明确写入templateVersion: 2；手工新建契约同样明确声明数值2。未声明版本的既有契约与显式数值1使用冻结v1模板，读取时不补字段或自动升级。layout选择布局，templateVersion选择该布局的固定模板，二者独立。主动升级旧包属于受审修订，先解决pending/active工作，再递增revision、生成完整新包并重新交最终用户批准；具体未知版本、事实收尾和旧运行时回退边界见[模板版本](runtime.md#总控模板版本)。后续JSON片段只示意分层字段，不能覆盖draft已经声明的模板版本。
+新draft为两种布局明确写入templateVersion: 3；手工新建契约同样明确声明数值3。未声明版本的既有契约与显式数值1使用冻结v1模板，显式数值2保持冻结v2正文，读取时不补字段或自动升级。layout选择布局，templateVersion选择该布局的固定模板，二者独立。主动升级旧包属于受审修订，先解决pending/active工作，再递增revision、生成完整新包并重新交最终用户批准；具体未知版本、事实收尾和旧运行时回退边界见[模板版本](runtime.md#总控模板版本)。后续JSON片段只示意分层字段，不能覆盖draft已经声明的模板版本。
 
 `node <skill>/scripts/harness.mjs draft --project <project> --id <id> --goal <goal> --domain research --layout layered`
 

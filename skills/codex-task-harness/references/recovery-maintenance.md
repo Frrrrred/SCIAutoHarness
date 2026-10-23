@@ -16,7 +16,7 @@ verify 返回 HARNESS_ACTIVE_EXECUTION 时，先沿消息给出的原运行句�
 
 输入/规范变更使批准失效，输出/验收证据变更使相关任务及下游陈旧；按实际范围返工。新鲜会话能读旧状态不证明已经恢复所有科研理解，关键判断仍查来源和当前证据。
 
-技能升级后，未修改的旧包（缺省templateVersion或显式数值1）仍使用冻结v1完整模板；approved/pending_acceptance/verified和原active身份按当前证据续接，不为新文案自动render、补字段或重新review。主动换为v2属于新受审修订，先完成pending验收、事实闭合active，再递增revision、完整审查并等待最终用户批准。若运行中模板字段被改成未知值，status/context保留原身份及失效诊断，新正式动作被阻断，真实结束后原run仍可stale事实闭合；闭合不恢复批准。正文/版本错配不得通过猜版本或同时接受两份正文消除，版本及旧运行时回退边界见[模板版本](runtime.md#总控模板版本)。
+技能升级后，未修改的旧包（缺省templateVersion或显式数值1）仍使用冻结v1完整模板，显式数值2保持冻结v2正文；approved/pending_acceptance/verified和原active身份按当前证据续接，不为新默认v3自动render、补字段或重新review。主动更改模板版本属于新受审修订，先完成pending验收、事实闭合active，再递增revision、完整审查并等待最终用户批准。若运行中模板字段被改成未知值，status/context保留原身份及失效诊断，新正式动作被阻断，真实结束后原run仍可stale事实闭合；闭合不恢复批准。正文/版本错配不得通过猜版本或同时接受两份正文消除，版本及旧运行时回退边界见[模板版本](runtime.md#总控模板版本)。
 
 ## 进程与回执中断
 

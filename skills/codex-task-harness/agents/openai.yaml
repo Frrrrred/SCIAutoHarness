@@ -1,0 +1,6 @@
+interface:
+  display_name: "codex-task-harness"
+  short_description: "复杂任务先生成总控与主要阶段文件，完整审查后按需加载执行；简单任务直接处理"
+  default_prompt: "使用 $codex-task-harness 为当前复杂任务生成总控与主要阶段文件，先交我完整审查，再按需加载执行。"
+policy:
+  allow_implicit_invocation: true

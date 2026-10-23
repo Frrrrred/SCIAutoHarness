@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# Preserve every byte of the installable skill, including frozen template fixtures.
+skills/codex-task-harness/** -text

@@ -1,0 +1,15 @@
+/node_modules/
+/work/
+/harness/
+/.codex/
+/.agents/
+/coverage/
+/test-results/
+/artifacts/
+.env
+.env.*
+!.env.example
+*.log
+/install-plan*.json
+/approval*.json
+/receipt-*.json

@@ -1,0 +1,16 @@
+{
+  "name": "codex-task-harness",
+  "private": true,
+  "description": "Codex task planning, execution records and evidence acceptance; based on learn-claude-code Harness engineering principles.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Frrrrred/codex-task-harness.git"
+  },
+  "scripts": {
+    "check:skill": "node skills/codex-task-harness/scripts/check-skill.mjs",
+    "help": "node skills/codex-task-harness/scripts/harness.mjs help",
+    "help:submit": "node skills/codex-task-harness/scripts/harness.mjs help submit",
+    "test": "node skills/codex-task-harness/scripts/tests/harness-regression.mjs"
+  }
+}

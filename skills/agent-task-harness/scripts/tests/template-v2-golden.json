@@ -1,0 +1,166 @@
+{
+  "provenance": {
+    "kind": "SYNTHETIC template v2 oracle captured from the published pre-cleanup runtime",
+    "sourceCommit": "cc5bef261bdb276c763981279ba15189ced63d04",
+    "sourceHashes": {
+      "agents/openai.yaml": "2cbc9365173778b0ebce9ef5cdc76a5dfa6daf6206638e40d73640b023f6c54b",
+      "LICENSE": "a45ba66fa502c49ad108440536d8aa91dfe9c04575a32a01287839bee336199c",
+      "references/artifact-examples.md": "35ce64fddd2c37c2f8979b032cbd2e89425adf9561f2c075866911d698d651d9",
+      "references/authoring.md": "54f5a28fbe5dec883a5055cb31a15b2737e5e552c38dbf821dd82c682c16eb5a",
+      "references/context-hygiene.md": "a264029ce27236a38fb2083631f34669193e16f51e892d692b8550401a20fbfb",
+      "references/domains.md": "bbfc094bf3f5f0b0a807e500ee82ae7fa872f1e61e73f28256b236af7d60cdaf",
+      "references/execution-judgment.md": "5145299270126055220feac6e304178a2fbc10d7af6afe45c3093292d227c708",
+      "references/recovery-maintenance.md": "908b8a81254a8bfb21ceab560bc0fbf1c8098c9c5429010b9f93b14b78e80081",
+      "references/research.md": "b3c851cd41f371c45e0db0fdd6e984e50a52c9b08e8a326ccd73ac20fb7bb310",
+      "references/ruflo-compatibility.md": "f640a94a1788d85bc14f9d4fe09b5414b4ad07a56f597a19d7d9f59322a00253",
+      "references/runtime.md": "5b0a4a10c96eaedfffc7d92fa0963951c88705568daecce17f95191b29f85023",
+      "scripts/check-harness-paths.mjs": "4240fa7f7d3e913abe51f6ceb89e158628c8639a244e052c52c5f102d73c5fa9",
+      "scripts/check-skill.mjs": "f6893c03c736ba602176a17676cc74d796cf0abc9df7d41b84de9068865a9860",
+      "scripts/harness.mjs": "0938097ddc263a8a72b8d4e37c415f8933c876a41c7af93a715f954c3d2f4ee3",
+      "scripts/lib/context.mjs": "3f045ae67650e0230a35f0a2f6fb2932b8da41d57d1042e7133eada0fa3c5be6",
+      "scripts/lib/contract.mjs": "1ea231af42b6f12964e8e519a51ce2716570a9b1bc4790217d4a5523f4273189",
+      "scripts/lib/engine.mjs": "5c5fee6ebdbe87e7ea1ea6ea956f57baaa3c338d726a11c149cf1fd02e270ee5",
+      "scripts/lib/files.mjs": "7a17d4010f8513f61c79cc0a73fafcf25b1fe5956532a815eb12f0b154fede51",
+      "scripts/lib/install.mjs": "59a6c4f49ad8f7e0a40f3c2711344269f5562820604c58d5d637efa2d03af691",
+      "scripts/lib/process.mjs": "66888195cfb90198366f1d012078caaffcdd94e1cd1c0af1425f20fc2c7a97f8",
+      "scripts/lib/templates.mjs": "8872a202317819c05aeee333cc5cd7f4e928260151df1ce254e98e2226b5cfa2",
+      "scripts/tests/harness-regression.mjs": "7bcef8d21e75b1fa0e570956dd8e16f2565ba40b1e43b7d60ea19b0b1db4c171",
+      "scripts/tests/helpers/artifact-example.mjs": "5a29aebd4f5215162988e54f85330fdb105d19637ae5617ec5bcf24cee45bc0b",
+      "scripts/tests/helpers/controlled-child.mjs": "e2484cacba22465fd24a43bc442bc81f86d954c4f73f41d6619bbb26a53d74aa",
+      "scripts/tests/template-upgrade-regression.mjs": "979016478e50b8b1428396e6327b2a8212d06eb39bf2d44eb449d48503982f2c",
+      "scripts/tests/template-v1-golden.json": "61cb474fab3a43b0be9a6ea342e8b3dfff58818b39383e7594cb133f7d23becb",
+      "SKILL.md": "e7a634b4f601923d91040171861414c4b44991f6b6ce251d82983029b6e5e96b"
+    }
+  },
+  "cases": [
+    {
+      "id": "layered-v2",
+      "contract": {
+        "schemaVersion": 1,
+        "taskId": "synthetic-v2-golden",
+        "revision": 1,
+        "domain": "general",
+        "goal": "SYNTHETIC pre-cleanup template v2 rendering oracle",
+        "nonGoals": [],
+        "inputs": [
+          {
+            "source": "SYNTHETIC immutable input",
+            "path": "input.txt"
+          }
+        ],
+        "deliverables": [
+          {
+            "id": "out-a",
+            "path": "out/a.txt"
+          }
+        ],
+        "skills": [],
+        "assumptions": [],
+        "risks": [],
+        "stops": [],
+        "permissions": {
+          "localWrites": true,
+          "network": false,
+          "install": false,
+          "externalWrites": false,
+          "longGpu": false
+        },
+        "resources": {
+          "budget": "not specified; ask before incurring new cost",
+          "stopConditions": []
+        },
+        "reviewFiles": [],
+        "tasks": [
+          {
+            "id": "a",
+            "title": "SYNTHETIC output",
+            "dependsOn": [],
+            "outputs": [
+              "out-a"
+            ],
+            "acceptance": [
+              {
+                "id": "check-a",
+                "type": "artifact",
+                "description": "SYNTHETIC output exists"
+              }
+            ]
+          }
+        ],
+        "layout": "layered",
+        "contextFiles": [
+          {
+            "path": "phases/a.md",
+            "kind": "phase",
+            "tasks": [
+              "a"
+            ],
+            "purpose": "SYNTHETIC phase",
+            "loadWhen": "After context selects a"
+          }
+        ],
+        "recoveryFile": "RECOVERY.md",
+        "templateVersion": 2
+      },
+      "master": "# Task harness: synthetic-v2-golden · revision 1\n\nGoal: SYNTHETIC pre-cleanup template v2 rendering oracle\n\nDomain: general. Layout: layered. Formal execution requires direct user approval of this complete version.\n\n## Entry: resume or review\n\nOn resumption with this supplied entry, first project reads are only this master and recovery instructions; read the skill runtime interface as needed, then immediately use context. Do not enumerate or broadly search the project/package, load full state or predecessor reports before context. Search matches also count as loading. Only locate filenames narrowly when the supplied entry is actually missing. Runtime: context --project <this project> --id synthetic-v2-golden --task <current task>. It derives current approval, dependencies and the next permitted action. Use the current approval provenance and dependency summaries, then the returned current-stage context; do not reread old state merely to confirm them. Do not load the complete contract or old receipts by default; inspect linked raw evidence only for a specific unresolved gap.\n\nIf approval is missing or the plan changes, use the complete review route below. Preparing authorized planning files precedes formal work; formal content in chat, files or subagent handoffs requires user review first.\n\n## Overall boundaries\n\nNon-goals: []\nPermissions: {\"localWrites\":true,\"network\":false,\"install\":false,\"externalWrites\":false,\"longGpu\":false}\nResources: {\"budget\":\"not specified; ask before incurring new cost\",\"stopConditions\":[]}\nAssumptions: []\nRisks: []\nStop conditions: []\n\n## Whole-task map and acceptance\n\n| Task | Depends on verified | Outputs | Acceptance | Phase plans |\n|---|---|---|---|---|\n| a: SYNTHETIC output | none | out/a.txt | SYNTHETIC output exists | [phases/a.md](<phases/a.md>) |\n\n## Conditional reading\n\n- [phases/a.md](<phases/a.md>) — SYNTHETIC phase; read when: After context selects a; tasks: a.\n\nRecovery and semantic maintenance: [RECOVERY.md](<RECOVERY.md>). Load on a new session, interruption, stale evidence or phase maintenance; do not load all phase bodies by default.\n\n## Inputs and complete review (initial approval or revision only)\n\nInputs and sources: [{\"source\":\"SYNTHETIC immutable input\",\"path\":\"input.txt\"}]\n\nThe full machine contract is [contract.json](contract.json). For initial approval or a substantive revision, review this map, the complete contract and every linked phase/reference/recovery file. For approved execution, use the context-first entry above. All belong to the review digest even when not loaded into a particular execution context. A skeleton or a structure check is not a semantic or scientific review.\n\nWithin a valid approved version, proceed by verified dependencies without repeating the same approval. Changed immutable inputs or reviewed plans invalidate approval; normal declared outputs and execution records are handled through acceptance and downstream evidence status. Never self-approve. Authorization records do not authenticate users or impose OS isolation.\n\nProcess exit alone never verifies a task. On first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are reported stale. Only actual current acceptance evidence verifies a task. Preserve negative/opposite/inconclusive findings; do not repair research toward positivity. Final completion requires all mandatory outputs and acceptance, with limitations and unresolved items reported.\n"
+    },
+    {
+      "id": "legacy-v2",
+      "contract": {
+        "schemaVersion": 1,
+        "taskId": "synthetic-v2-golden",
+        "revision": 1,
+        "domain": "general",
+        "goal": "SYNTHETIC pre-cleanup template v2 rendering oracle",
+        "nonGoals": [],
+        "inputs": [
+          {
+            "source": "SYNTHETIC immutable input",
+            "path": "input.txt"
+          }
+        ],
+        "deliverables": [
+          {
+            "id": "out-a",
+            "path": "out/a.txt"
+          }
+        ],
+        "skills": [],
+        "assumptions": [],
+        "risks": [],
+        "stops": [],
+        "permissions": {
+          "localWrites": true,
+          "network": false,
+          "install": false,
+          "externalWrites": false,
+          "longGpu": false
+        },
+        "resources": {
+          "budget": "not specified; ask before incurring new cost",
+          "stopConditions": []
+        },
+        "reviewFiles": [],
+        "tasks": [
+          {
+            "id": "a",
+            "title": "SYNTHETIC output",
+            "dependsOn": [],
+            "outputs": [
+              "out-a"
+            ],
+            "acceptance": [
+              {
+                "id": "check-a",
+                "type": "artifact",
+                "description": "SYNTHETIC output exists"
+              }
+            ]
+          }
+        ],
+        "templateVersion": 2
+      },
+      "master": "# Task harness: synthetic-v2-golden · revision 1\n\nGoal: SYNTHETIC pre-cleanup template v2 rendering oracle\n\nDomain: general. Status: review required before formal work.\n\n## User review\n\nReview the complete contract below: scope, all deliverables, inputs, dependencies, permissions, skills, acceptance, assumptions, risks and stopping rules. Approval applies only to the current review digest. Reply approve, reject, or request a revision. Silence does not approve. Changes to this file, the contract, review attachments or bound file inputs invalidate approval.\n\nThe runtime records supplied user authorization; it does not authenticate user identity or enforce all permissions at the OS level. Native Codex must obey the user's actual authorization. No model may approve its own plan.\n\n## Execution and evidence\n\nCodex executes; Ruflo records contracts and evidence. Dependency tasks must be verified before dependent execution. Process exit alone never verifies a task. On first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are reported stale. All declared outputs and acceptance criteria must pass before verified. Relevant artifact/receipt changes invalidate verification and downstream tasks. Negative and inconclusive findings are legitimate outcomes.\n\n## Complete machine contract\n\n```json\n{\n  \"schemaVersion\": 1,\n  \"taskId\": \"synthetic-v2-golden\",\n  \"revision\": 1,\n  \"domain\": \"general\",\n  \"goal\": \"SYNTHETIC pre-cleanup template v2 rendering oracle\",\n  \"nonGoals\": [],\n  \"inputs\": [\n    {\n      \"source\": \"SYNTHETIC immutable input\",\n      \"path\": \"input.txt\"\n    }\n  ],\n  \"deliverables\": [\n    {\n      \"id\": \"out-a\",\n      \"path\": \"out/a.txt\"\n    }\n  ],\n  \"skills\": [],\n  \"assumptions\": [],\n  \"risks\": [],\n  \"stops\": [],\n  \"permissions\": {\n    \"localWrites\": true,\n    \"network\": false,\n    \"install\": false,\n    \"externalWrites\": false,\n    \"longGpu\": false\n  },\n  \"resources\": {\n    \"budget\": \"not specified; ask before incurring new cost\",\n    \"stopConditions\": []\n  },\n  \"reviewFiles\": [],\n  \"tasks\": [\n    {\n      \"id\": \"a\",\n      \"title\": \"SYNTHETIC output\",\n      \"dependsOn\": [],\n      \"outputs\": [\n        \"out-a\"\n      ],\n      \"acceptance\": [\n        {\n          \"id\": \"check-a\",\n          \"type\": \"artifact\",\n          \"description\": \"SYNTHETIC output exists\"\n        }\n      ]\n    }\n  ],\n  \"templateVersion\": 2\n}\n```\n"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Agent Task Harness"
+  short_description: "Review complex plans, resume work, and verify evidence"
+  default_prompt: "Use $agent-task-harness to prepare a complete task plan for my review, then execute approved stages with current context and acceptance evidence."
+policy:
+  allow_implicit_invocation: true

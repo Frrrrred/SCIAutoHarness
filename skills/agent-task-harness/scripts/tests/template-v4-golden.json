@@ -1,0 +1,184 @@
+{
+  "provenance": {
+    "kind": "SYNTHETIC v4 oracle from unchanged9b2532f published runtime",
+    "sourceCommit": "9b2532ffb6437193d6f6800a54a115ea2b6552e5",
+    "sourceHashes": {
+      "LICENSE": "a45ba66fa502c49ad108440536d8aa91dfe9c04575a32a01287839bee336199c",
+      "SKILL.md": "1bb4f1c6f921be15436413bbc9bb38c9c2d64341ef81e2fb797c9118bf67de0b",
+      "agents/openai.yaml": "6d26af7bff8cfa3d69cb55e7f67d0cdf17e20730dd38ff62d2ab3fa0fd5c386a",
+      "references/artifact-examples.md": "a9b2bff3fac1faf1a4774e691c4a382caf8055d0a62e52b6096856333fce6e73",
+      "references/authoring.md": "9e031f71605b11784c40f2df83683883be9cb0dda9e90c73fecd352821cc070c",
+      "references/context-hygiene.md": "797f4bcba5c4298561c4fed0dd5b74d8db0cf0c3c1a3f55ea0782bc5d1f94bb5",
+      "references/domains.md": "992475b4ce40d3b10298d7890cc7c92b3f2c20c7b7c708866055a3fc43e2065f",
+      "references/execution-judgment.md": "76d06f68d20832479873d6af63fe3d6f14adc4d43f202f6bb87c686cae68d856",
+      "references/recovery-maintenance.md": "d87908f35722d5d71fc9cfad5514c784ca907a008562c657274f192ccd3ac659",
+      "references/research.md": "e4847fee44d517caf40da5c393d588c3af12116f2a7ca283c0f4c7a687686b14",
+      "references/runtime.md": "32e74138428fdb8ed2f66ba6c2afcaf2131e3c365aa817add68f71271eb93b17",
+      "references/hosts/claude-code.md": "30b8832eb6f77f4c44facfc25a0da30ae9f20323aee66d651cf933028c1df255",
+      "references/hosts/codex.md": "f235744bcf505a2172b9de94d2d313efb4d2f6cf52772e3cd85100271d3ba5c3",
+      "references/hosts/deepseek-harness.md": "a2a8a5988f4fa2bd09c678eb7b3943e12f5a6aef2682ddc8863a731615ffe0ab",
+      "scripts/check-harness-paths.mjs": "4240fa7f7d3e913abe51f6ceb89e158628c8639a244e052c52c5f102d73c5fa9",
+      "scripts/check-skill.mjs": "f6893c03c736ba602176a17676cc74d796cf0abc9df7d41b84de9068865a9860",
+      "scripts/harness.mjs": "f59233fb054220e55dacec068bfe4a2697df1e64395f22cadf303c2da1241ffb",
+      "scripts/lib/context.mjs": "0012cd53c0cfd2b7a03cf6162d121475a0db79d38b67609ede2c6bd9ead38db5",
+      "scripts/lib/contract.mjs": "946b5a4164117663a94de413062214fc7539252f6102e410bdf5c5349c71378c",
+      "scripts/lib/engine.mjs": "11440cd21bd094df967fefc76d7dd2b88a1877731e7a1ee31d8153bf4b6ff46f",
+      "scripts/lib/files.mjs": "6fe5ec0c5ca8099265b0945acc51d85fb8f07bd576beccc5e25404ce5046466d",
+      "scripts/lib/hosts.mjs": "54a5202478652e1e125037eb03ea842bbb40dec3ab95f9bea5356d21972f0639",
+      "scripts/lib/install.mjs": "cf5f7abfbea3386cdda28a2b0446f2df2e506dece44c9ea16b5409db97dbb914",
+      "scripts/lib/process.mjs": "22075447b44faf8813695c9c85545ae9d8abe3d3bd0d78d2bc12d195ff8173ea",
+      "scripts/lib/templates.mjs": "086f958a3746f6dd525c803d5d20a09114e3c8e203543762e424088ce0f55329",
+      "scripts/tests/harness-regression.mjs": "a9da1d8f404c5dde3ab3b9ae08ad1a5aab502d0ff8c47b794f5dcdb3dd365a2c",
+      "scripts/tests/template-upgrade-regression.mjs": "8632265695f6276083e51d3dfc0016c8975626c82bb196349147eca445790421",
+      "scripts/tests/template-v1-golden.json": "61cb474fab3a43b0be9a6ea342e8b3dfff58818b39383e7594cb133f7d23becb",
+      "scripts/tests/template-v2-golden.json": "df83fdd18a4cac84ec1a75bd0c61e3d923759eb32b5898f82775c98692c639dc",
+      "scripts/tests/template-v3-golden.json": "5247df78cb213c0a90748c0ffe55b669ab4dab62ebfb1cc5039789ca57b75338",
+      "scripts/tests/helpers/artifact-example.mjs": "5a29aebd4f5215162988e54f85330fdb105d19637ae5617ec5bcf24cee45bc0b",
+      "scripts/tests/helpers/controlled-child.mjs": "e2484cacba22465fd24a43bc442bc81f86d954c4f73f41d6619bbb26a53d74aa",
+      "scripts/tests/helpers/host-child.mjs": "32f179146d335a06116218e3bf6e8efc25adaaaf797afb698527c9a2cc37d3d4"
+    }
+  },
+  "cases": [
+    {
+      "id": "layered-v4",
+      "contract": {
+        "schemaVersion": 1,
+        "taskId": "synthetic-v4-golden",
+        "revision": 1,
+        "domain": "general",
+        "goal": "SYNTHETIC unchanged v4 rendering oracle",
+        "nonGoals": [],
+        "inputs": [
+          {
+            "source": "SYNTHETIC immutable input",
+            "path": "input.txt"
+          }
+        ],
+        "deliverables": [
+          {
+            "id": "out-a",
+            "path": "out/a.txt"
+          }
+        ],
+        "skills": [],
+        "assumptions": [],
+        "risks": [],
+        "stops": [],
+        "permissions": {
+          "localWrites": true,
+          "network": false,
+          "install": false,
+          "externalWrites": false,
+          "longGpu": false
+        },
+        "resources": {
+          "budget": "not specified; ask before incurring new cost",
+          "stopConditions": []
+        },
+        "reviewFiles": [],
+        "tasks": [
+          {
+            "id": "a",
+            "title": "SYNTHETIC output",
+            "dependsOn": [],
+            "outputs": [
+              "out-a"
+            ],
+            "acceptance": [
+              {
+                "id": "check-a",
+                "type": "artifact",
+                "description": "SYNTHETIC output exists"
+              }
+            ]
+          }
+        ],
+        "layout": "layered",
+        "contextFiles": [
+          {
+            "path": "phases/a.md",
+            "kind": "phase",
+            "tasks": [
+              "a"
+            ],
+            "purpose": "SYNTHETIC phase",
+            "loadWhen": "After context selects a"
+          }
+        ],
+        "recoveryFile": "RECOVERY.md",
+        "templateVersion": 4,
+        "execution": {
+          "allowedHosts": [
+            "codex"
+          ],
+          "defaultHost": "codex"
+        }
+      },
+      "master": "# Task harness: synthetic-v4-golden · revision 1\n\nGoal: SYNTHETIC unchanged v4 rendering oracle\n\nDomain: general. Layout: layered. Formal execution requires direct user approval of this complete version.\n\n## Entry: resume or review\n\nOn resumption with this supplied entry, first project reads are only this master and recovery instructions; read the skill runtime interface as needed, then immediately use context. Do not enumerate or broadly search the project/package, load full state or predecessor reports before context. Search matches also count as loading. Only locate filenames narrowly when the supplied entry is actually missing. Runtime: context --project <this project> --id synthetic-v4-golden --task <current task>. It derives current approval, dependencies and the next permitted action. Use the current approval provenance and dependency summaries, then the returned current-stage context; do not reread old state merely to confirm them. Do not load the complete contract or old receipts by default; inspect linked raw evidence only for a specific unresolved gap.\n\nIf approval is missing or the plan changes, use the complete review route below. Preparing authorized planning files precedes formal work; formal content in chat, files or subagent handoffs requires user review first.\n\n## Reviewed host policy\n\n{\"allowedHosts\":[\"codex\"],\"defaultHost\":\"codex\"}\n\nOnly a reviewed allowed host may begin new work. Preserve the original host/mode/executor when closing active work. Host selection grants no extra tools or permissions; use the selected host reference and actual native capabilities.\n\n## Overall boundaries\n\nNon-goals: []\nPermissions: {\"localWrites\":true,\"network\":false,\"install\":false,\"externalWrites\":false,\"longGpu\":false}\nResources: {\"budget\":\"not specified; ask before incurring new cost\",\"stopConditions\":[]}\nAssumptions: []\nRisks: []\nStop conditions: []\n\n## Whole-task map and acceptance\n\n| Task | Depends on verified | Outputs | Acceptance | Phase plans |\n|---|---|---|---|---|\n| a: SYNTHETIC output | none | out/a.txt | SYNTHETIC output exists | [phases/a.md](<phases/a.md>) |\n\n## Conditional reading\n\n- [phases/a.md](<phases/a.md>) — SYNTHETIC phase; read when: After context selects a; tasks: a.\n\nRecovery and semantic maintenance: [RECOVERY.md](<RECOVERY.md>). Load on a new session, interruption, stale evidence or phase maintenance; do not load all phase bodies by default.\n\n## Inputs and complete review (initial approval or revision only)\n\nInputs and sources: [{\"source\":\"SYNTHETIC immutable input\",\"path\":\"input.txt\"}]\n\nThe full machine contract is [contract.json](contract.json). For initial approval or a substantive revision, review this map, the complete contract and every linked phase/reference/recovery file. For approved execution, use the context-first entry above. All belong to the review digest even when not loaded into a particular execution context. A skeleton or a structure check is not a semantic or scientific review.\n\nWithin a valid approved version, proceed by verified dependencies without repeating the same approval. Changed immutable inputs or reviewed plans invalidate approval; normal declared outputs and execution records are handled through acceptance and downstream evidence status. Never self-approve. Authorization records do not authenticate users or impose OS isolation.\n\nProcess exit alone never verifies a task. On first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are reported stale. Only actual current acceptance evidence verifies a task. Preserve negative/opposite/inconclusive findings; do not repair research toward positivity. Final completion requires all mandatory outputs and acceptance, with limitations and unresolved items reported.\n"
+    },
+    {
+      "id": "legacy-v4",
+      "contract": {
+        "schemaVersion": 1,
+        "taskId": "synthetic-v4-golden",
+        "revision": 1,
+        "domain": "general",
+        "goal": "SYNTHETIC unchanged v4 rendering oracle",
+        "nonGoals": [],
+        "inputs": [
+          {
+            "source": "SYNTHETIC immutable input",
+            "path": "input.txt"
+          }
+        ],
+        "deliverables": [
+          {
+            "id": "out-a",
+            "path": "out/a.txt"
+          }
+        ],
+        "skills": [],
+        "assumptions": [],
+        "risks": [],
+        "stops": [],
+        "permissions": {
+          "localWrites": true,
+          "network": false,
+          "install": false,
+          "externalWrites": false,
+          "longGpu": false
+        },
+        "resources": {
+          "budget": "not specified; ask before incurring new cost",
+          "stopConditions": []
+        },
+        "reviewFiles": [],
+        "tasks": [
+          {
+            "id": "a",
+            "title": "SYNTHETIC output",
+            "dependsOn": [],
+            "outputs": [
+              "out-a"
+            ],
+            "acceptance": [
+              {
+                "id": "check-a",
+                "type": "artifact",
+                "description": "SYNTHETIC output exists"
+              }
+            ]
+          }
+        ],
+        "templateVersion": 4,
+        "execution": {
+          "allowedHosts": [
+            "codex"
+          ],
+          "defaultHost": "codex"
+        }
+      },
+      "master": "# Task harness: synthetic-v4-golden · revision 1\n\nGoal: SYNTHETIC unchanged v4 rendering oracle\n\nDomain: general. Status: review required before formal work.\n\n## User review\n\nReview the complete contract below, including all inputs, outputs, dependencies, permissions, host policy, methods, acceptance and recovery boundaries. Approval binds only the current complete task ID, revision and digest. Silence or agent self-assessment is not approval. Changes to reviewed files or bound inputs require a revised review. Runtime records do not authenticate an operator or provide an OS sandbox. The current host must honor actual user authorization.\n\n## Reviewed host policy\n\n{\"allowedHosts\":[\"codex\"],\"defaultHost\":\"codex\"}\n\nOnly a reviewed allowed host may begin new work. Preserve the original host, mode and executor when closing an active run, even after approval becomes stale. Hosts have different tools and permission controls; selection grants no extra rights.\n\n## Execution and evidence\n\nThe selected host performs actual work; this shared runtime records contracts, execution identity and evidence. Dependencies must be currently verified. Process exit alone never verifies a task. On first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are reported stale. All mandatory outputs and acceptance criteria must pass before verified. Preserve negative and inconclusive findings, original facts and recovery evidence.\n\n## Complete machine contract\n\n```json\n{\n  \"schemaVersion\": 1,\n  \"taskId\": \"synthetic-v4-golden\",\n  \"revision\": 1,\n  \"domain\": \"general\",\n  \"goal\": \"SYNTHETIC unchanged v4 rendering oracle\",\n  \"nonGoals\": [],\n  \"inputs\": [\n    {\n      \"source\": \"SYNTHETIC immutable input\",\n      \"path\": \"input.txt\"\n    }\n  ],\n  \"deliverables\": [\n    {\n      \"id\": \"out-a\",\n      \"path\": \"out/a.txt\"\n    }\n  ],\n  \"skills\": [],\n  \"assumptions\": [],\n  \"risks\": [],\n  \"stops\": [],\n  \"permissions\": {\n    \"localWrites\": true,\n    \"network\": false,\n    \"install\": false,\n    \"externalWrites\": false,\n    \"longGpu\": false\n  },\n  \"resources\": {\n    \"budget\": \"not specified; ask before incurring new cost\",\n    \"stopConditions\": []\n  },\n  \"reviewFiles\": [],\n  \"tasks\": [\n    {\n      \"id\": \"a\",\n      \"title\": \"SYNTHETIC output\",\n      \"dependsOn\": [],\n      \"outputs\": [\n        \"out-a\"\n      ],\n      \"acceptance\": [\n        {\n          \"id\": \"check-a\",\n          \"type\": \"artifact\",\n          \"description\": \"SYNTHETIC output exists\"\n        }\n      ]\n    }\n  ],\n  \"templateVersion\": 4,\n  \"execution\": {\n    \"allowedHosts\": [\n      \"codex\"\n    ],\n    \"defaultHost\": \"codex\"\n  }\n}\n```\n"
+    }
+  ]
+}

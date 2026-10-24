@@ -310,7 +310,7 @@ for(const stage of ['write','close','publish','cleanup'])await test('receipt-pub
 });
 
 async function installFixture(name,{copy=false,bytes=Buffer.from('SYNTHETIC personal policy\n')}={}){
-  const dir=path.join(root,'install-'+name);const home=path.join(dir,'home'),skills=path.join(dir,'skills'),target=path.join(skills,'agent-task-harness');await fs.mkdir(home,{recursive:true});await fs.mkdir(skills);const agents=path.join(home,'AGENTS.md');await fs.writeFile(agents,bytes);if(copy)await fs.cp(source,target,{recursive:true});
+  const dir=path.join(root,'install-'+name);const home=path.join(dir,'home'),skills=path.join(dir,'skills'),target=path.join(skills,'sciautoharness');await fs.mkdir(home,{recursive:true});await fs.mkdir(skills);const agents=path.join(home,'AGENTS.md');await fs.writeFile(agents,bytes);if(copy)await fs.cp(source,target,{recursive:true});
   return {dir,home,skills,target,agents,options:{codexHome:home,skillRoot:skills,replaceSkill:copy}};
 }
 for(const target of ['agents','skill'])for(const kind of ['hardlink','symlink'])await test('install-link-'+target+'-'+kind,'Preview refuses alias targets before touching sentinels',async()=>{
@@ -909,7 +909,7 @@ await test('install-source-target','Installation source failure retains the logi
 const templateV2Golden=JSON.parse(await fs.readFile(new URL('./template-v2-golden.json',import.meta.url),'utf8'));
 const retiredProduct=templateV2Golden.cases.find(x=>x.contract.layout!=='layered').master.match(/Codex executes; (\w+) records contracts and evidence\./)[1];
 await test('public-neutral-help','Ordinary help identifies the standalone product',async()=>{
- const r=command(['help']);assert.equal(r.code,0,r.stderr);assert.equal(r.stdout.split(/\r?\n/)[0],'agent-task-harness (local Node.js; no automatic downloads)');return {standaloneProduct:true};
+ const r=command(['help']);assert.equal(r.code,0,r.stderr);assert.equal(r.stdout.split(/\r?\n/)[0],'SCIAutoHarness (local Node.js; no automatic downloads)');return {standaloneProduct:true};
 });
 for(const layered of [true,false])await test('public-neutral-template-'+(layered?'layered':'legacy'),'Explicit published template3 remains neutral without changing the state schema',async()=>{
  const f=await fixture('public-template-'+(layered?'layered':'legacy'),{layered,two:false,templateVersion:3});assert.equal(f.c.templateVersion,3);assert.equal((await readJson(path.join(f.directory,'state.json'))).schemaVersion,1);
@@ -917,7 +917,7 @@ for(const layered of [true,false])await test('public-neutral-template-'+(layered
  return {templateVersion:f.c.templateVersion,layout:layered?'layered':'legacy'};
 });
 await test('public-neutral-managed-rule','New rules use the supplied installation path and generic permission boundaries',async()=>{
- const paths=[path.join(root,'first user','skills','agent-task-harness'),path.join(root,'second-user','skills','agent-task-harness')];
+ const paths=[path.join(root,'first user','skills','sciautoharness'),path.join(root,'second-user','skills','sciautoharness')];
  for(const target of paths){const rule=defaultRule(target);assert.ok(rule.includes(path.join(target,'SKILL.md').replaceAll('\\','/')));assert.ok(!rule.includes(retiredProduct));assert.ok(rule.includes('no additional services or execution permissions are implied.'));}
  return {dynamicTargets:paths.length};
 });
@@ -927,7 +927,7 @@ await test('public-neutral-doctor','Doctor probes only a synthetic executable an
  await fs.mkdir(path.dirname(fake),{recursive:true});await fs.writeFile(fake,(process.platform==='win32'?'':'#!'+process.execPath+'\n')+"const a=process.argv.slice(2);if(a.length===1&&a[0]==='--version')console.log('SYNTHETIC doctor version');else if(a.length===2&&a[0]==='exec'&&a[1]==='--help')console.log('--sandbox --skip-git-repo-check --json --config');else process.exitCode=91;\n",{mode:0o755});
  const env=Object.fromEntries(Object.entries(process.env).filter(([k])=>!['path','temp','tmp','tmpdir'].includes(k.toLowerCase())));Object.assign(env,{PATH:bin,TEMP:tmp,TMP:tmp,TMPDIR:tmp});
  const r=spawnSync(process.execPath,[cli,'doctor'],{cwd:dir,env,encoding:'utf8',timeout:30000,windowsHide:true,shell:false});assert.equal(r.status,0,r.stderr);const report=JSON.parse(r.stdout);
- assert.equal(report.versionExit,0);assert.equal(report.helpExit,0);assert.equal(report.actualModelRun,false);assert.equal(report.execArgumentsSupported,true);assert.equal(path.dirname(report.evidenceDirectory),tmp);assert.ok(path.basename(report.evidenceDirectory).startsWith('agent-task-harness-doctor-'));
+ assert.equal(report.versionExit,0);assert.equal(report.helpExit,0);assert.equal(report.actualModelRun,false);assert.equal(report.execArgumentsSupported,true);assert.equal(path.dirname(report.evidenceDirectory),tmp);assert.ok(path.basename(report.evidenceDirectory).startsWith('sciautoharness-doctor-'));
  assert.equal((await fs.readFile(path.join(report.evidenceDirectory,'version.txt'),'utf8')).trim(),'SYNTHETIC doctor version');assert.ok((await fs.readFile(path.join(report.evidenceDirectory,'help.txt'),'utf8')).includes('--sandbox'));return {syntheticExecutableOnly:true,actualModelRun:false};
 });
 
@@ -1019,7 +1019,7 @@ for(const layered of [true,false])for(const version of ['missing',1,2])for(const
 for(const [i,name] of [[0,'plain'],[1,'user space 用户']])await test('public-install-roundtrip-'+i,'Two independent installations receive only the neutral skill and restore original bytes',async()=>{
  const bytes=Buffer.concat([Buffer.from([239,187,191]),Buffer.from('SYNTHETIC 用户 policy\r\nno-final-newline')]),f=await installFixture('public-'+name,{bytes});
  const config=path.join(f.home,'config.toml');await fs.writeFile(config,'SYNTHETIC_CONFIG=true\n');const configBefore=await fs.readFile(config),agentsIdentity=(await fs.stat(f.agents,{bigint:true})).ino;
- const plan=await previewInstall(f.options);assert.ok(plan.changes.every(c=>c.target===f.agents||[f.target,path.join(f.skills,'codex-task-harness')].some(t=>key(c.target).startsWith(key(t)+path.sep))));
+ const plan=await previewInstall(f.options);assert.ok(plan.changes.every(c=>c.target===f.agents||[f.target,path.join(f.skills,'agent-task-harness'),path.join(f.skills,'codex-task-harness')].some(t=>key(c.target).startsWith(key(t)+path.sep))));
  const done=await applyInstall(plan),installed=await fs.readFile(f.agents);assert.deepEqual(installed.subarray(0,bytes.length),bytes);assert.ok(installed.toString('utf8').includes(defaultRule(f.target)));assert.ok(!defaultRule(f.target).includes(retiredProduct));
  const sourceFiles=await publicSnapshot(source),targetFiles=await publicSnapshot(f.target);assert.deepEqual(Object.keys(targetFiles).sort(),Object.keys(sourceFiles).sort());for(const file of Object.keys(sourceFiles))assert.equal(targetFiles[file].hash,sourceFiles[file].hash);
  await rollbackInstall(done.rollbackManifest);assert.deepEqual(await fs.readFile(f.agents),bytes);assert.equal((await fs.stat(f.agents,{bigint:true})).ino,agentsIdentity);assert.deepEqual(await fs.readFile(config),configBefore);await assert.rejects(fs.stat(f.target),{code:'ENOENT'});return {byteExact:true,sourceFiles:Object.keys(sourceFiles).length,independentRoot:i};
@@ -1113,7 +1113,7 @@ for(const host of ['codex','claude-code','deepseek-harness'])for(const layered o
 for(const host of ['codex','claude-code','deepseek-harness'])await test('mh-install-profile-'+host,'Explicit host profile uses its fixed instruction filename and restores original bytes',async()=>{
  const dir=path.join(root,'mh-install-'+host),home=path.join(dir,'host-home'),skills=path.join(dir,'skills');await fs.mkdir(home,{recursive:true});
  const instructions=path.join(home,host==='claude-code'?'CLAUDE.md':'AGENTS.md');const bytes=Buffer.from('SYNTHETIC original instructions\r\nno-final-newline');await fs.writeFile(instructions,bytes);
- const plan=await previewInstall({host,hostHome:home,skillRoot:skills});assert.equal(plan.safetyVersion,3);assert.equal(plan.host,host);
+ const plan=await previewInstall({host,hostHome:home,skillRoot:skills});assert.equal(plan.safetyVersion,4);assert.equal(plan.host,host);
  assert.ok(plan.changes.some(c=>c.target===instructions&&c.kind==='append-rule'));
  const applied=await applyInstall(plan);assert.equal(applied.status,'installed');const again=await previewInstall({host,hostHome:home,skillRoot:skills});assert.equal(again.changes.length,0);
  await rollbackInstall(applied.rollbackManifest);assert.deepEqual(await fs.readFile(instructions),bytes);
@@ -1136,7 +1136,7 @@ for(const kind of ['target-home','source-home'])await test('mh-install-overlap-'
 });
 
 
-await test('mh-install-safety-downgrade','A safety2 manifest cannot bypass host binding by changing only its safetyVersion',async()=>{
+await test('mh-install-safety-downgrade','A current safety record cannot bypass host binding by changing only its safetyVersion',async()=>{
  const f=await installFixture('mh-downgrade'),r=await applyInstall(await previewInstall(f.options)),record=await readJson(r.rollbackManifest),before=await publicSnapshot(f.dir);
  record.safetyVersion=1;const forged=path.join(path.dirname(r.rollbackManifest),'downgrade.json');await writeJson(forged,record);
  const stable=await publicSnapshot(f.dir);await assert.rejects(rollbackInstall(forged),/binding|safety|legacy|profile/i);assert.deepEqual(await publicSnapshot(f.dir),stable);
@@ -1247,7 +1247,7 @@ for(const host of mhHosts)for(const fault of ['spawn','prelaunch','log-open','ti
  assert.equal(published,true);assert.equal(outcome.ok,false);const e=outcome.error;assert.equal(e.processResult.processState,'closed');const before=await engine.status(f.project,f.id);assert.ok(before.activeExecutions.some(x=>x.runId===e.runId));const final=path.join(f.directory,'receipt-'+e.runId+'.json'),sha=await digest(final);const closed=await engine.submit(f.project,f.id,'a',e.submissionFacts);assert.equal(closed.executionClosed,true);assert.equal(await digest(final),sha);assert.equal((await engine.submit(f.project,f.id,'a',e.submissionFacts)).replayed,true);await engine.verify(f.project,f.id,'a');return {host,fault,publicationRecovered:true};
 });
 for(const host of mhHosts)for(const kind of ['bom-crlf-unicode','home-equals-root','tampered','override','partial-source'])await test('mh-install-combination-'+host+'-'+kind,'Host installation combinations preserve bytes, identities, profile binding and failure diagnostics',async()=>{
- const dir=path.join(root,'mh-install-combo-'+host+'-'+kind),home=path.join(dir,'home'),skills=kind==='home-equals-root'?home:path.join(dir,'skills');await fs.mkdir(home,{recursive:true});const target=path.join(skills,'agent-task-harness'),instructions=path.join(home,host==='claude-code'?'CLAUDE.md':'AGENTS.md');
+ const dir=path.join(root,'mh-install-combo-'+host+'-'+kind),home=path.join(dir,'home'),skills=kind==='home-equals-root'?home:path.join(dir,'skills');await fs.mkdir(home,{recursive:true});const target=path.join(skills,'sciautoharness'),instructions=path.join(home,host==='claude-code'?'CLAUDE.md':'AGENTS.md');
  const bytes=Buffer.concat([Buffer.from([239,187,191]),Buffer.from('SYNTHETIC 原文\r\nno-final-newline')]);await fs.writeFile(instructions,bytes);const original=await fs.stat(instructions,{bigint:true});const options={host,hostHome:home,skillRoot:skills};
  if(kind==='override'){await fs.writeFile(path.join(home,host==='codex'?'AGENTS.override.md':host==='claude-code'?'CLAUDE.local.md':'AGENTS.local.md'),'SYNTHETIC local rule');const before=await publicSnapshot(dir);await assert.rejects(previewInstall(options),/shadow|local|review/i);assert.deepEqual(await publicSnapshot(dir),before);return {host,kind,noWrite:true};}
  const plan=await previewInstall(options);
@@ -1275,11 +1275,11 @@ for(const scenario of ['reverse','duplicate','alias','second-busy','cleanup-succ
 await test('mh-shared-homes-concurrency','Two real in-flight installation operations with different host homes serialize on the shared skill root',async()=>{
  const dir=path.join(root,'mh-concurrent'),homeA=path.join(dir,'a-home'),homeB=path.join(dir,'b-home'),skills=path.join(dir,'z-skills');await fs.mkdir(homeA,{recursive:true});await fs.mkdir(homeB);await fs.mkdir(skills);
  const optionsA={host:'codex',hostHome:homeA,skillRoot:skills},optionsB={host:'claude-code',hostHome:homeB,skillRoot:skills},planA=await previewInstall(optionsA),planB=await previewInstall(optionsB);let release,hit=false;const barrier=new Promise(resolve=>{release=resolve;});
- const result=await patchMethod(fs,'open',old=>async function(file,...args){const h=await old.call(this,file,...args);if(!hit&&key(file)===key(path.join(homeA,'AGENTS.md'))){hit=true;await barrier;}return h;},async()=>{
+ const result=await patchMethod(fs,'writeFile',old=>async function(file,...args){if(!hit&&key(file).startsWith(key(path.join(homeA,'harness-install-backups'))+path.sep)&&/^rollback\.json\..+\.tmp$/.test(path.basename(String(file)))&&JSON.parse(String(args[0])).status==='prepared'){hit=true;await barrier;}return old.call(this,file,...args);},async()=>{
   const first=applyInstall(planA);try{for(let n=0;n<200&&!hit;n++)await pause(5);assert.equal(hit,true);const before=await publicSnapshot(homeB);await assert.rejects(applyInstall(planB),/writer|holds|lock/i);assert.deepEqual(await publicSnapshot(homeB),before);await assert.rejects(fs.stat(path.join(homeB,'.writer-lock')),{code:'ENOENT'});await fs.stat(path.join(skills,'.writer-lock'));}finally{release();}
   return first;
  });
- assert.equal(result.status,'installed');await assert.rejects(applyInstall(planB),/changed|preview/i);const second=await applyInstall(await previewInstall(optionsB));assert.equal(second.changedFiles,1);await rollbackInstall(second.rollbackManifest);await rollbackInstall(result.rollbackManifest);await assert.rejects(fs.stat(path.join(skills,'agent-task-harness')),{code:'ENOENT'});return {differentHomes:true,sharedRoot:true,oldPreviewRefused:true,completeLifecycle:true};
+ assert.equal(result.status,'installed');await assert.rejects(applyInstall(planB),/changed|preview/i);const second=await applyInstall(await previewInstall(optionsB));assert.equal(second.changedFiles,1);await rollbackInstall(second.rollbackManifest);await rollbackInstall(result.rollbackManifest);await assert.rejects(fs.stat(path.join(skills,'sciautoharness')),{code:'ENOENT'});return {differentHomes:true,sharedRoot:true,oldPreviewRefused:true,completeLifecycle:true};
 });
 for(const host of mhHosts)await test('mh-cli-binding-replay-'+host,'CLI receipts reject every other host/mode and preserve full closed-run replay after policy drift',async()=>{
  const f=await fixture('mh-cli-binding-'+host,{templateVersion:4,two:false,execution:mhPolicy});await approve(f);await writeJson(path.join(f.project,'host-child-expectations.json'),{host,cwd:f.project});const done=await mhRun(f.project,f.id,'a',{host,executable:mhChild});const receipt=await readJson(done.receipt.path),original=receipt.callerFacts??receipt;
@@ -1304,10 +1304,10 @@ for(const host of mhHosts)await test('mh-conflicting-original-'+host,'Conflictin
 for(const host of mhHosts)await test('mh-install-cli-'+host,'The actual public CLI previews the host profile, copies only the portable skill and rolls back exact original instructions',async()=>{
  const dir=path.join(root,'mh-install-cli-'+host),home=path.join(dir,'home'),skills=path.join(dir,'skills'),project=path.join(dir,'project');await fs.mkdir(home,{recursive:true});await fs.mkdir(project);const instruction=path.join(home,host==='claude-code'?'CLAUDE.md':'AGENTS.md'),bytes=Buffer.from('SYNTHETIC original CLI instruction\r\nno final newline');await fs.writeFile(instruction,bytes);
  const init=command(['init','--project',project,'--host',host]);assert.equal(init.code,0,init.stderr);const projectPlan=JSON.parse(init.stdout);assert.equal(projectPlan.hostHome,project);assert.equal(projectPlan.skillRoot,path.join(project,host==='codex'?'.agents':host==='claude-code'?'.claude':'.dsh','skills'));assert.deepEqual(await fs.readdir(project),[]);
- const file=path.join(dir,'plan.json'),preview=command(['install-preview','--host',host,'--host-home',home,'--skill-root',skills,'--out',file]);assert.equal(preview.code,0,preview.stderr);const plan=JSON.parse(preview.stdout);assert.equal(plan.host,host);assert.equal(plan.changes.length,(await listFiles(source)).length+7);assert.ok(plan.changes.every(c=>c.target===instruction||['agent-task-harness','codex-task-harness'].some(n=>key(c.target).startsWith(key(path.join(skills,n))+path.sep))));
+ const file=path.join(dir,'plan.json'),preview=command(['install-preview','--host',host,'--host-home',home,'--skill-root',skills,'--out',file]);assert.equal(preview.code,0,preview.stderr);const plan=JSON.parse(preview.stdout);assert.equal(plan.host,host);assert.equal(plan.changes.length,(await listFiles(source)).length+13);assert.ok(plan.changes.every(c=>c.target===instruction||['sciautoharness','agent-task-harness','codex-task-harness'].some(n=>key(c.target).startsWith(key(path.join(skills,n))+path.sep))));
  const badAlias=command(['install-preview','--host',host,'--host-home',home,'--codex-home',home,'--skill-root',skills]);assert.notEqual(badAlias.code,0);assert.match(badAlias.stderr,/only one/);
- const installed=command(['install','--plan',file]);assert.equal(installed.code,0,installed.stderr);const applied=JSON.parse(installed.stdout);assert.equal(applied.changedFiles,(await listFiles(source)).length+7);const files=await publicSnapshot(path.join(skills,'agent-task-harness'));assert.equal(Object.keys(files).length,(await listFiles(source)).length);assert.ok(!Object.keys(files).some(x=>x.startsWith('.git')||x==='README.md'||x==='package.json'));
- const again=command(['install-preview','--host',host,'--host-home',home,'--skill-root',skills]);assert.equal(again.code,0,again.stderr);assert.equal(JSON.parse(again.stdout).changes.length,0);const rolled=command(['rollback','--manifest',applied.rollbackManifest]);assert.equal(rolled.code,0,rolled.stderr);assert.deepEqual(await fs.readFile(instruction),bytes);await assert.rejects(fs.stat(path.join(skills,'agent-task-harness')),{code:'ENOENT'});return {host,portableFiles:(await listFiles(source)).length,actualCLI:true,originalBytesRestored:true};
+ const installed=command(['install','--plan',file]);assert.equal(installed.code,0,installed.stderr);const applied=JSON.parse(installed.stdout);assert.equal(applied.changedFiles,(await listFiles(source)).length+13);const files=await publicSnapshot(path.join(skills,'sciautoharness'));assert.equal(Object.keys(files).length,(await listFiles(source)).length);assert.ok(!Object.keys(files).some(x=>x.startsWith('.git')||x==='README.md'||x==='package.json'));
+ const again=command(['install-preview','--host',host,'--host-home',home,'--skill-root',skills]);assert.equal(again.code,0,again.stderr);assert.equal(JSON.parse(again.stdout).changes.length,0);const rolled=command(['rollback','--manifest',applied.rollbackManifest]);assert.equal(rolled.code,0,rolled.stderr);assert.deepEqual(await fs.readFile(instruction),bytes);await assert.rejects(fs.stat(path.join(skills,'sciautoharness')),{code:'ENOENT'});return {host,portableFiles:(await listFiles(source)).length,actualCLI:true,originalBytesRestored:true};
 });
 
 await (await import('./rename-regression.mjs')).runRenameTests({test,source,root,patchMethod,fixturePreparationRetries});

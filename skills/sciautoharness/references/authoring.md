@@ -32,6 +32,8 @@ Define the whole objective, sources, mandatory outputs, rights, actual tools and
 
 Master: ID/revision, objective/non-goals, global constraints/rights, major products, dependencies, overall acceptance and phase-to-document map. No execution log. Own detailed rules once, in phase/protocol.
 
+Connect the requested deliverable to the decision it supports and the evidence needed for that decision. For an unclear purpose or consequential choice of methods, use [outcome-oriented work](outcome-oriented-work.md); keep an already fixed objective intact and review any proposed expansion before execution.
+
 Every phase states requirement served/evidence/local quality exit or redirection; actual fees/capacity/operational rights (not duration); input identities/verified prerequisites; methods/assumptions; allowed reads/writes/ownership; substantive checks; next discriminating check and repair/retest/stops after failure; handoff meaning/paths/limits. Use [judgment](execution-judgment.md) as needed. Structural checks do not certify science.
 
 Recovery starts with master/recovery → immediate context, deriving current authority/dependencies/phase; SCOPE/raw evidence follows only a stated gap. Put input links after this conditional route. Phases/protocols link the master and read inputs only after selection, without competing pre-context contract/state/history reads. Before sealing check all routes agree.

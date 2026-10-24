@@ -4,7 +4,7 @@ Read only for actual Codex or its selected profile. The shared [runtime](../runt
 
 ## Native skill
 
-Codex discovers documented project/user .agents/skills. Install the direct agent-task-harness child of the selected root; the separate instruction home contains AGENTS.md. Use `$agent-task-harness` or a matching request. agents/openai.yaml is Codex-specific UI metadata.
+Codex discovers documented project/user .agents/skills. Install the direct sciautoharness child of the selected root; the separate instruction home contains AGENTS.md. Use `$sciautoharness` or a matching request. agents/openai.yaml is Codex-specific UI metadata.
 
 Use actual native file/patch/terminal/delegation tools exposed by this session; names/APIs vary by surface/version. Current inventory takes precedence. After context-first loading, begin with the allowed Codex policy, perform actual work and submit original runId with codex-native. Receipts do not replace actual activity or acceptance.
 

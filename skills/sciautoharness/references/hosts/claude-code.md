@@ -4,7 +4,7 @@ Read only for actual Claude Code or its selected profile. Shared [runtime](../ru
 
 ## Native skill
 
-Claude discovers user ~/.claude/skills and project .claude/skills, plus documented plugin routes. Use a direct agent-task-harness child and CLAUDE.md instructions. Invoke `/agent-task-harness` or matching work. OpenAI UI YAML does not configure Claude.
+Claude discovers user ~/.claude/skills and project .claude/skills, plus documented plugin routes. Use a direct sciautoharness child and CLAUDE.md instructions. Invoke `/sciautoharness` or matching work. OpenAI UI YAML does not configure Claude.
 
 Use exposed native Read/Glob/Grep/Edit/Write/Bash tools when present; Agent only when available and permitted. Do not assume Codex functions/collaboration APIs. Follow context-first through the actual terminal tool, begin with allowed Claude policy, perform real native work and submit original runId with claude-code-native. Human review and evidence acceptance remain unchanged.
 

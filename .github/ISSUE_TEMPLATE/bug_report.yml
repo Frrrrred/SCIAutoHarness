@@ -32,4 +32,4 @@ body:
     id: evidence
     attributes:
       label: Redacted evidence
-      description: Include actual errors and test selection/counts; omit private paths and secrets.
+      description: Include the relevant error and observable behavior; omit private paths and secrets.

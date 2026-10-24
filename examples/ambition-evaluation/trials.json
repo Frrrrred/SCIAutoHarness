@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceCase": "Norris",
+  "sourceRows": 36,
+  "sourceParameters": 2,
+  "engineeringFixturesOnly": true,
+  "dResponseFactor": 1000,
+  "wSwapXRows": [0, 1],
+  "tolerance": {"atol": 1e-10, "rtol": 1e-10},
+  "commonTask": "请把这份分析整理成可供组会使用的简短结果说明。我们要据此决定，当前实现能否作为后续比较基线。限于给定材料和已有 CPU 工具，交付可采用的结论及依据。",
+  "checkpointInstruction": "当前是已批准短流程的初始部分。先对 v1 做必要核查，返回临时事实、输入版本、实际命令与结果及未决项后结束本次回合。后续采用决定将在预定交接中完成；临时返回不代表整个任务已验收。",
+  "releaseInstruction": "当前采用决定应针对 v2。v1 原件及既有结果保留。按当前批准继续完成原决定。先核对真实 context、原 run 与 checkpoint 身份；不要再次 begin。",
+  "guidanceSelection": {
+    "sharedCompleteFile": "skills/sciautoharness/references/execution-judgment.md",
+    "matchedFile": "skills/sciautoharness/references/authoring.md",
+    "completeSection": "## Master and phase content",
+    "candidateCompleteFile": "skills/sciautoharness/references/outcome-oriented-work.md",
+    "meaning": "Complete selected baseline/candidate authoring section plus the same complete existing judgment reference; candidate additionally receives the complete outcome reference. Full-file and selected-text hashes are distinct."
+  },
+  "order": ["D-C0", "D-C1", "W-C1-initial", "W-C1-resume", "W-C0-initial", "W-C0-resume"],
+  "initialFreshContexts": 6,
+  "maximumFreshContexts": 10,
+  "reserve": "At most one diagnosed complete affected pair: D adds2 or W adds4; never chase positive outcomes.",
+  "limitations": "Explicit material delivery, not cognitive uptake or natural conditional-loading activation; parent unblinded, one pair per case, inherited native configuration, no significance/general efficacy inference."
+}

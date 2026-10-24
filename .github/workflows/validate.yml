@@ -45,14 +45,14 @@ jobs:
       - name: Check all module syntax
         run: |
           $modules = @(Get-ChildItem -LiteralPath 'skills' -Recurse -File -Filter '*.mjs')
-          if ($modules.Count -ne 21) { throw 'Unexpected module inventory' }
+          if ($modules.Count -ne 25) { throw 'Unexpected module inventory' }
           foreach ($module in $modules) {
             node --check $module.FullName
             if ($LASTEXITCODE -ne 0) { throw ('Syntax failure: ' + $module.FullName) }
           }
       - name: Run and verify all 719 main regression cases
         run: |
-          $workRoot = Join-Path $env:RUNNER_TEMP ('agent-task-harness-tests-' + [guid]::NewGuid())
+          $workRoot = Join-Path $env:RUNNER_TEMP ('sciautoharness-tests-' + [guid]::NewGuid())
           if (Test-Path -LiteralPath $workRoot) { throw 'Refusing to reuse test root' }
           npm test -- --work-root $workRoot
           if ($LASTEXITCODE -ne 0) { throw 'Main regression process failed' }
@@ -84,3 +84,15 @@ jobs:
           Write-Output ('Main regression: 719/719; Node ' + $report.node + '; platform ' + $report.platform)
           Write-Output ('Fixture preparation retries: ' + @($report.fixturePreparationRetries).Count)
           Write-Output '84 cross-runtime upgrade cases were NOT RUN: the matching external frozen baseline is unavailable.'
+      - name: Run SCIAutoHarness migration guards
+        run: |
+          $migrationRoot = Join-Path $env:RUNNER_TEMP ('sciautoharness-migration-' + [guid]::NewGuid())
+          if (Test-Path -LiteralPath $migrationRoot) { throw 'Refusing to reuse migration root' }
+          npm run test:migration -- --work-root $migrationRoot
+          if ($LASTEXITCODE -ne 0) { throw 'Migration regression process failed' }
+          $roots = @(Get-ChildItem -LiteralPath $migrationRoot -Directory -Filter 'sciautoharness-*')
+          if ($roots.Count -ne 1) { throw 'Unexpected migration root count' }
+          $migration = Get-Content -LiteralPath (Join-Path $roots[0].FullName 'results.json') -Raw | ConvertFrom-Json
+          if ($migration.suite -ne 'sciautoharness-migration' -or $migration.failed -ne 0 -or $migration.tests -ne 30 -or $migration.passed -ne 30) {
+            throw 'Incomplete or failed migration suite'
+          }

@@ -2,13 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import {canonicalName,legacyName,compatibilityFiles,legacyInventories} from './identity.mjs';
+import {canonicalName,legacyName,previousName,compatibilityNames,compatibilityFiles,legacyInventories} from './identity.mjs';
+import inventories from './installation-inventories.json' with {type:'json'};
 import {hostProfile} from './hosts.mjs';
 import { contained, digest, exists, hash, inside, json, listFiles, lockedRoots, writeJson } from './files.mjs';
 
 export const skillSource = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..','..');
-const start = '<!-- agent-task-harness:start -->';
-const end = '<!-- agent-task-harness:end -->';
+const start = '<!-- sciautoharness:start -->';
+const end = '<!-- sciautoharness:end -->';
 export function defaultRule(skillPath,host='codex') {
   const profile=hostProfile(host);
   const rule=`${start}\n## Complex task harness\n\nHonor explicit project-read boundaries during intake and execution. Resolve project-relative paths against the supplied task directory; do not inspect the host cwd to locate an already supplied project. Without a supplied in-scope Git baseline, do not probe ancestor/sibling metadata or run Git discovery, status or history (including git -C); review current files and mark historical evidence unverified.\n\nClassify the complete request first. Cross-module behavior with dependent tests, comprehensive multi-module reviews, multi-stage deliverables and substantive research require Harness; theoretical research includes dependent definitions, proofs, counterexamples and a manuscript. For a complex task, before any project intake, main and delegated agents must separately await reading ${path.join(skillPath,'SKILL.md').replaceAll('\\','/')} and receive its contents. Do not batch this read with SCOPE, README, enumeration or any project operation. Simple questions, isolated diagnosis and single low-risk edits proceed directly; a domain skill does not replace the Harness review gate.\n\nNew task/no associated Harness: read necessary in-scope inputs and follow the skill authoring route to prepare the complete package yourself. Missing formal approval does not block authorized planning. Include the master, substantive major stages, applicable protocols, recovery, deliverables, dependencies, acceptance and unknowns. With file authorization, resolve links per document and actually run the documented package path check. A read-only request without file authorization uses the complete in-session route: verify referenced local inputs read-only, keep a full ID/revision/text and approval provenance in chat, and do not invent a disk package, machine digest or CLI context. Authorized implementation includes necessary task-local Harness files. Present the complete current version and await direct final-human approval before formal work, including proofs, results or manuscripts in chat/files/handoffs. Do not self-approve or treat silence, the initial request or another task's approval as approval. For delegated unapproved new work or material changes, prepare and return the complete pending-review package normally with all navigation links. For an independent read-only subtask within the same valid approval, inherit its ID/revision, approval provenance, current phase, scope, permissions and acceptance; follow the same context route and return actual evidence without a new approval identity. The parent cannot grant new permissions by forwarding approval. Do not ask the parent to supply/write/approve a package or replace final delivery with a status message.\n\nExisting layered task with supplied entry: first project reads ONLY its master and recovery; the skill runtime interface may be read, then immediately derive context. Defer SCOPE, README and task descriptions until after context even when named in the prompt. Before context, do not enumerate/broad-search, load full state or old receipts/reports; search matches count as loading. Only an unknown or actually missing entry permits narrow filename lookup within the explicit task directory. Use context's approval provenance/dependency summaries; read raw linked evidence only for a stated specific gap. Absent current approval means complete review. After context, load only master constraints, current phase and applicable protocols/accepted dependency summaries. Use native begin, actual inline submit and verify; runtime owns formal state/receipts, so do not create payload JSON. Preserve active run identity even when evidence becomes stale or approval becomes invalid. Never re-review or restart to clear active/pending work. After the original run actually ends, submit its real step/runId and evidence; stale-run factual closure does not restore approval or accept results. Check context active-execution and latest-acceptance summaries for recovery; submit does not stop or cancel a process. Follow the approved dependencies and acceptance; execution records, file existence and exit zero do not establish correctness.\n\nPreserve source/evidence integrity, negative/inconclusive findings, current user permissions and domain constraints. Reassess applicable skills when the current work changes, without bulk-loading or re-reading unchanged skills. Material changes to methods, scope, inputs, permissions, resources or acceptance require renewed review and invalidate affected downstream evidence. Use absolute file-link targets in the normal final handoff, including manual review packages; preserve Windows drive paths such as E:/ literally. Use native Codex tools. Native tool use follows this Harness route and the user's actual permissions; no additional services or execution permissions are implied.\n${end}\n`;
@@ -19,7 +20,26 @@ async function futureRoot(root) {
   while (!(await exists(current))) { suffix.unshift(path.basename(current)); current=path.dirname(current); }
   return path.join(await fs.realpath(current),...suffix);
 }
-const safetyVersion=3;
+const safetyVersion=4;
+const directoryIdentity=s=>({dev:String(s.dev),ino:String(s.ino),mode:String(s.mode)});
+const sameDirectory=(a,b)=>!!a&&!!b&&['dev','ino','mode'].every(k=>a[k]===b[k]);
+async function inspectDirectory(dir){
+ if(!await exists(dir))return null;
+ const st=await fs.lstat(dir,{bigint:true});
+ if(!st.isDirectory()||st.isSymbolicLink()||st.ino===0n||await fs.realpath(dir)!==dir)throw new Error('Unsafe linked directory or installation root: '+dir);
+ return directoryIdentity(st);
+}
+async function assertDirectory(dir,expected){const actual=await inspectDirectory(dir);if(expected===null?actual!==null:!sameDirectory(actual,expected))throw new Error('Installation directory identity changed: '+dir);}
+function directoryTargets(changes,roots){
+ const result=new Set();
+ for(const c of changes.filter(c=>c.role!=='instructions')){
+  const root=roots[c.role];if(!root)throw new Error('Unknown directory role');let dir=path.dirname(c.target);
+  while(inside(root,dir)){result.add(dir);if(dir===root)break;dir=path.dirname(dir);}
+ }
+ return [...result].sort((a,b)=>a.length-b.length||a.localeCompare(b));
+}
+async function assertInstallationRoots(record){for(const root of [record.targetSkill,record.agentCompat,record.legacyCompat])if(await exists(root))await inspectDirectory(root);}
+
 const identity=s=>({dev:String(s.dev),ino:String(s.ino),nlink:String(s.nlink),mode:String(s.mode)});
 const sameIdentity=(a,b)=>!!a&&!!b&&['dev','ino','nlink','mode'].every(k=>a[k]===b[k]);
 async function inspect(file){
@@ -55,23 +75,28 @@ async function writeTarget(change,bytes,expectedIdentity,expectedHash){
 
 async function assertExpectedTarget(file,id,sha){if(id===null&&sha===null){if(await exists(file))throw new Error('New installation target appeared: '+file);return;}return assertTarget(file,id,sha);}
 export function legacyDefaultRule(skillPath,host='codex'){
- return defaultRule(skillPath,host).replaceAll('<!-- agent-task-harness:','<!-- codex-task-harness:');
+ return defaultRule(skillPath,host).replaceAll('<!-- sciautoharness:','<!-- codex-task-harness:');
 }
-function managedReplacement(oldBytes,rule,oldRule,reviewedRule){
- const old=decode(oldBytes),markers=[...old.matchAll(/<!-- (?:agent|codex)-task-harness:(start|end) -->/g)];
- if([...old.matchAll(/<!--\s*(?:agent|codex)-task-harness\s*:/g)].length!==markers.length)throw new Error('Malformed managed rule markers.');
+function managedReplacement(oldBytes,rule,oldRules,reviewedRule){
+ const old=decode(oldBytes),markers=[...old.matchAll(/<!-- (?:sciautoharness|(?:agent|codex)-task-harness):(start|end) -->/g)];
+ if([...old.matchAll(/<!--\s*(?:sciautoharness|(?:agent|codex)-task-harness)\s*:/g)].length!==markers.length)throw new Error('Malformed managed rule markers.');
  if(!markers.length&&reviewedRule)throw new Error('Explicit reviewed before block is absent; obtain a fresh exact review.');
  if(!markers.length)return Buffer.concat([oldBytes,Buffer.from(`${old&&!old.endsWith('\n')?'\n':''}${old?'\n':''}${rule}`)]);
  if(markers.length!==2||markers[0][1]!=='start'||markers[1][1]!=='end'||markers[0][0].split(':')[0]!==markers[1][0].split(':')[0])throw new Error('Malformed, mixed or duplicate managed rule markers.');
  const i=markers[0].index,j=markers[1].index+markers[1][0].length,actual=old.slice(i,j);
  if(actual===rule.trimEnd())return oldBytes;
- if((reviewedRule&&actual!==reviewedRule.before)||(!reviewedRule&&actual!==oldRule.trimEnd()))throw new Error('An existing managed rule differs; inspect it instead of overwriting.');
+ if(reviewedRule&&actual!==reviewedRule.before)throw new Error('An existing managed rule differs; inspect it instead of overwriting.');
+ if(!reviewedRule&&!oldRules.some(r=>actual===r.trimEnd()))throw new Error('An existing managed rule differs; inspect it instead of overwriting.');
  return Buffer.from(old.slice(0,i)+rule.trimEnd()+old.slice(j),'utf8');
 }
-async function inventoryRecognized(root){
- const files=await listFiles(root),mapping=Object.fromEntries(await Promise.all(files.map(async f=>[f.split(path.sep).join('/'),(await inspect(path.join(root,f))).sha256])));
- if(!legacyInventories.some(known=>JSON.stringify(Object.keys(known).sort())===JSON.stringify(Object.keys(mapping).sort())&&Object.keys(known).every(f=>known[f]===mapping[f])))throw new Error('Existing skill has extra files or unrecognized legacy content; refuse automatic migration.');
- return hash(JSON.stringify(mapping));
+const equalMapping=(a,b)=>JSON.stringify(Object.keys(a).sort())===JSON.stringify(Object.keys(b).sort())&&Object.keys(a).every(k=>a[k]===b[k]);
+const knownFull=(role,mapping)=>(role==='agentCompat'?inventories.agentFull:legacyInventories).some(known=>equalMapping(known,mapping));
+async function inventoryRecognized(root,role){
+ const files=await listFiles(root),members=[];
+ for(const f of files){const relative=f.split(path.sep).join('/'),observed=await inspect(path.join(root,f));members.push({relative,...observed});}
+ const mapping=Object.fromEntries(members.map(m=>[m.relative,m.sha256]));
+ if(!knownFull(role,mapping))throw new Error('Existing skill has extra files or unrecognized legacy content; refuse automatic migration.');
+ return {role,root,inventoryDigest:hash(JSON.stringify(mapping)),members};
 }
 export async function previewInstall({host='codex',hostHome,codexHome,skillRoot,replaceSkill=false,migrateLegacy=false,reviewedRule}={}){
  const profile=hostProfile(host);
@@ -79,8 +104,8 @@ export async function previewInstall({host='codex',hostHome,codexHome,skillRoot,
  if(hostHome!==undefined&&codexHome!==undefined&&path.resolve(hostHome)!==path.resolve(codexHome))throw new Error('Conflicting host-home and codex-home values.');
  hostHome=hostHome??codexHome;if(!hostHome||!skillRoot)throw new Error('Declare host home and skill root explicitly.');
  hostHome=await futureRoot(hostHome);skillRoot=await futureRoot(skillRoot);
- const targetSkill=path.join(skillRoot,canonicalName),legacyCompat=path.join(skillRoot,legacyName),agents=path.join(hostHome,profile.instructionFile);
- for(const root of [targetSkill,legacyCompat]){
+ const targetSkill=path.join(skillRoot,canonicalName),agentCompat=path.join(skillRoot,previousName),legacyCompat=path.join(skillRoot,legacyName),agents=path.join(hostHome,profile.instructionFile);
+ for(const root of [targetSkill,agentCompat,legacyCompat]){
   if(await exists(root)&&((await fs.lstat(root)).isSymbolicLink()||await fs.realpath(root)!==root))throw new Error('Unsafe linked installation root: '+root);
   if(inside(skillSource,root)||inside(root,skillSource))throw new Error('Installation source and target must not overlap.');
   if(inside(skillSource,hostHome)||inside(root,hostHome))throw new Error('Instruction home must not be inside the portable skill source or target.');
@@ -88,44 +113,50 @@ export async function previewInstall({host='codex',hostHome,codexHome,skillRoot,
  for(const name of profile.overrideFiles){const file=path.join(hostHome,name);if(await exists(file)&&(await fs.readFile(file,'utf8')).trim())throw new Error(host==='codex'?'AGENTS.override.md shadows AGENTS.md. Review the override.':`Nearby local instruction file ${name} requires review before adding another instruction source.`);}
  const before=await inspect(agents),oldBytes=before.sha256?await fs.readFile(agents):Buffer.alloc(0);
  if(reviewedRule&&(!reviewedRule.before||!reviewedRule.after))throw new Error('Explicit reviewed rule requires exact before and after block bytes.');
- if(reviewedRule&&(!reviewedRule.after.startsWith(start)||!reviewedRule.after.endsWith(end)||[...reviewedRule.after.matchAll(/<!--\s*(?:agent|codex)-task-harness\s*:/g)].length!==2))throw new Error('Explicit reviewed canonical block requires exactly one new marker pair.');
+ if(reviewedRule&&(!reviewedRule.after.startsWith(start)||!reviewedRule.after.endsWith(end)||[...reviewedRule.after.matchAll(/<!--\s*(?:sciautoharness|(?:agent|codex)-task-harness)\s*:/g)].length!==2))throw new Error('Explicit reviewed canonical block requires exactly one new marker pair.');
  const rule=reviewedRule?reviewedRule.after+'\n':defaultRule(targetSkill,host);
- // A custom block can only be changed through the separately reviewed exact before/after API input.
- const next=managedReplacement(oldBytes,rule,legacyDefaultRule(legacyCompat,host),reviewedRule),changes=[];
+ const oldRules=[defaultRule(agentCompat,host).replaceAll('<!-- sciautoharness:','<!-- agent-task-harness:'),legacyDefaultRule(legacyCompat,host)];
+ const next=managedReplacement(oldBytes,rule,oldRules,reviewedRule),changes=[],sources=[];
  if(!next.equals(oldBytes))changes.push({role:'instructions',target:agents,before:before.sha256,beforeIdentity:before.identity,after:hash(next),kind:'append-rule',bytes:next.toString('base64')});
- const files=await listFiles(skillSource),compat=compatibilityFiles();
- let migrating=false,inventoryDigest=null;
- if(await exists(legacyCompat)){
-  const existing=await listFiles(legacyCompat);
-  const thin=existing.every(f=>Object.hasOwn(compat,f.split(path.sep).join('/')));
-  if(!thin){if(!migrateLegacy||!replaceSkill)throw new Error('A full legacy skill requires explicit --migrate-legacy and --replace-skill after review.');inventoryDigest=await inventoryRecognized(legacyCompat);migrating=true;}
- }
- for(const [role,root,members]of [['canonical',targetSkill,Object.fromEntries(files.map(f=>[f.split(path.sep).join('/'),null]))],['legacyCompat',legacyCompat,compat]]){
-  if(await exists(root)&&!(role==='legacyCompat'&&migrating)){
-   const extras=(await listFiles(root)).filter(f=>!Object.hasOwn(members,f.split(path.sep).join('/')));if(extras.length)throw new Error('Existing skill has extra files; refuse automatic overwrite: '+extras.join(', '));
+ const files=await listFiles(skillSource);
+ const roles=[['canonical',targetSkill,Object.fromEntries(files.map(f=>[f.split(path.sep).join('/'),null]))],['agentCompat',agentCompat,compatibilityFiles(previousName)],['legacyCompat',legacyCompat,compatibilityFiles(legacyName)]];
+ for(const [role,root,members]of roles){
+  let migrating=false;
+  if(await exists(root)){
+   const existing=await listFiles(root),mapping={};for(const f of existing)mapping[f.split(path.sep).join('/')]=(await inspect(path.join(root,f))).sha256;
+   if(role!=='canonical'&&existing.length){
+    const expected=Object.fromEntries(Object.entries(members).map(([k,v])=>[k,hash(Buffer.from(v))]));
+    const thin=equalMapping(expected,mapping)||(role==='legacyCompat'&&equalMapping(inventories.oldThin,mapping));
+    if(!thin){
+     if(!migrateLegacy||!replaceSkill)throw new Error('A full legacy skill requires explicit --migrate-legacy and --replace-skill after review.');
+     sources.push(await inventoryRecognized(root,role));migrating=true;
+    }
+   }
+   if(!migrating){const extras=existing.filter(f=>!Object.hasOwn(members,f.split(path.sep).join('/')));if(extras.length)throw new Error('Existing skill has extra files; refuse automatic overwrite: '+extras.join(', '));}
   }
-  const relatives=role==='legacyCompat'&&migrating?[...new Set([...(await listFiles(root)).map(f=>f.split(path.sep).join('/')),...Object.keys(members)])].sort():Object.keys(members).sort();
+  const relatives=migrating?[...new Set([...(await listFiles(root)).map(f=>f.split(path.sep).join('/')),...Object.keys(members)])].sort():Object.keys(members).sort();
   for(const relative of relatives){
-   const target=path.join(root,relative),previous=await inspect(target),source=role==='canonical'?path.join(skillSource,relative):null,bytes=role==='canonical'?null:(Object.hasOwn(compat,relative)?Buffer.from(compat[relative]):null),after=source?await digest(source):bytes?hash(bytes):null;
+   const target=path.join(root,relative),previous=await inspect(target),source=role==='canonical'?path.join(skillSource,relative):null,bytes=role==='canonical'?null:(Object.hasOwn(members,relative)?Buffer.from(members[relative]):null),after=source?await digest(source):bytes?hash(bytes):null;
    if(previous.sha256===after)continue;
    if(previous.sha256&&!replaceSkill)throw new Error(`Different skill already exists: ${target}. Review replacement explicitly.`);
-   const retire=role==='legacyCompat'&&migrating&&!!previous.identity;
+   const retire=migrating&&!!previous.identity;
    changes.push({role,target,...(source?{source,sourceMode:(await fs.stat(source)).mode&0o777}:bytes?{bytes:bytes.toString('base64')}:{}),before:previous.sha256,beforeIdentity:previous.identity,after,kind:after===null?'retire-legacy':previous.sha256?'replace-skill':'create-skill',...(retire?{retire:true}:{})});
   }
  }
- // Stable preview path; apply replaces it with an exclusive UUID directory bound in the manifest.
- const retirementParent=path.join(path.dirname(skillRoot),'.agent-task-harness-rollback');
- if(migrating){
+ const retirementParent=path.join(path.dirname(skillRoot),'.sciautoharness-rollback');
+ if(sources.length){
   if(inside(skillRoot,retirementParent)||inside(skillSource,retirementParent))throw new Error('Rollback storage must be outside skill discovery/source roots.');
   const parent=await futureRoot(retirementParent);let existing=parent;while(!await exists(existing))existing=path.dirname(existing);
   for(const c of changes.filter(c=>c.retire))if(String((await fs.stat(existing,{bigint:true})).dev)!==c.beforeIdentity.dev)throw new Error('Migration requires same-volume identity-preserving rollback storage.');
  }
- const contract={schemaVersion:1,safetyVersion,product:canonicalName,host,hostHome,instructionFile:profile.instructionFile,...(host==='codex'?{codexHome:hostHome}:{}),skillRoot,targetSkill,legacyCompat,retirementParent,replaceSkill,migrateLegacy,migration:{mode:migrating?'legacy-full-to-compatibility':'none',inventoryDigest},...(reviewedRule?{reviewedRule}:{}),changes};
+ const migration={mode:sources.length?'legacy-full-to-compatibility':'none',inventoryDigest:sources.length?hash(JSON.stringify(sources.map(s=>s.inventoryDigest))):null,sources};
+ const directories=[];for(const dir of directoryTargets(changes,{canonical:targetSkill,agentCompat,legacyCompat}))directories.push({path:dir,beforeIdentity:await inspectDirectory(dir)});
+ const contract={schemaVersion:1,safetyVersion,product:canonicalName,host,hostHome,instructionFile:profile.instructionFile,...(host==='codex'?{codexHome:hostHome}:{}),skillRoot,targetSkill,agentCompat,legacyCompat,retirementParent,replaceSkill,migrateLegacy,migration,directories,...(reviewedRule?{reviewedRule}:{}),changes};
  return {...contract,digest:hash(JSON.stringify(contract)),summary:{changedFiles:changes.length,configTomlChanged:false,dependenciesInstalled:false,modelCalled:false,legacyRufloDirectivesDetected:/npx\s+(?:claude-flow|ruflo)|mcp__claude-flow|swarm_init/i.test(decode(oldBytes)),legacyPolicy:'Unrelated original bytes and permissions are retained.',agentsRule:rule}};
 }
 function manifestBinding(record){const{bindingDigest,status,...bound}=record;return hash(JSON.stringify(bound));}
 export async function applyInstall(plan){
- if(plan.safetyVersion!==3||!plan.changes?.every(c=>'beforeIdentity'in c))throw new Error('Legacy installation plan lacks current safety identities; obtain a fresh preview.');
+ if(plan.safetyVersion!==4||!plan.changes?.every(c=>'beforeIdentity'in c))throw new Error('Legacy installation plan lacks current safety identities; obtain a fresh preview.');
  const current=await previewInstall(plan);if(current.digest!==plan.digest)throw new Error('Installation source or target changed after preview. Review a fresh preview.');
  if(!current.changes.length)return{status:'already-installed',changedFiles:0};
  await fs.mkdir(current.hostHome,{recursive:true});await fs.mkdir(current.skillRoot,{recursive:true});
@@ -133,7 +164,7 @@ export async function applyInstall(plan){
   if((await previewInstall(plan)).digest!==plan.digest)throw new Error('Installation target changed while acquiring lock.');
   const id=randomUUID(),backupDir=await contained(current.hostHome,path.join('harness-install-backups',id));
   const retirementRoot=current.migration.mode==='none'?null:path.join(current.retirementParent,id);
-  const saved=[],manifest=path.join(backupDir,'rollback.json'),record={schemaVersion:1,safetyVersion:3,product:canonicalName,status:'prepared',host:current.host,hostHome:current.hostHome,instructionFile:current.instructionFile,...(current.host==='codex'?{codexHome:current.hostHome}:{}),skillRoot:current.skillRoot,targetSkill:current.targetSkill,legacyCompat:current.legacyCompat,migration:current.migration,retirementRoot,changes:saved};
+  const saved=[],manifest=path.join(backupDir,'rollback.json'),record={schemaVersion:1,safetyVersion:4,product:canonicalName,status:'prepared',host:current.host,hostHome:current.hostHome,instructionFile:current.instructionFile,...(current.host==='codex'?{codexHome:current.hostHome}:{}),skillRoot:current.skillRoot,targetSkill:current.targetSkill,agentCompat:current.agentCompat,legacyCompat:current.legacyCompat,migration:current.migration,retirementRoot,directories:current.directories.map(d=>({...d,created:false,afterIdentity:d.beforeIdentity})),changes:saved};
   let target=null,stage='prepare-directories',completedTargets=0;
   try{
    target=backupDir;await fs.mkdir(backupDir,{recursive:true});
@@ -147,6 +178,14 @@ export async function applyInstall(plan){
     saved.push({...c,backup});
    }
    stage='prepared-manifest';target=manifest;record.bindingDigest=manifestBinding(record);await writeJson(manifest,record);
+   stage='prepare-target-directories';
+   for(const d of record.directories){
+    target=d.path;await assertDirectory(d.path,d.beforeIdentity);
+    if(d.beforeIdentity===null){
+     await fs.mkdir(d.path);d.afterIdentity=await inspectDirectory(d.path);d.created=true;
+     stage='progress-manifest';target=manifest;record.bindingDigest=manifestBinding(record);await writeJson(manifest,record);stage='prepare-target-directories';
+    }
+   }
    stage='write-targets';
    for(const c of saved){
     target=c.target;await fs.mkdir(path.dirname(target),{recursive:true});
@@ -161,10 +200,83 @@ export async function applyInstall(plan){
  });
 }
 export async function rollbackInstall(manifest){
- const record=await json(manifest);if(record.safetyVersion!==3)return rollbackLegacyInstall(manifest);
+ const record=await json(manifest);
+ if(record.safetyVersion===4)return rollbackSafety4Install(manifest);
+ if([1,2,3].includes(record.safetyVersion)){
+  if(Object.hasOwn(record,'agentCompat')||record.migration?.sources)throw new Error('Safety4 fields cannot be downgraded to a legacy format.');
+  return record.safetyVersion===3?rollbackSafety3Install(manifest):rollbackLegacyInstall(manifest);
+ }
+ throw new Error('Only a completed safety-bound installation can be rolled back; unknown format.');
+}
+async function rollbackSafety4Install(manifest){
+ const record=await json(manifest);if(record.safetyVersion!==4)throw new Error('Invalid safety4 format binding.');
  const profile=hostProfile(record.host),home=record.hostHome,root=record.skillRoot,backupDir=path.dirname(path.resolve(manifest));
  if(record.schemaVersion!==1||record.status!=='installed'||record.product!==canonicalName||record.bindingDigest!==manifestBinding(record)||record.instructionFile!==profile.instructionFile||(record.host==='codex'?record.codexHome!==home:Object.hasOwn(record,'codexHome'))||!Array.isArray(record.changes)||!record.changes.every(c=>'afterIdentity'in c&&'beforeIdentity'in c))throw new Error('Only a completed safety-bound installation can be rolled back; host/profile/home binding changed.');
- if(![home,root,record.targetSkill,record.legacyCompat].every(x=>typeof x==='string'&&path.isAbsolute(x))||record.targetSkill!==path.join(root,canonicalName)||record.legacyCompat!==path.join(root,legacyName)||!inside(path.join(home,'harness-install-backups'),backupDir))throw new Error('Invalid declared installation roots or backup manifest.');
+ if(![home,root,record.targetSkill,record.agentCompat,record.legacyCompat].every(x=>typeof x==='string'&&path.isAbsolute(x))||record.targetSkill!==path.join(root,canonicalName)||record.agentCompat!==path.join(root,previousName)||record.legacyCompat!==path.join(root,legacyName)||!inside(path.join(home,'harness-install-backups'),backupDir))throw new Error('Invalid declared installation roots or backup manifest.');
+ if(!['none','legacy-full-to-compatibility'].includes(record.migration?.mode)||!Array.isArray(record.migration.sources)||((record.migration.mode==='none')!==(record.migration.sources.length===0)))throw new Error('Invalid migration binding.');
+ const retirementParent=path.join(path.dirname(root),'.sciautoharness-rollback');
+ if(record.migration.mode==='none'?record.retirementRoot!==null:typeof record.retirementRoot!=='string'||path.dirname(record.retirementRoot)!==retirementParent||path.basename(record.retirementRoot)!==path.basename(backupDir)||inside(root,record.retirementRoot))throw new Error('Invalid identity-preserving rollback storage binding.');
+ return lockedRoots([home,root],async()=>{
+  let target=null,stage='preflight',completedTargets=0;
+  try{
+   if(record.retirementRoot){target=record.retirementRoot;if(await fs.realpath(retirementParent)!==retirementParent||await fs.realpath(record.retirementRoot)!==record.retirementRoot)throw new Error('Rollback storage real path changed.');}
+   await assertInstallationRoots(record);
+   if(!Array.isArray(record.directories))throw new Error('Missing safety4 directory journal.');
+   const expectedDirectories=directoryTargets(record.changes,{canonical:record.targetSkill,agentCompat:record.agentCompat,legacyCompat:record.legacyCompat});
+   if(JSON.stringify(record.directories.map(d=>d.path))!==JSON.stringify(expectedDirectories))throw new Error('Directory role/path journal binding changed.');
+   for(const d of record.directories){
+    if(d.created!==(d.beforeIdentity===null)||!d.afterIdentity||(!d.created&&!sameDirectory(d.beforeIdentity,d.afterIdentity)))throw new Error('Invalid created directory identity binding.');
+    await assertDirectory(d.path,d.afterIdentity);
+   }
+   const sourceRoles=new Set();
+   for(const source of record.migration.sources){
+    if(!['agentCompat','legacyCompat'].includes(source.role)||sourceRoles.has(source.role)||source.root!==record[source.role]||!Array.isArray(source.members))throw new Error('Invalid migration source role/root binding.');
+    sourceRoles.add(source.role);
+    const mapping=Object.fromEntries(source.members.map(m=>[m.relative,m.sha256]));
+    if(!knownFull(source.role,mapping)||source.members.length!==Object.keys(mapping).length||source.inventoryDigest!==hash(JSON.stringify(mapping)))throw new Error('Invalid migration source inventory binding.');
+    for(const m of source.members){
+     const target=path.join(source.root,m.relative),change=record.changes.find(c=>c.target===target);
+     if(change){if(!change.retire||change.before!==m.sha256||!sameIdentity(change.beforeIdentity,m.identity))throw new Error('Migration original identity binding changed.');}
+     else await assertExpectedTarget(target,m.identity,m.sha256);
+    }
+   }
+   if(record.migration.inventoryDigest!==(record.migration.sources.length?hash(JSON.stringify(record.migration.sources.map(s=>s.inventoryDigest))):null))throw new Error('Migration inventory digest changed.');
+   const targets=new Set(),identities=new Set();
+   for(const[cIndex,c]of record.changes.entries()){
+    target=c.target;const normalized=path.resolve(c.target),key=process.platform==='win32'?normalized.toLowerCase():normalized;
+    const physical=c.afterIdentity?`${c.afterIdentity.dev}:${c.afterIdentity.ino}`:null;if(targets.has(key)||(physical&&identities.has(physical)))throw new Error('Duplicate rollback target identity.');targets.add(key);if(physical)identities.add(physical);
+    const role=c.target===path.join(home,record.instructionFile)?'instructions':inside(record.targetSkill,c.target)&&c.target!==record.targetSkill?'canonical':inside(record.agentCompat,c.target)&&c.target!==record.agentCompat?'agentCompat':inside(record.legacyCompat,c.target)&&c.target!==record.legacyCompat?'legacyCompat':null;
+    const expectedKind=role==='instructions'?'append-rule':c.after===null?'retire-legacy':c.before===null?'create-skill':'replace-skill';
+    if(c.kind!==expectedKind||!role||role!==c.role||!['append-rule','create-skill','replace-skill','retire-legacy'].includes(c.kind)||(c.kind==='append-rule')!==(role==='instructions')||(c.kind==='retire-legacy')!==(c.after===null)||(c.kind==='retire-legacy'&&!c.retire)||(c.retire&&(!c.beforeIdentity||typeof c.before!=='string'))||!!c.retire&&(!['agentCompat','legacyCompat'].includes(role)||!record.migration.sources.some(s=>s.role===role)))throw new Error('Rollback target conflicts with its fixed profile role; outside installation.');
+    await contained(role==='instructions'?home:root,path.relative(role==='instructions'?home:root,target));
+    await assertExpectedTarget(target,c.afterIdentity,c.after);
+    if(c.backup){const expected=path.join(c.retire?record.retirementRoot:backupDir,`${cIndex}.bin`);if(c.backup!==expected)throw new Error('Backup path binding changed.');await contained(c.retire?record.retirementRoot:backupDir,path.relative(c.retire?record.retirementRoot:backupDir,c.backup));const b=await inspect(c.backup);if(b.sha256!==c.before||c.retire&&!sameIdentity(b.identity,c.beforeIdentity))throw new Error('Backup integrity mismatch or original identity changed.');}
+    else if(c.before!==null||c.beforeIdentity!==null)throw new Error('Missing original backup identity.');
+   }
+   stage='restore';
+   for(const c of record.changes){
+    target=c.target;
+    if(c.retire){if(c.after!==null){await assertExpectedTarget(target,c.afterIdentity,c.after);await fs.unlink(target);}await assertExpectedTarget(c.backup,c.beforeIdentity,c.before);if(await exists(target))throw new Error('Original restore target appeared.');await fs.rename(c.backup,target);await assertExpectedTarget(target,c.beforeIdentity,c.before);}
+    else if(c.backup){const bytes=await fs.readFile(c.backup);if(hash(bytes)!==c.before)throw new Error('Backup changed after preflight.');await writeTarget(c,bytes,c.afterIdentity,c.after);}
+    else{await assertExpectedTarget(target,c.afterIdentity,c.after);await fs.unlink(target);}
+    completedTargets++;
+   }
+   stage='cleanup-directories';
+   for(const d of record.directories.filter(d=>d.created).sort((a,b)=>b.path.length-a.path.length)){
+    target=d.path;await assertDirectory(d.path,d.afterIdentity);
+    await fs.rmdir(d.path).catch(e=>{if(!['ENOTEMPTY','ENOENT'].includes(e.code))throw e;});
+   }
+   stage='manifest';target=manifest;record.status='rolled-back';await writeJson(manifest,record);
+   return{status:'rolled-back',restoredFiles:record.changes.length,backupPreserved:backupDir,rollbackManifest:path.resolve(manifest),retirementRoot:record.retirementRoot};
+  }catch(e){throw Object.assign(new Error(`${e.message}. Rollback ${stage} failed at ${target??'preflight'}; ${completedTargets}/${record.changes.length} target operations returned successfully. Inspect manifest ${manifest} and backup directory ${backupDir}. Changes may be partial; do not automatically retry.`,{cause:e}),{recovery:{operation:'rollback',stage,failedTarget:target,completedTargets,totalTargets:record.changes.length,manifest,backupDirectory:backupDir,retirementRoot:record.retirementRoot}});}
+ });
+}
+
+async function rollbackSafety3Install(manifest){
+ const record=await json(manifest);if(record.safetyVersion!==3||Object.hasOwn(record,'agentCompat')||record.migration?.sources)throw new Error('Invalid original safety3 format binding.');
+ const profile=hostProfile(record.host),home=record.hostHome,root=record.skillRoot,backupDir=path.dirname(path.resolve(manifest));
+ if(record.schemaVersion!==1||record.status!=='installed'||record.product!=='agent-task-harness'||record.bindingDigest!==manifestBinding(record)||record.instructionFile!==profile.instructionFile||(record.host==='codex'?record.codexHome!==home:Object.hasOwn(record,'codexHome'))||!Array.isArray(record.changes)||!record.changes.every(c=>'afterIdentity'in c&&'beforeIdentity'in c))throw new Error('Only a completed safety-bound installation can be rolled back; host/profile/home binding changed.');
+ if(![home,root,record.targetSkill,record.legacyCompat].every(x=>typeof x==='string'&&path.isAbsolute(x))||record.targetSkill!==path.join(root,'agent-task-harness')||record.legacyCompat!==path.join(root,legacyName)||!inside(path.join(home,'harness-install-backups'),backupDir))throw new Error('Invalid declared installation roots or backup manifest.');
  if(!['none','legacy-full-to-compatibility'].includes(record.migration?.mode))throw new Error('Invalid migration binding.');
  const retirementParent=path.join(path.dirname(root),'.agent-task-harness-rollback');
  if(record.migration.mode==='none'?record.retirementRoot!==null:typeof record.retirementRoot!=='string'||path.dirname(record.retirementRoot)!==retirementParent||path.basename(record.retirementRoot)!==path.basename(backupDir)||inside(root,record.retirementRoot))throw new Error('Invalid identity-preserving rollback storage binding.');

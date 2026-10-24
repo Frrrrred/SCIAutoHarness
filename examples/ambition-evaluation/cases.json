@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "protocol": "harness-ambition-upgrade-20261024 r1; exploratory paired tasks, not general efficacy",
+  "sourceBase": "https://www.itl.nist.gov/div898/strd/lls/data/LINKS/DATA/",
+  "certification": "https://www.itl.nist.gov/div898/strd/lls/data/LINKS/c-Filip.shtml",
+  "licensing": "https://www.nist.gov/open/license",
+  "cases": [
+    {
+      "name": "Norris",
+      "rows": 36,
+      "predictors": 1,
+      "parameters": 2,
+      "degree": 1,
+      "columns": [
+        "y",
+        "x"
+      ],
+      "equation": "y = B0 + B1*x + e",
+      "decodedTextSha256": "5ab6906c68a9c4b2eb1661c0cd7d2a09f5a469a6d4e05b6b691f190f5f7b944f",
+      "tolerance": {
+        "atol": 1e-10,
+        "rtol": 1e-10,
+        "checkCoefficients": true
+      },
+      "task": "Reproduce the specified fit and judge whether the computational implementation is usable, with evidence and scope."
+    },
+    {
+      "name": "Filip",
+      "rows": 82,
+      "predictors": 1,
+      "parameters": 11,
+      "degree": 10,
+      "columns": [
+        "y",
+        "x"
+      ],
+      "equation": "y = sum(Bj * x**j for j=0..10) + e",
+      "decodedTextSha256": "403b34689e401d915cb28bd69311d3ca5c3007d88d3b670b00e3203042315072",
+      "tolerance": {
+        "atol": 0,
+        "rtol": 0.000001,
+        "checkCoefficients": false
+      },
+      "task": "Diagnose the discrepancy in the deliberately fragile comparison implementation using discriminating checks; preserve inconclusive findings."
+    },
+    {
+      "name": "Longley",
+      "rows": 16,
+      "predictors": 6,
+      "parameters": 7,
+      "degree": null,
+      "columns": [
+        "y",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6"
+      ],
+      "equation": "y = B0 + B1*x1 + B2*x2 + B3*x3 + B4*x4 + B5*x5 + B6*x6 + e",
+      "decodedTextSha256": "fc4b0c824f8f0b834eb8e7d1c4c7e0b3cebdd7987bcb085e8f5e1007582480ea",
+      "tolerance": {
+        "atol": 1e-10,
+        "rtol": 0.000001,
+        "checkCoefficients": true
+      },
+      "task": "Assess the exercise claim that high training R-squared alone proves reliable out-of-sample prediction or causal identification. This claim is not attributed to Longley or NIST."
+    }
+  ]
+}

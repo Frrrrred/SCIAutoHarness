@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import{createHash}from'node:crypto';
 import{spawnSync}from'node:child_process';
 import{pathToFileURL}from'node:url';
+import inventories from '../lib/installation-inventories.json' with {type:'json'};
 import{legacyInventories,compatibilityFiles}from'../lib/identity.mjs';
 import{previewInstall,applyInstall,rollbackInstall}from'../lib/install.mjs';
 import*as candidate from'../lib/engine.mjs';
@@ -23,6 +24,13 @@ export async function runRenameTests({test,source,root,patchMethod,fixturePrepar
    const file=path.join(dir,relative);await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,r.stdout);
   }sources.push(dir);
  }
+ const genuine3=path.join(work,'frozen-safety3','skills','agent-task-harness');
+ for(const [relative,expected]of Object.entries(inventories.agentFull[0])){
+  const r=spawnSync('git',['-C',repo,'show',inventories.officialCommit+':skills/agent-task-harness/'+relative],{shell:false,windowsHide:true,maxBuffer:8*1024*1024});
+  assert.equal(r.status,0,String(r.stderr));assert.equal(hash(r.stdout),expected);
+  const file=path.join(genuine3,relative);await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,r.stdout);
+ }
+ const original3=await import(pathToFileURL(path.join(genuine3,'scripts/lib/install.mjs')));
  const baseline=sources[0],engine=await import(pathToFileURL(path.join(baseline,'scripts/lib/engine.mjs')));
 async function inventory(root){
   const files={};
@@ -141,7 +149,7 @@ for(const entry of ['canonical','legacy'])for(const host of ['claude-code','deep
 for(const entry of ['canonical','legacy'])await test('rename-old-extension-'+entry,'Arbitrary template3 execution JSON is preserved and keeps original Codex semantics',async()=>continueOld(await oldFixture(3,true,'approved',{entry,extension:true})));
 for(const entry of ['canonical','legacy'])for(const kind of ['help','unknown','path-failure'])await test(`rename-entry-${entry}-${kind}`,'Compatibility entry actually runs the canonical interface and retains failure exits',async()=>{
  if(kind==='path-failure'){const r=spawnSync(process.execPath,[path.join(path.dirname(entryPaths[entry]),'check-harness-paths.mjs'),'--project',work,'--package',path.join(work,'missing-package')],{encoding:'utf8',shell:false,windowsHide:true});assert.equal(r.status,1);assert.equal(JSON.parse(r.stdout).ok,false);return{code:r.status};}
- const r=call(entry,kind==='help'?['help']:['context','--unknown','invalid']);assert.equal(r.status,kind==='help'?0:1);if(kind==='help')assert.match(r.stdout,/agent-task-harness \(local Node.js/);else assert.match(r.stderr,/Unknown|unknown/);return{code:r.status,nonempty:true};
+ const r=call(entry,kind==='help'?['help']:['context','--unknown','invalid']);assert.equal(r.status,kind==='help'?0:1);if(kind==='help')assert.match(r.stdout,/SCIAutoHarness \(local Node.js/);else assert.match(r.stderr,/Unknown|unknown/);return{code:r.status,nonempty:true};
 });
 const golden=await readJson(path.join(source,'scripts/tests/template-v4-golden.json'));
 for(const example of golden.cases)await test('rename-frozen-'+example.id,'Renaming preserves independently captured template4 rendered bytes',async()=>{const{renderContract}=await import('../lib/contract.mjs');assert.equal(renderContract(example.contract),example.master);return{oracleCommit:golden.provenance.sourceCommit};});
@@ -169,7 +177,7 @@ for(const safety of [1,2])for(const host of safety===1?['codex']:['codex','claud
 for(const host of ['codex','claude-code','deepseek-harness'])await test('rename-migration-lifecycle-'+host,'Full old installation migrates to one engine, preserves original objects and can restore the genuine old scene before old rollback',async()=>{
  const f=await oldInstall('migration-'+host,{host}),before=await inventory(f.old),license=path.join(f.old,'SKILL.md');const ads='SYNTHETIC original NTFS stream';let acl;
  if(process.platform==='win32'){await fs.writeFile(license+':rename-synthetic',ads);const r=spawnSync('pwsh',['-NoProfile','-Command',`(Get-Acl -LiteralPath '${license.replaceAll("'","''")}').Sddl`],{encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);acl=r.stdout.trim();}
- const p=await previewInstall(f.options);assert.equal(p.safetyVersion,3);assert.equal(p.migration.mode,'legacy-full-to-compatibility');const relocation=p.changes.find(c=>c.target===license);assert.equal(relocation.retire,true);const done=await applyInstall(p);const relocated=(await readJson(done.rollbackManifest)).changes.find(c=>c.target===license);assert.ok(relocated.backup);if(acl){assert.equal(await fs.readFile(relocated.backup+':rename-synthetic','utf8'),ads);const r=spawnSync('pwsh',['-NoProfile','-Command',`(Get-Acl -LiteralPath '${relocated.backup.replaceAll("'","''")}').Sddl`],{encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),acl);}assert.equal((await previewInstall(f.options)).changes.length,0);
+ const p=await previewInstall(f.options);assert.equal(p.safetyVersion,4);assert.equal(p.migration.mode,'legacy-full-to-compatibility');const relocation=p.changes.find(c=>c.target===license);assert.equal(relocation.retire,true);const done=await applyInstall(p);const relocated=(await readJson(done.rollbackManifest)).changes.find(c=>c.target===license);assert.ok(relocated.backup);if(acl){assert.equal(await fs.readFile(relocated.backup+':rename-synthetic','utf8'),ads);const r=spawnSync('pwsh',['-NoProfile','-Command',`(Get-Acl -LiteralPath '${relocated.backup.replaceAll("'","''")}').Sddl`],{encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),acl);}assert.equal((await previewInstall(f.options)).changes.length,0);
  assert.deepEqual(Object.keys(await inventory(f.old)).sort(),Object.keys(compatibilityFiles()).sort());await assert.rejects(rollbackInstall(f.done.rollbackManifest),/identity|changed/);
  await rollbackInstall(done.rollbackManifest);assert.deepEqual(await inventory(f.old),before);if(acl){assert.equal(await fs.readFile(license+':rename-synthetic','utf8'),ads);const r=spawnSync('pwsh',['-NoProfile','-Command',`(Get-Acl -LiteralPath '${license.replaceAll("'","''")}').Sddl`],{encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),acl);}
  await rollbackInstall(f.done.rollbackManifest);assert.deepEqual(await fs.readFile(f.file),f.bytes);return{host,identityExact:true,metadataChecked:!!acl,oldRollbackUsableAgain:true};
@@ -181,8 +189,8 @@ for(const kind of ['custom','duplicate','mixed','malformed','unknown-file','no-m
 for(const kind of ['parent-mkdir','vault-mkdir','vault-realpath','rename-exdev','journal-after-rename','alias-write'])await test('rename-migration-fault-'+kind,'Migration failures retain actual stage, target and identity-preserving originals without destructive fallback',async()=>{
  const f=await oldInstall('fault-'+kind),p=await previewInstall(f.options);let hit=false,moved=false;
  const method=kind.includes('mkdir')?'mkdir':kind==='vault-realpath'?'realpath':kind==='journal-after-rename'?'writeFile':kind==='alias-write'?'open':'rename';
- const oldRename=fs.rename;await patchMethod(fs,'rename',old=>async function(a,b,...args){const v=await old.call(this,a,b,...args);if(String(b).includes('.agent-task-harness-rollback'))moved=true;return v;},()=>patchMethod(fs,method,old=>async function(file,...a){
-  const text=String(file),matches=kind==='parent-mkdir'?text.endsWith('.agent-task-harness-rollback'):kind==='vault-mkdir'?path.basename(path.dirname(text))==='.agent-task-harness-rollback':kind==='vault-realpath'?text.endsWith('.agent-task-harness-rollback'):kind==='rename-exdev'?String(a[0]).includes('.agent-task-harness-rollback'):kind==='journal-after-rename'?moved&&text.includes('rollback.json.'):kind==='alias-write'?moved&&text===path.join(f.old,'SKILL.md'):false;
+ const oldRename=fs.rename;await patchMethod(fs,'rename',old=>async function(a,b,...args){const v=await old.call(this,a,b,...args);if(String(b).includes('.sciautoharness-rollback'))moved=true;return v;},()=>patchMethod(fs,method,old=>async function(file,...a){
+  const text=String(file),matches=kind==='parent-mkdir'?text.endsWith('.sciautoharness-rollback'):kind==='vault-mkdir'?path.basename(path.dirname(text))==='.sciautoharness-rollback':kind==='vault-realpath'?text.endsWith('.sciautoharness-rollback'):kind==='rename-exdev'?String(a[0]).includes('.sciautoharness-rollback'):kind==='journal-after-rename'?moved&&text.includes('rollback.json.'):kind==='alias-write'?moved&&text===path.join(f.old,'SKILL.md'):false;
   if(matches&&!hit){hit=true;throw Object.assign(new Error('SYNTHETIC migration '+kind),{code:kind==='rename-exdev'?'EXDEV':'EACCES'});}return old.call(this,file,...a);
  },async()=>{await assert.rejects(applyInstall(p),e=>{assert.ok(e.recovery);assert.ok(e.recovery.failedTarget);assert.match(e.message,new RegExp('SYNTHETIC migration '+kind));return true;});}));assert.equal(hit,true);assert.equal(fs.rename,oldRename);
  const manifests=(await fs.readdir(path.join(f.home,'harness-install-backups'))).filter(x=>x!==path.basename(path.dirname(f.done.rollbackManifest)));
@@ -219,7 +227,7 @@ for(const form of ['bare','equals-true','equals-false'])await test('rename-migra
  const f=await oldInstall('flag-'+form),flag=form==='bare'?'--migrate-legacy':'--migrate-legacy='+form.slice(7),r=call('canonical',['install-preview','--host','codex','--host-home',f.home,'--skill-root',f.skillRoot,'--replace-skill',flag]);assert.equal(r.status,form==='equals-false'?1:0,r.stderr);if(r.status===0)assert.equal(JSON.parse(r.stdout).migrateLegacy,true);else assert.match(r.stderr,/migrate|legacy/);return{form,code:r.status};
 });
 for(const field of ['product','targetSkill','legacyCompat','retirementRoot','hostHome','instructionFile','role','kind','downgrade2'])await test('rename-safety3-binding-'+field,'Resealed malformed records cannot broaden fixed migration roles or downgrade original identities',async()=>{
- const f=await oldInstall('binding-'+field),done=await applyInstall(await previewInstall(f.options)),record=await readJson(done.rollbackManifest);
+ const f=await oldInstall('binding-'+field),done=await original3.applyInstall(await original3.previewInstall(f.options)),record=await readJson(done.rollbackManifest);assert.equal(record.safetyVersion,3);
  if(field==='role')record.changes.find(c=>c.retire).role='canonical';else if(field==='kind'){const c=record.changes.find(c=>c.kind==='retire-legacy');c.retire=false;}else if(field==='downgrade2')record.safetyVersion=2;else record[field]=field==='retirementRoot'?path.join(f.skillRoot,'unsafe-vault'):field==='product'?'wrong-product':field==='instructionFile'?'WRONG.md':path.join(f.dir,'wrong-root');
  const{bindingDigest,status,...bound}=record;record.bindingDigest=hash(JSON.stringify(bound));const forged=path.join(path.dirname(done.rollbackManifest),'forged.json');await writeJson(forged,record);const before=await inventory(f.dir);await assert.rejects(rollbackInstall(forged));assert.deepEqual(await inventory(f.dir),before);await rollbackInstall(done.rollbackManifest);return{field,noMutation:true};
 });
@@ -242,7 +250,7 @@ await test('rename-relocated-identity-drift','Same bytes in a replacement archiv
 await test('rename-reviewed-custom-rule','Only an explicitly reviewed exact custom-block patch can migrate custom policy while preserving every outside byte and original object',async()=>{
  const f=await oldInstall('custom-reviewed'),text=await fs.readFile(f.file,'utf8'),start=text.indexOf('<!-- codex-task-harness:start -->'),end=text.indexOf('<!-- codex-task-harness:end -->')+'<!-- codex-task-harness:end -->'.length;
  const before=text.slice(start,end).replace('## Complex task harness','## SYNTHETIC custom policy'),prefix=text.slice(0,start),suffix=text.slice(end)+'\r\nSYNTHETIC suffix without final LF';await fs.writeFile(f.file,prefix+before+suffix);const original=await fs.readFile(f.file),identity=(await fs.stat(f.file,{bigint:true})).ino;
- await assert.rejects(previewInstall(f.options),/managed rule differs/);const after=before.replaceAll('codex-task-harness','agent-task-harness');const p=await previewInstall({...f.options,reviewedRule:{before,after}}),done=await applyInstall(p);
+ await assert.rejects(previewInstall(f.options),/managed rule differs/);const after=before.replaceAll('codex-task-harness','sciautoharness');const p=await previewInstall({...f.options,reviewedRule:{before,after}}),done=await applyInstall(p);
  assert.deepEqual(await fs.readFile(f.file),Buffer.from(prefix+after+suffix));assert.equal((await fs.stat(f.file,{bigint:true})).ino,identity);await rollbackInstall(done.rollbackManifest);assert.deepEqual(await fs.readFile(f.file),original);assert.equal((await fs.stat(f.file,{bigint:true})).ino,identity);return{explicitReviewRequired:true,outsideByteExact:true,identityExact:true};
 });
 
@@ -251,12 +259,12 @@ for(const spelling of ['missing-space','unknown-end'])await test('rename-malform
  const f=await oldInstall('near-marker-'+spelling);await fs.appendFile(f.file,spelling==='missing-space'?'\n<!--agent-task-harness:start-->':'\n<!-- agent-task-harness:finish -->');const before=await inventory(f.dir);await assert.rejects(previewInstall(f.options),/Malformed.*markers/);assert.deepEqual(await inventory(f.dir),before);return{spelling,noWrites:true};
 });
 for(const kind of ['missing','old','duplicate'])await test('rename-reviewed-rule-marker-'+kind,'Explicit custom review still binds exactly one canonical managed block before writes',async()=>{
- const f=await oldInstall('reviewed-marker-'+kind),text=await fs.readFile(f.file,'utf8'),a=text.indexOf('<!-- codex-task-harness:start -->'),b=text.indexOf('<!-- codex-task-harness:end -->')+'<!-- codex-task-harness:end -->'.length,before=text.slice(a,b),canonical=before.replaceAll('codex-task-harness','agent-task-harness'),after=kind==='missing'?'SYNTHETIC missing managed markers':kind==='old'?before:canonical+canonical,snapshot=await inventory(f.dir);await assert.rejects(previewInstall({...f.options,reviewedRule:{before,after}}),/canonical block/);assert.deepEqual(await inventory(f.dir),snapshot);return{kind,noWrites:true};
+ const f=await oldInstall('reviewed-marker-'+kind),text=await fs.readFile(f.file,'utf8'),a=text.indexOf('<!-- codex-task-harness:start -->'),b=text.indexOf('<!-- codex-task-harness:end -->')+'<!-- codex-task-harness:end -->'.length,before=text.slice(a,b),canonical=before.replaceAll('codex-task-harness','sciautoharness'),after=kind==='missing'?'SYNTHETIC missing managed markers':kind==='old'?before:canonical+canonical,snapshot=await inventory(f.dir);await assert.rejects(previewInstall({...f.options,reviewedRule:{before,after}}),/canonical block/);assert.deepEqual(await inventory(f.dir),snapshot);return{kind,noWrites:true};
 });
 
 
 for(const kind of ['default','custom','absent'])await test('rename-reviewed-before-binding-'+kind,'An exact reviewed patch cannot use a mismatching or nonexistent original block',async()=>{
- const f=await oldInstall('before-binding-'+kind),text=await fs.readFile(f.file,'utf8'),a=text.indexOf('<!-- codex-task-harness:start -->'),b=text.indexOf('<!-- codex-task-harness:end -->')+'<!-- codex-task-harness:end -->'.length,old=text.slice(a,b),canonical=old.replaceAll('codex-task-harness','agent-task-harness');if(kind==='custom')await fs.writeFile(f.file,text.replace('## Complex task harness','## SYNTHETIC custom'));if(kind==='absent')await fs.writeFile(f.file,'SYNTHETIC user policy without managed block');const before=await inventory(f.dir);await assert.rejects(previewInstall({...f.options,reviewedRule:{before:'SYNTHETIC wrong before block',after:canonical}}),/differs|absent|exact review/);assert.deepEqual(await inventory(f.dir),before);return{kind,noMutation:true};
+ const f=await oldInstall('before-binding-'+kind),text=await fs.readFile(f.file,'utf8'),a=text.indexOf('<!-- codex-task-harness:start -->'),b=text.indexOf('<!-- codex-task-harness:end -->')+'<!-- codex-task-harness:end -->'.length,old=text.slice(a,b),canonical=old.replaceAll('codex-task-harness','sciautoharness');if(kind==='custom')await fs.writeFile(f.file,text.replace('## Complex task harness','## SYNTHETIC custom'));if(kind==='absent')await fs.writeFile(f.file,'SYNTHETIC user policy without managed block');const before=await inventory(f.dir);await assert.rejects(previewInstall({...f.options,reviewedRule:{before:'SYNTHETIC wrong before block',after:canonical}}),/differs|absent|exact review/);assert.deepEqual(await inventory(f.dir),before);return{kind,noMutation:true};
 });
 
 await writeJson(path.join(work,'commands.json'),commands);

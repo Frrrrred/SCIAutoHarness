@@ -1,16 +1,17 @@
 {
-  "name": "agent-task-harness",
+  "name": "sciautoharness",
   "private": true,
-  "description": "Shared task planning, execution records and evidence acceptance for Codex, Claude Code and official DeepSeek Harness; based on learn-claude-code Harness engineering principles.",
+  "description": "Scientific task planning, human review, traceable execution and original-run recovery for agent hosts.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Frrrrred/agent-task-harness.git"
+    "url": "https://github.com/Frrrrred/SCIAutoHarness.git"
   },
   "scripts": {
-    "check:skill": "node skills/agent-task-harness/scripts/check-skill.mjs",
-    "help": "node skills/agent-task-harness/scripts/harness.mjs help",
-    "help:submit": "node skills/agent-task-harness/scripts/harness.mjs help submit",
-    "test": "node skills/agent-task-harness/scripts/tests/harness-regression.mjs"
+    "check:skill": "node skills/sciautoharness/scripts/check-skill.mjs",
+    "help": "node skills/sciautoharness/scripts/harness.mjs help",
+    "help:submit": "node skills/sciautoharness/scripts/harness.mjs help submit",
+    "test": "node skills/sciautoharness/scripts/tests/harness-regression.mjs",
+    "test:migration": "node skills/sciautoharness/scripts/tests/sciautoharness-migration-regression.mjs"
   }
 }

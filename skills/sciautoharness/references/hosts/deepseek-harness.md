@@ -6,13 +6,13 @@ Read only for official [deepseek-ai/deepseek-harness](https://github.com/deepsee
 
 The adapter targets [687f282e8625c6b8d11ff58211a90524be2e4317](https://github.com/deepseek-ai/deepseek-harness/tree/687f282e8625c6b8d11ff58211a90524be2e4317), `@deepseek-ai/dsh` `0.2.1-rc.2`. It is developer preview, not a guarantee for every version.
 
-DSH was not installed for validation and no live model was called. Source/strict fixtures do not establish live discovery, provider auth, composed services or model behavior. Consult repository validation for actual evidence.
+Confirm discovery, provider authentication and available services in the selected host before using this adapter. A source-level interface description does not establish that the host is configured for model execution.
 
 ## Native skill
 
 The filesystem provider discovers project .dsh/skills and .agents/skills and documented user/explicit roots. Global instructions include selected DSH-home and shared agents-home AGENTS files. Providers can be disabled by the profile operator; copying a file does not prove loading.
 
-When filesystem skills and the dsh-tool-skill consumer are enabled, a discovered user-invocable skill supports `/agent-task-harness` in direct user text. This whitespace-delimited skill gesture is separate from the command registry. Otherwise name the skill and require confirmation that the actual instructions were discovered/loaded. See the [official consumer](https://github.com/deepseek-ai/deepseek-harness/blob/687f282e8625c6b8d11ff58211a90524be2e4317/packages/skill/tool-skill/src/index.ts).
+When filesystem skills and the dsh-tool-skill consumer are enabled, a discovered user-invocable skill supports `/sciautoharness` in direct user text. This whitespace-delimited skill gesture is separate from the command registry. Otherwise name the skill and require confirmation that the actual instructions were discovered/loaded. See the [official consumer](https://github.com/deepseek-ai/deepseek-harness/blob/687f282e8625c6b8d11ff58211a90524be2e4317/packages/skill/tool-skill/src/index.ts).
 
 Use only actually mounted file/terminal/delegation tools. Do not assume Codex or Claude APIs. Follow context-first, begin only with reviewed deepseek-harness policy, perform real work and submit original runId with deepseek-harness-native. The shared Skill does not install extra host plugins or hooks.
 

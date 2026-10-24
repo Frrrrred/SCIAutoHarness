@@ -50,6 +50,25 @@ jobs:
             node --check $module.FullName
             if ($LASTEXITCODE -ne 0) { throw ('Syntax failure: ' + $module.FullName) }
           }
+      - name: Verify synthetic record and invocation contracts
+        run: |
+          $pythonRoot = Join-Path $env:RUNNER_TEMP ('sciautoharness-python-' + [guid]::NewGuid())
+          if (Test-Path -LiteralPath $pythonRoot) { throw 'Refusing to reuse Python fixture root' }
+          New-Item -ItemType Directory -Path $pythonRoot -ErrorAction Stop | Out-Null
+          $env:EVIDENCE_TEST_ROOT = $pythonRoot
+          $program = @'
+          import sys
+          import unittest
+          suite = unittest.defaultTestLoader.discover('examples/ambition-evaluation/tests', pattern='test_*.py')
+          if suite.countTestCases() != 45:
+              raise RuntimeError('Unexpected Python case inventory')
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          if result.testsRun != 45 or result.skipped:
+              raise RuntimeError('Incomplete Python verification')
+          sys.exit(0 if result.wasSuccessful() else 1)
+          '@
+          $program | python -
+          if ($LASTEXITCODE -ne 0) { throw 'Synthetic Python verification failed' }
       - name: Run and verify all 719 main regression cases
         run: |
           $workRoot = Join-Path $env:RUNNER_TEMP ('sciautoharness-tests-' + [guid]::NewGuid())

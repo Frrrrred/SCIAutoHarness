@@ -210,8 +210,13 @@ def _audit_record(directory):
     value=json.loads((directory/'dispatch.json').read_text(encoding='utf-8'))
     result=validate_dispatch(value)
     errors=list(result['errors'])
-    if digest((directory/'message.txt').read_bytes())!=value.get('messageSha256'):errors.append('saved_message_drift')
-    if digest((directory/'native-arguments.json').read_bytes())!=value.get('nativeArgumentsSha256'):errors.append('saved_arguments_drift')
+    saved_message=(directory/'message.txt').read_bytes()
+    saved_arguments=(directory/'native-arguments.json').read_bytes()
+    if digest(saved_message)!=value.get('messageSha256'):errors.append('saved_message_drift')
+    if digest(saved_arguments)!=value.get('nativeArgumentsSha256'):errors.append('saved_arguments_drift')
+    if not isinstance(value.get('message'),str) or saved_message!=value['message'].encode('utf-8'):
+        errors.append('saved_message_payload')
+    if json.loads(saved_arguments)!=value.get('nativeArguments'):errors.append('saved_arguments_payload')
     es=events(directory)
     if [e.get('kind') for e in es]!=['dispatched','returned']:errors.append('actor_not_terminal')
     else:

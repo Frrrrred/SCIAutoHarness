@@ -163,6 +163,35 @@ class TrialProtocolTests(unittest.TestCase):
         (self.directory/'message.txt').write_text('different',encoding='utf-8')
         self.assertFalse(records.audit_record(self.directory)['passed'])
 
+    def test_rehashed_saved_message_must_match_dispatch(self):
+        self.complete()
+        saved=b'Different saved message with a matching stored hash.\n'
+        (self.directory/'message.txt').write_bytes(saved)
+        dispatch=json.loads((self.directory/'dispatch.json').read_text(encoding='utf-8'))
+        dispatch['messageSha256']=records.digest(saved)
+        (self.directory/'dispatch.json').write_bytes(records.json_bytes(dispatch))
+        es=records.events(self.directory)
+        es[-1]['details']['messageSha256']=dispatch['messageSha256']
+        (self.directory/'events.jsonl').write_bytes(''.join(json.dumps(e)+'\n' for e in es).encode('utf-8'))
+        self.assertTrue(records.validate_dispatch(dispatch)['passed'])
+        self.assertEqual(es[0]['details']['submittedArguments']['message'],dispatch['message'])
+        self.assertNotEqual(saved,dispatch['message'].encode('utf-8'))
+        self.assertFalse(records.audit_record(self.directory)['passed'])
+
+    def test_rehashed_saved_arguments_must_match_dispatch(self):
+        self.complete()
+        dispatch=json.loads((self.directory/'dispatch.json').read_text(encoding='utf-8'))
+        arguments=copy.deepcopy(dispatch['nativeArguments'])
+        arguments['task_name']='different_saved_actor'
+        saved=records.json_bytes(arguments)
+        (self.directory/'native-arguments.json').write_bytes(saved)
+        dispatch['nativeArgumentsSha256']=records.digest(saved)
+        (self.directory/'dispatch.json').write_bytes(records.json_bytes(dispatch))
+        self.assertTrue(records.validate_dispatch(dispatch)['passed'])
+        self.assertEqual(records.events(self.directory)[0]['details']['submittedArguments'],dispatch['nativeArguments'])
+        self.assertNotEqual(arguments,dispatch['nativeArguments'])
+        self.assertFalse(records.audit_record(self.directory)['passed'])
+
     def test_metric_record_drift_rejected(self):
         self.complete()
         (self.directory/'metrics.json').write_text('{}',encoding='utf-8')

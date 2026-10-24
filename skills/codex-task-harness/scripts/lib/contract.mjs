@@ -3,6 +3,7 @@ import path from 'node:path';
 import { contained, digest, safeId } from './files.mjs';
 import { validateLayered,renderLayered,layeredReviewFiles } from './context.mjs';
 import { CURRENT_TEMPLATE_VERSION, EXECUTION_SUMMARY, templateVersion } from './templates.mjs';
+import {draftPolicy,executionPolicy} from './hosts.mjs';
 
 export function classify({ intent = 'implement', stages = 1, deliverables = 1, research = false, readOnly = false } = {}) {
   const inspectOnly = readOnly || ['explain', 'review', 'diagnose', 'compare', 'plan'].includes(intent);
@@ -13,6 +14,7 @@ export function skeleton(taskId, goal, domain = 'general') {
   if (!['software','research','general'].includes(domain)) throw new Error('Domain must be software, research or general.');
   return {
     schemaVersion: 1, templateVersion: CURRENT_TEMPLATE_VERSION, taskId, revision: 1, domain, goal,
+    execution: draftPolicy(),
     nonGoals: [], inputs: [], deliverables: [], skills: [], assumptions: [], risks: [], stops: [],
     permissions: { localWrites: true, network: false, install: false, externalWrites: false, longGpu: false },
     resources: { budget: 'not specified; ask before incurring new cost', stopConditions: [] },
@@ -21,7 +23,7 @@ export function skeleton(taskId, goal, domain = 'general') {
   };
 }
 const requiredText = (value, label) => {
-  if (typeof value !== 'string' || !value.trim() || /^(TODO|TBD|UNKNOWN|AUTHOR_INPUT_NEEDED|待填写|待确认)$/i.test(value.trim())) throw new Error(`BLOCKED: ${label} is missing or unresolved.`);
+  if (typeof value !== 'string' || !value.trim() || /^(TODO|TBD|UNKNOWN|AUTHOR_INPUT_NEEDED|\u5f85\u586b\u5199|\u5f85\u786e\u8ba4)$/i.test(value.trim())) throw new Error(`BLOCKED: ${label} is missing or unresolved.`);
 };
 // IDs name artifacts; ownership must also be unique for the actual file target.
 const pathKey = file => {
@@ -54,6 +56,7 @@ async function outputIdentity(file) {
 export function validateContract(c) {
   if (c.schemaVersion !== 1) throw new Error('Unsupported contract schema.');
   templateVersion(c);
+  executionPolicy(c);
   safeId(c.taskId);
   if (!Number.isInteger(c.revision) || c.revision < 1) throw new Error('revision must be a positive integer.');
   if (!['software','research','general'].includes(c.domain)) throw new Error('Invalid domain.');
@@ -117,7 +120,7 @@ export function validateContract(c) {
   if (c.domain === 'research') {
     for (const key of ['question','estimand','dataProvenance','independentUnit','replication','controlsConfounding','primaryExploratory','analysis','leakage','uncertainty','provenanceToClaims','negativeResults']) {
       requiredText(c.protocol?.[key],`protocol.${key}`);
-      if(c.layout==='layered'&&/^(?:N\/A|not applicable|不适用|无)$/i.test(c.protocol[key].trim()))throw new Error(`BLOCKED: protocol.${key} needs a reason and suitable evidence when not applicable; see references/research.md.`);
+      if(c.layout==='layered'&&/^(?:N\/A|not applicable|\u4e0d\u9002\u7528|\u65e0)$/i.test(c.protocol[key].trim()))throw new Error(`BLOCKED: protocol.${key} needs a reason and suitable evidence when not applicable; see references/research.md.`);
     }
   }
   validateLayered(c);
@@ -141,6 +144,7 @@ async function protectedIdentities(dir) {
 }
 export function renderContract(c) {
   const version=templateVersion(c);
+  if(version===4&&c.layout!=='layered')return `# Task harness: ${c.taskId} · revision ${c.revision}\n\nGoal: ${c.goal}\n\nDomain: ${c.domain}. Status: review required before formal work.\n\n## User review\n\nReview the complete contract below, including all inputs, outputs, dependencies, permissions, host policy, methods, acceptance and recovery boundaries. Approval binds only the current complete task ID, revision and digest. Silence or agent self-assessment is not approval. Changes to reviewed files or bound inputs require a revised review. Runtime records do not authenticate an operator or provide an OS sandbox. The current host must honor actual user authorization.\n\n## Reviewed host policy\n\n${JSON.stringify(executionPolicy(c))}\n\nOnly a reviewed allowed host may begin new work. Preserve the original host, mode and executor when closing an active run, even after approval becomes stale. Hosts have different tools and permission controls; selection grants no extra rights.\n\n## Execution and evidence\n\nThe selected host performs actual work; this shared runtime records contracts, execution identity and evidence. Dependencies must be currently verified. ${EXECUTION_SUMMARY} All mandatory outputs and acceptance criteria must pass before verified. Preserve negative and inconclusive findings, original facts and recovery evidence.\n\n## Complete machine contract\n\n\`\`\`json\n${JSON.stringify(c,null,2)}\n\`\`\`\n`;
   const executionSummary=version===1?'Exit zero means pending acceptance.':EXECUTION_SUMMARY;
   const executionOwner=version===3?'Codex executes; the harness runtime records contracts and evidence.':'Codex executes; Ruflo records contracts and evidence.';
   if(c.layout==='layered')return renderLayered(c);

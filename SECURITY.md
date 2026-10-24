@@ -1,17 +1,17 @@
-# 安全问题与报告
+# Security and reporting
 
-本项目维护本地任务契约、证据和安装流程。它不会认证实际用户身份，也不提供 OS 沙箱、恶意并发改链的全面防护或外部执行权限。使用者仍需遵守宿主的文件、网络、模型与系统权限。
+This project manages local contracts, facts, evidence and installation. Records do not authenticate humans or provide an OS sandbox. Hosts retain their own filesystem/network/model/system permissions; the three profiles do not make enforcement equivalent. See [HOSTS](docs/HOSTS.md), [compatibility](docs/COMPATIBILITY.md) and [runtime](skills/codex-task-harness/references/runtime.md).
 
-详细边界见[兼容说明](docs/COMPATIBILITY.md)及技能的[运行与安装接口](skills/codex-task-harness/references/runtime.md)。
+## Execution and installation
 
-## 报告方式
+Runs use local executables, explicit argv, stdin and shell:false, retaining documented permissions. No bypass, downloader, provider/model selection or host fallback is added. A reviewed allowedHosts policy limits new adapter selection, not identity, credentials or access rights.
 
-普通故障通过 [Issues](https://github.com/Frrrrred/codex-task-harness/issues)报告。对于可能暴露凭据、绕过边界或损害数据的问题，请不要在公开 issue 中发布漏洞细节、利用步骤、真实路径或秘密。
+Previews/manifests bind profile, fixed instruction name, roots and identities. Locks/containment support the documented local workflow, not every adversarial concurrent link substitution. A binding checksum is an integrity check, not a signature or operator authentication. Review task content/logs before sharing.
 
-本项目目前没有单独声明的私密报告邮箱，也不假定 GitHub 私密漏洞报告功能已启用。可先在 issue 中仅请求与维护者建立安全联系方式，不附漏洞内容；随后按维护者实际提供的私密渠道发送细节。如果仓库 Security 页面实际提供私密报告入口，也可使用该入口。
+## Reporting
 
-维护者主页为 [Frrrrred](https://github.com/Frrrrred)。请勿将 token、个人 AGENTS、完整配置或真实任务日志直接贴到公开报告中。
+Ordinary defects use [Issues](https://github.com/Frrrrred/codex-task-harness/issues). Keep vulnerability details, exploit instructions, secrets and real paths out of public issues. No dedicated private contact is declared and private vulnerability reporting is not assumed enabled. Ask publicly only for a secure contact route, then use the private channel actually supplied; an available Security-page private reporting entry can also be used.
 
-## 复核需要的信息
+The maintainer profile is [Frrrrred](https://github.com/Frrrrred). Never post tokens, complete personal instructions/configurations or real logs. After a secure channel exists, supply affected entry, host/mode, reproduction conditions, impact, runtime/platform and minimal sanitized evidence.
 
-确认安全渠道后，提供受影响入口、可复现条件、实际影响、平台/Node 环境和最小脱敏证据。保留原始失败事实；不要为了复现而删除真实任务状态、自动清锁、改审批或在个人安装上进行破坏性测试。
+Preserve failures. Reproduce in synthetic fixtures instead of deleting real state, clearing activity, changing approvals or damaging a personal installation. Source/controlled processes do not establish live-host security or model behavior. [Validation](docs/VALIDATION.md) states actual evidence and limits.

@@ -1,69 +1,79 @@
 ---
 name: codex-task-harness
-description: "复杂任务先生成可按需加载的总控与主要阶段驾驭文件，交用户审查后按证据判断与全局优先级推进并验收；简单问答、单点诊断和低风险单点编辑直接处理。"
+description: "Prepare complete, reviewable plans for complex tasks, then load stages progressively, execute approved work, recover original runs, and verify evidence. Handle simple questions, isolated diagnostics, and single low-risk edits directly."
 license: MIT
 ---
 
 # codex-task-harness
 
-把完整目标转成可审查的总体计划、阶段约束和验收证据。Codex 负责实际工作，运行时只管理契约、状态与可追踪证据；不授权额外模型、安装、联网或后台服务。
+Turn the complete objective into a reviewable plan, stage constraints and acceptance evidence. The current host performs reasoning and actual work. The local runtime manages contracts, state, execution identity and traceable evidence; it grants no permission for extra models, installation, networking or background services.
 
-## 先判定完整任务
+## Classify the complete request first
 
-跨模块功能及联动测试、综合多个模块的架构/正确性/兼容/测试判断、实质科研、多阶段或多个关联产物，先建立 Harness。领域 TDD、审查或计算程序不替代用户事前审查。简单问题、窄诊断和单点低风险编辑直接处理。
+Use Harness for cross-module behavior with dependent tests, comprehensive multi-module reviews, substantive research, multiple stages or related deliverables. Domain testing, review or computing does not replace advance user review. Handle simple questions, narrow diagnostics and single low-risk edits directly.
 
-先区分新建和续接，不先找到项目 Harness 才读取本 skill：
+Distinguish a new task from continuation before searching for a project Harness:
 
-1. **新任务或没有关联 Harness**：按 authoring.md 读取必要输入、自行准备完整审查包。缺少正式工作批准不阻止已获授权的规划准备；没有文件授权的只读请求仍在会话中形成完整包。不要把“没有现成计划/批准”当成必须由别人先提供计划的阻塞。输入、权限确有缺口时报告具体缺口，不编造。
-2. **已有 Harness**：优先按下方续接路线，先总控/恢复说明，再 context；提示中提及的范围文件也在 context 后按需读取。当前批准缺失则完整审查，正式工作继续等待最终用户批准。
-3. **作为子代理执行**：先区分规划与已批准执行。同一有效用户批准内、职责和权限已明确的独立只读子任务，继承原任务 ID/修订、批准来源、当前阶段和验收，按 context 路线执行并正常回交真实证据，不另建审批身份。未批准新任务、规划或实质变更，才自行准备负责范围的完整待审包，由主代理转呈最终用户；不向主代理索取批准或等其代写。实体包回交保留当前 ID/修订/摘要、检查结果和总控、契约、全部阶段/适用协议/恢复导航；会话包回交完整会话版本。状态消息不能代替正常最终回交，规划不能以正式证明/结果替代包。细则见 context-hygiene.md。
+1. **New task or no associated Harness:** follow [authoring](references/authoring.md), read necessary authorized inputs and prepare the complete review package yourself. Missing formal approval does not block authorized planning. A read-only request without file authorization still receives a complete in-session package. Do not require another person to supply a plan before preparing it. State real input/permission gaps without inventing evidence.
+2. **Existing Harness:** master and recovery, then context. Named scope files and inputs are loaded after context when needed. Missing current approval requires complete review; formal work waits for the final human.
+3. **Delegated work:** independent read-only work within the same valid approval inherits original ID/revision, approval provenance, current phase, scope, rights, responsibility and acceptance. Follow the same route and return actual evidence without another approval identity. For unapproved new work or a material change, prepare a complete pending-review package for the parent to present to the final human. Do not ask the parent to write or approve it. Return current identity, checks and full navigation for file packages, or complete text for session packages. A status message or formal result cannot replace the pending plan. See [context and delegation](references/context-hygiene.md).
 
-复杂只读任务先作必要调查界定输入与方法，提交完整会话包，批准前不输出正式完整发现；没有文件授权仍保持只读。用户要求文件或已授权实施时，只写任务内必要 Harness。常设文件授权不等于批准尚未展示的方案。
+For a complex read-only request, perform necessary intake to define inputs/methods, then present the complete in-session package. Formal comprehensive findings wait for approval. Without file authorization remain read-only. Authorized implementation includes necessary task-local Harness files; standing file permission is not approval of an undisclosed plan.
 
-必要调查足以明确范围即转入审查，不用无限调查绕过关卡；输入/工具未知如实标为阻塞，不能补造。
+Move from necessary intake to review once scope/method are defined. Do not investigate indefinitely or fabricate unknown tools. Dependent definitions, assumptions, proofs, counterexamples and a manuscript constitute complex theoretical research; mathematical text does not bypass review. A short explanation or isolated proposition can proceed directly. Resolve project-relative paths against the explicit task directory, not host cwd; use that directory for tools.
 
-形式理论任务若包含相互依赖的定义/假设、多个证明、反例和文稿整理，按复杂科研处理；不能以“只是数学问答”为由跳过完整方案审查。单一简短解释或孤立命题问答仍直接处理。所有项目相对路径先按用户明确目录解析并作为工具工作目录，不在宿主 cwd 寻找已给出的项目。
+## Select the actual host
 
-## 分层生成，不在执行时加载全书
+Use this shared workflow with real host capabilities. For an existing layered task, complete master/recovery → context before additional guidance. For a new task, load the selected host reference when discovery, invocation, tools, installation or CLI behavior affects planning.
 
-为复杂实施任务先读 [编写与加载规则](references/authoring.md)。生成一份短 HARNESS.md 总控：用户目标、非目标、全程硬约束与权限、主要交付、阶段依赖、整体验收、读取路由和具体未知项。为各主要环节生成独立、有实质内容的阶段文件，涵盖输入/来源、方法、允许读写、产物、检查、失败反馈/停止和交接；共享协议按需拆分。
+- [Codex](references/hosts/codex.md): `codex`, its discovery, native tools, UI metadata and optional CLI.
+- [Claude Code](references/hosts/claude-code.md): `claude-code`, its actual invocation, instructions, tools and optional print-mode CLI.
+- [DeepSeek Harness](references/hosts/deepseek-harness.md): `deepseek-harness`, official providers, discovery and optional headless CLI.
 
-阶段根据真实任务决定，不固定目录数，不创建空壳凑文件。所有主要阶段规划和实质约束在正式工作前写出并纳入同一个审查版本；不能用“以后再规划”替代完整包。详细规范仅放一处，总控通过路径与读取条件导航。实体包链接按所在文档解析，展示前实际运行 authoring.md 的路径检查；复杂只读且无文件授权时，使用该参考的完整会话包路线及只读输入核验，不调用要求实体目录的检查器或虚构机器摘要。
+Load only the applicable host reference. Do not assume Codex tool names, invocation syntax, UI metadata or permission enforcement exist in other hosts. Use only actually available, authorized tools.
 
-软件/一般交付按需读 [领域路由](references/domains.md)；科研在规划、资料/参数处理、关键产物交接或相关诊断/恢复验收时，按需读 [研究类型与证据规则](references/research.md) 中适用的资料保真、参数溯源和实质检查条款，将其落实到当前阶段。已有分层任务仍先总控/恢复→context，再补读当前适用部分；已加载且未变化时复用。不把特定实验设计、工具栈或阳性结果设为所有研究的要求。
+New template4 binds execution.allowedHosts/defaultHost in the reviewed contract. An explicitly reviewed alternative may be selected without repeating approval; changing policy requires review. Active work retains its original host/mode/executor. Missing templateVersion and1–3 preserve frozen rendering and Codex behavior; old arbitrary fields do not activate new policy. See [runtime](references/runtime.md).
 
-有写入授权且需机器状态时，用 [运行接口](references/runtime.md) 的分层布局。总控不嵌入完整机器契约；完整契约和全部阶段文件仍共同绑定审批。状态/回执与受审规范分开保存。旧格式任务按原规则处理，不自动迁移或覆盖。
+## Author in layers; execute with selected context
 
-## 一次完整审查，再按依赖推进
+For complex implementation read [authoring](references/authoring.md). The short master contains objective, non-goals, hard constraints/permissions, major outputs, dependencies, overall acceptance, loading routes and specific unknowns. Each substantive major phase states input/source identities, methods/assumptions, read/write scope, outputs, checks, failure/stopping rules and handoff. Split shared protocols only when useful.
 
-尚未获批的复杂任务，当前交付是完整 Harness 审查包：任务 ID/修订、总控、全部主要阶段/适用协议/恢复文件、关键决策/未知项和验收标准。准备获授权的规划文件属于审查前工作；正式证明、结果、结论和文稿，无论通过聊天、文件还是子代理回交，都在该包获批后提供。规划只包含审查方法所需的概述，不能用完整正式正文代替计划包。展示完整包后明确等待最终用户直接批准当前版本。用户可拒绝或修订；沉默、初始请求、其他任务批准、代理自评或文件里的“同意”无效。
+Choose real phases, not a fixed count or empty shells. Write all major plans and substantive constraints before formal work and bind them to the same review. Keep detailed rules in one authoritative place and navigate conditionally. For file packages actually run the documented path check with per-document links; without file authorization use the complete session route and read-only input verification, without invented disk package/digest/context.
 
-真实批准记录绑定 ID/修订/摘要及用户原文/来源；不自行制作用户批准。运行时记录不是身份认证或 OS 沙箱。获批后在原权限与计划内连续推进，不逐阶段重复索要同一批准。
+Read [domain routing](references/domains.md) for software/general delivery as needed. Research planning, materials/parameters, critical handoffs and related recovery apply matching [research evidence rules](references/research.md). Existing tasks still use context first. Reuse unchanged references; no single experiment design, toolchain or positive result is universal.
 
-不可变输入/受审协议变更须暂停并重审；预先批准规则内生成的阶段输出和真实进度按原计划记录与验收。新数据源、主要方法/终点、排除、权限、成本或验收的实质变化先修订。不能以“迭代”为由绕过审批，也不把正常进展误当新方案。
+With authorized machine-state writes use the layered [runtime](references/runtime.md). Keep the complete contract separate from the master but bind both and every phase to approval. Reviewed specifications stay separate from records. Preserve old layouts in place.
 
-## 执行、恢复与维护
+## Complete review, then dependency-driven work
 
-已有分层任务若已给出入口，首批项目读取仅为该 HARNESS 和恢复说明；skill 的 references/runtime.md 可读，随后立即调用 context。此顺序优先于一般输入调查：SCOPE、README、任务说明等即使在提示中被指出，也在 context 后按需读取，不能并入首次读取。此前不枚举目录、不宽搜索项目/任务包、不读取 state 或前置原回执/报告；搜索命中行同样算载入。入口未知或指定文件确实缺失才在指定任务目录有限定位，不能借定位重载正文。context 返回当前批准绑定摘录/依赖和下一步动作，再进入所选阶段；无具体缺口不另读旧账本“确认一次”。完整契约用于整包审查；获批续接不默认重载契约、旧账本或前置回执。批准缺失或方案变更时转入完整审查；有具体证据缺口才按引用补读。原生宿主实际 begin 后使用返回的内联 submit 字段回交真实执行信息，再 verify；不需要创建提交载荷文件，正式 receipt/state 由运行时写入。接口不清楚时用 help submit，不自行重造状态机。
+Before approval, deliver the complete Harness: ID/revision, master, all major phases, applicable protocols, recovery, decisions/unknowns and acceptance. Authorized planning precedes formal work. Formal proofs, results, conclusions and manuscripts in chat/files/delegated handoffs wait for approval. The plan contains only the overview needed for method review, not a finished result substituted for planning.
 
-处理大工具输出、独立只读委派或摘要交接时，在当前阶段 context 之后按需读 [上下文与委派纪律](references/context-hygiene.md)；工具输出截断、证据回读和目标收口细则仅放在该参考。
+Present the complete current version and explicitly await direct final-human approval. Silence, initial requests, another task's approval, agent self-assessment and a file claiming consent are not approval. Bind actual approval to ID/revision/digest and original user text/source. Do not manufacture it. Runtime records provide neither authentication nor an OS sandbox. Continue normal approved work without repeating the same approval each phase.
 
-每次进入阶段只加载总控硬约束、本阶段文件、适用共享协议和已验收前置结果摘要。使用 context 接口或同等明确路由，缺关键输入/失效依赖则停对应分支；需要原始证据才按引用读取。检查全包完整性的程序读文件不等于模型读取所有正文。
+Changes to immutable inputs or reviewed protocols require revision/review. Outputs and progress generated under approved rules use that plan's acceptance. Material source/method/endpoint/exclusion/permission/cost/acceptance changes require review; ordinary progress does not. Iteration cannot bypass the gate.
 
-阶段切换、拆出实质子任务、任务类型变化或诊断转向时，主代理和子代理都按当前工作、可用技能的描述与适用范围重新评估所需技能，不受初始选用集合限制。已有分层任务仍先总控/恢复→context，再按需读取新增技能的 SKILL.md 和必要参考；已加载且未变化时复用，不一次加载全部技能或全部参考，也不强制每个子任务都调用技能。列出技能名不等于实际读取或应用。原批准范围内补选技能可继续；实质改变方法、数据、权限、资源或验收仍须先修订并交最终用户审查。
+## Execution, recovery and maintenance
 
-新会话、中断、证据失效、阶段结束或重复失败，按 [恢复与语义维护](references/recovery-maintenance.md) 核实当前批准、派生状态、真实执行和下一步。遗留 executing 不自动当失败/完成，不重复启动或自动清锁。进程控制/日志失败与真实终态分别判断；同 run 完整回执的重放与冲突处理按 runtime.md，不删证据或重启来绕过恢复。除摘要漂移外，还检查过时解释、文档冲突、图文/主张一致与失效引用，保留旧证据及负结果。
+For an existing supplied layered entry, first project reads are ONLY master/recovery; runtime.md may be read, then immediately derive context. This takes priority over intake: even named SCOPE/README/task descriptions wait until context. Before context do not enumerate/broad-search, load full state or predecessor receipts/reports; matches count as loading. Only an unknown or actually missing entry permits narrow filename lookup inside the explicit task directory.
 
-### 判断与全局推进
+Use current approval provenance, selected phase and dependency summaries. Do not reread old ledgers merely to confirm. The full contract belongs to complete review, not default continuation. Raw evidence needs a stated gap. Missing approval/material changes return to complete review.
 
-判断与推进服从上述完整用户审查关卡。尚未获最终用户批准当前完整包时，只用于已授权的范围界定、方法选择与规划准备；“有首选”“可逆”或“证据充分”不构成正式工作的额外许可。简单解释和孤立诊断可直接采用判断规则，不因此生成 Harness。
+Actually begin native work, perform it, then submit real facts using returned inline fields and original binding, and verify. Runtime alone owns formal receipt/state; normal native submission needs no payload JSON. Consult help submit rather than inventing state rules. After context, read [context discipline](references/context-hygiene.md) for large output, read-only delegation or summary handoff.
 
-每个实质工作块前，核对剩余必做项与关键依赖，按核心正确性/关键依赖、必要交付、可选改善排序；明确本块服务的必做项、所需证据和退出/转向条件。需要作判断或选择行动、阶段完成/解阻、重要新事实、连续尝试无新增证据、增加依赖/改路线/扩范围或明显资源之前、恢复/压缩后及最终交付前，按需读取 [判断与全局推进](references/execution-judgment.md)；已加载且未变化时复用。已有任务仍先总控/恢复→context，再读取当前适用内容，不把此参考变成 context 前的项目输入。
+Execute with only master hard constraints, current phase, applicable protocols and accepted dependency summaries. A program checking every file does not mean the model reloads every body. Reassess skills at phase transitions, substantive decomposition, task-type changes and diagnostic pivots. Select by current need and availability after context; reuse unchanged instructions, do not bulk-load or require one per subtask. Naming a skill is not invoking it. In-scope skill choice can proceed; material method/data/rights/resource/acceptance changes need renewed review.
 
-任务耗时、网络变慢、单次工具等待或命令超时不构成结束、降级或暂停任务的理由。按原句柄和真实状态接续；在既有授权内，以剩余必做项和整体验收推进。费用、算力配额/容量和操作权限仍受实际授权约束，不能把任务时长混入资源停止条件。
+On new session, interruption, stale evidence, phase end or repeated failure use [recovery](references/recovery-maintenance.md). An executing label is neither failure nor completion. Preserve original run and observe actual termination. Separate process-control/logging errors from terminal facts. Follow same-run replay/conflict rules; never delete evidence or restart to bypass recovery. Check obsolete explanations, conflicting documents, figures/text/claims and links as well as digests. Preserve old and negative evidence.
 
-主代理串行写入；只对获得授权的独立只读调查使用实际可用子代理。不要创建另一聊天、第二套编排、定时任务或后台服务。独立 CLI run 可能消耗额度，仅在实际授权时使用；不固定/改变持久模型，不自动下载工具、切换执行器或启用额外模型。
+## Judgment and overall progress
 
-验证与风险相称。反馈给出问题证据、下一检查/修复、复测范围/停止条件和相关规则。执行日志、非空字段、文件存在或退出 0 不等于语义/科学正确。科研保留负结果、反向和不确定结果，不能自动修为阳性；独立性声明不得超过实际达到的程度。
+Judgment remains subject to human review. Before approval use it only for authorized intake/method choice/planning; a preferred approach, reversibility or sufficient evidence grants no formal-work permission. Simple explanations/diagnostics may use judgment directly.
 
-整体及各阶段区分待做、执行中、待验收、已验证、失败/受阻/过期。取得真实验收后再推进依赖；失败定位后在授权内返工，不盲重试。最终对照全部目标报告改动、证据、兼容影响和未解决项；全部必做验收满足后才完成。
+Before substantial work check all remaining mandatory items and critical dependencies. Prioritize overall correctness and critical prerequisites, then required deliverables, then optional improvements. State the requirement served, necessary evidence and local exit/redirection condition. Read [judgment](references/execution-judgment.md) when choosing actions, completing stages, resolving blocks, learning important facts, repeating attempts without new evidence, increasing dependencies/resources, recovering or delivering. It remains post-context for existing tasks.
+
+Elapsed time, slow networks, tool waiting and a single timeout do not justify ending, downgrading or pausing executable approved work. Continue the original handle/state. Actual fees, compute capacity/quotas and permissions still constrain work; duration is not a resource stop.
+
+Primary agent writes serially. Parallelize only authorized independent read-only investigations using available native delegation. Do not create another user chat, orchestrator, scheduler or background service. Independent CLI run may consume model resources and needs applicable authorization. Do not change persistent models, download tools, fall back to executors or enable extra models.
+
+Scale verification to risk. Report failures with evidence, next discriminating check/repair, retest scope/stopping rules and relevant policy. Logs, filled fields, files and exit0 do not prove meaning/science. Preserve negative/opposite/inconclusive findings and accurately limit independence claims.
+
+Distinguish todo, executing, pending, verified, failed, blocked and stale. Advance dependencies only after real acceptance. Diagnose and rework within approval, rather than blindly retrying. Final delivery covers changes, evidence, compatibility and unresolved items against the whole objective. Complete means every mandatory criterion passed.

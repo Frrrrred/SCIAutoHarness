@@ -1,67 +1,61 @@
-# 判断与全局推进
+# Judgment and overall progress
 
-在需要判断、选择下一项行动，或入口列出的全局复核事件发生时读取；已加载且未变化时复用。本参考自足。
+Read when choosing actions, making judgments or responding to the overall-progress events in the entrypoint. Reuse unchanged guidance. This reference is self-contained.
 
-## 审查与授权优先
+## Review and authority first
 
-复杂任务仍须先完成并展示全部主要阶段的审查包，取得最终用户对当前版本的直接批准。批准前只推进已授权的必要调查和规划，不输出正式证明、结果或完整发现。首选明确、动作可逆或已有证据均不增加权限。已有批准内的正常推进不重复索要批准；实质改变范围、方法、输入、权限、成本或验收时，按 [主入口](../SKILL.md) 修订重审。
+For complex work prepare/present every major stage and obtain direct final-human approval of the complete current version. Before approval, only authorized intake/method choice/planning advances; formal proofs, results and comprehensive findings wait. A preference, reversibility or existing evidence grants no permission. Ordinary progress within unchanged approval needs no repeat approval; material changes follow the [entrypoint](../SKILL.md).
 
-只读解释、评估和诊断的交付可以是有证据的判断，不据此实施修改或运行。简单任务直接处理；复杂任务采用原 Harness，领域程序不能替代审查。
+An explanation, review or diagnosis may make an evidence-based judgment without implementing it. Simple work proceeds directly; a domain process does not replace complex-task review.
 
-## 按证据作明确判断
+## Evidence-based judgments
 
-先给当前范围内的判断或推荐，再给关键证据。证据强度限制主张范围，不代替行动选择。
-
-| 当前证据 | 判断与下一步 |
+| Evidence | Judgment and next action |
 | --- | --- |
-| 有直接、充分的证据 | 对已覆盖范围直接下结论并指向证据；不以无信息的“可能”“仍需综合研究”稀释已成立的结论。 |
-| 足以选择行动，尚不能证明唯一解释 | 给首选及理由，只列最可能改变选择的条件；可逆且已在批准范围和权限内的动作直接推进。 |
-| 缺少会改变决定的关键事实 | 准确指出缺口，先作已授权的区分性核验；必须由用户决定时，准备具体选择、影响和推荐，只问决定性问题。 |
-| 证据反驳既有方案或用户主张 | 明确指出不成立之处、影响和有依据的替代路线；替代涉及实质变更时重新审查。 |
+| Direct and sufficient | State the covered conclusion and evidence; do not dilute it with empty uncertainty |
+| Enough to choose, not prove a unique explanation | Give the preferred action/reason and only conditions likely to change it; advance reversible approved work |
+| A decisive fact is missing | Identify it and run an authorized discriminating check; ask only necessary user choices with concrete consequences and recommendation |
+| Evidence contradicts plan/claim | State what fails, its consequence and supported alternative; renew review for material changes |
 
-不伪造结果、文献支持、置信度百分比或确定性；不对强弱悬殊的选项作无意义的等量平衡。某个事实尚不明确，不把所有相关工作一并暂停。只保留会改变决定、适用范围或可信度的限制，并放在受影响的结论旁。
+Do not invent observations, citation support, confidence percentages or certainty. Unequal alternatives need not receive equal weight. One unknown does not suspend all work. Place decision-relevant applicability/credibility limits beside the conclusion.
 
-例如，稳定最小复现及修正前后证据足以判断本次索引故障，不扩张为所有故障的解释；准确率略高却违反明确延迟上限的方案不能优先于满足全部硬约束的方案；单次提升不足以证明新机制有效，可先核对协议并准备获准费用/算力配额或容量内的区分验证。
+A stable before/after reproduction can establish one indexing failure without explaining every failure. A small accuracy gain cannot outweigh a fixed unmet latency constraint. Improvement alone does not prove a mechanism; choose a discriminating test under the actual protocol and resource rights.
 
-## 用整体目标选择工作块
+## Select blocks from the whole objective
 
-每个实质工作块前简短核对三件事，不强制输出表格：
+Before substantial work check remaining mandatory outputs/acceptance and blocked critical dependencies; classify the local issue by impact; select the authorized action that most directly resolves core correctness, unblocks a dependency or completes a requirement.
 
-1. 还缺哪些必做交付和验收，哪些关键依赖受阻？
-2. 当前问题影响核心正确性、关键依赖、必要交付还是可选改善？
-3. 哪项已授权行动最能解阻、减少决定性不确定性或完成必做项？
+Prioritize invalidating defects and critical prerequisites, then required delivery, then optional optimization/style. Recent discovery or easy fixes do not automatically confer priority. Preserve complete execution/integration/final verification when requested. Only the user changes scope; never silently turn required work into an option, future work or a known issue.
 
-会使核心结论失效的问题和关键依赖优先，其次必要交付，再按目标选择可选性能、样式或整洁性改善。最近发现、容易解释或容易修不自动获得优先级。完整运行、整合和最终核验属于原目标时必须保留，不能自行降级为可选、未来工作或已知问题；用户改变范围才更新约定并记录原因。
+State which requirement a block serves, evidence needed, local quality/evidence exit or redirection criteria and real cost/capacity/permission limits. When sufficient, advance the next mandatory item. Continue deeper investigation while it yields decision-relevant evidence within authorization; do not impose fixed attempt counts. Repeated attempts without new information require a discriminating check or another independent mandatory item. A waiting tool/slow network is not a blind retry.
 
-进入局部工作前明确：服务的必做项、所需证据、质量/证据上的退出或转向条件及实际资源/权限约束。达到所需质量即推进其他必做项，不追求与验收无关的局部最优。只要深入仍产生影响整体目标的新证据，就可在批准的费用/算力配额或容量内继续，不设固定轮数，不机械地频繁换任务。连续尝试无新增诊断证据时停止盲试，选区分性检查或推进其他独立必做项；网络慢、等待或进程仍运行不能直接视为盲试。
+For example, do not refine a readable legend while a required comparison is unfinished. A train/test overlap that invalidates that comparison takes priority, followed by downstream reacceptance. Examples explain priority, not permission for experiments.
 
-例如，图例已可读而比较尚未完成时退出修饰；训练/验证重复却会使比较失效，须先修划分并使受影响结果、图表与结论重新验收。例子仅解释排序，不授权实际实验。
+Reassess the whole task after phase completion/unblocking, new assumptions/interfaces/dependencies, repeated attempts without new evidence, before extra dependencies/route/scope/resources, after recovery/compaction and before delivery. Choose continuation, redirection, discriminating checks or a necessary human decision. Progress reports, plans, elapsed time and agent completion are not acceptance.
 
-阶段完成或阻塞解除、改变假设/接口/依赖的新事实、连续尝试无新增证据、增加依赖/改路线/扩范围或明显资源之前、恢复/上下文压缩后及最终回复前，重新核对全局，立即选择继续、转向、区分检查或必要用户决定。通过进度消息展示阶段成果，并在消息后继续推进仍可执行的已授权必做项。维护计划、进度汇报、耗时和子代理自报完成均不替代实际推进及整体验收。
+Classify implementation/data/method/tool/permission failures versus valid negative results. Retry with new evidence or reasonable transient grounds. Repair authorized issues and reaccept affected downstream work. When one branch is blocked, advance independent approved mandatory items without inventing substitute results. Core defects need repair, not only a final caveat. Reuse [recovery](recovery-maintenance.md).
 
-失败时区分实现错误、数据问题、方法不适用、工具限制、权限阻塞和有效负结果；有新诊断依据或合理瞬时故障理由才重试。有已授权的安全修复或替代路径就执行并核验；一分支受阻则继续独立获准的必做项，不用模拟结果填补真实证据。核心缺陷返回上游修复并重验受影响下游，不能只在最终报告承认。具体反馈、失效和回执规则复用 [恢复与语义维护](recovery-maintenance.md)，不另建状态机。
+## Execution, resources and acceptance
 
-## 执行状态、资源权限与整体验收
+Task duration, network speed, tool waiting and one timeout are not stopping criteria. Continue original handles/state while approved work is executable. Actual fees, compute quota/capacity and rights constrain branches; the whole task is blocked only with no authorized route. Persistence grants no extra permission, and resource limits do not require a default duration field.
 
-不以耗时、网络速度、工具等待或单次命令超时设置任务停止条件；先核对真实状态并按原句柄续取，继续可执行的已授权必做项。实际费用、算力配额/容量不足或动作越权时，停止依赖分支并准确报告，其他独立获准项继续；没有可推进的授权路径才整体受阻。坚持完成不授予额外权限。文中资源约束仅指费用、算力配额/容量和权限，不包含任务执行时长，不要求填写任务级时间字段。
+Waiting, timeout, compaction and task termination differ. Use actual session/handle interfaces; inspect processes and outputs rather than restarting after empty output. No resident daemon is promised. Native boundaries/state ownership follow [runtime](runtime.md).
 
-工具等待、单次命令超时、上下文压缩和任务结束是不同事件。工具提供会话句柄或任务 ID 时，按原接口续取，先核对真实进程、产物与状态，不盲目重启或把空输出当完成；不声称技能保证后台常驻。原生 begin/submit/verify 与正式 receipt/state 归属仍按 [运行接口](runtime.md)。
+Before delivery compare every original requirement and approved change with real evidence. Check module interfaces, results versus figures/text, complete runs, usability and compatibility proportionate to risk. Samples, generated files, startup, exit0, stopped tool calls, attractive plots or agent reports cannot alone establish completion. Avoid redundant checks once sufficient evidence exists without a new concern.
 
-最终逐项对照原始约定和批准变更，按风险核查跨模块接口、结果与图文/正文一致性、所需完整运行、产物可用性和兼容性。部分样例、代码/文件生成、进程启动、退出 0、工具停止调用、漂亮图表或子代理报告均不能单独证明整体完成；证据充分后不重复无价值检查。
+- **Complete:** every mandatory criterion met. Valid negative/opposite/inconclusive research may satisfy the protocol; do not continue solely for positivity.
+- **Blocked:** mandatory work remains with no authorized route. Give exact obstacle, actual checks, required decision and continuation point; resume the original objective when possible.
+- **Paused/interrupted:** user stop, real unavailable resources or platform interruption. Report accepted work, unfinished items and precise continuation without claiming completion.
 
-- **完成**：全部必做项达到相应验收；按有效协议得到负结果、反向或不确定结果也可满足研究任务，不为阳性无限加试。
-- **受阻**：必做项未完成，且已无可推进的授权路径；报告具体障碍、实际核验、所需决定和接续点，用户提供条件后继续原目标。
-- **暂停/中断**：用户主动叫停、实际费用/算力配额或容量受限、真实平台中断时；在可响应时给已完成证据、未完成项和准确接续位置，不标完成。
+Continue executable mandatory work; do not return it as an optional offer. Lead final delivery with result/actual state, then decisive evidence, changes/scope, compatibility and material unresolved issues.
 
-只要仍有可执行的已授权必做项就继续，不以“如需可以继续”退还剩余任务。最终先给结果或真实状态，再给关键证据、实际改动/审查范围、兼容影响及真正未解问题；限制仅解释对决定的影响。
+## Session and recovery information
 
-## 会话状态及恢复所需信息
+Keep state in-session by default; simple tasks keep relevant parts only. Persistent masters/records require user/project authorization. A skill does not authorize a cross-session ledger or second template; runtime still owns formal state/receipts.
 
-默认在会话维护以下信息；简单任务只保留相关项，不强制建表。只有用户或项目已有文件授权时才复用任务总控、阶段记录或交接；不新建跨会话账本或第二份模板，不把调用技能当持久化授权。正式 state/receipt 仍由原运行时管理。
-
-- 任务约定：完整目标、输入及证据位置、必做交付/依赖/验收、排除项、权限与需另行授权的动作、已声明且影响决定的实际费用/算力配额或容量约束、批准变更及原因。
-- 全局进度：每项状态、产物位置、尚缺验收；区分待做、执行中、待验收、已验证、受阻及现有运行时失败/过期状态，产物存在不代表已验证。
-- 当前选择：最影响整体的缺口、当前判断与关键依据、会改变判断的事实、下一授权行动及解除的依赖、局部退出/转向条件、可选项为何后置。
-- 失败返工：实际证据、已试路径与新信息、受影响上游假设/下游产物、重验范围和必要用户决定。
-- 中断恢复：最后已验证阶段及代码/数据/配置版本、原工具/会话 ID 和可观察状态、未验收/可能陈旧产物、恢复后的第一项核查与下一步。先查进程和产物真实存在，不据旧记录假定成功；不保存密码、令牌或凭据。
-- 最终验收：全部原始必做项、实际检查及证据、改动/审查范围、兼容影响、影响使用的未解问题、完成/受阻/暂停状态及依据。
+- **Agreement:** full objective, inputs/evidence, required outputs/dependencies/acceptance, exclusions, rights/separate authorizations, real resource limits, approved changes/reasons.
+- **Progress:** actual states/outputs, missing acceptance and todo/executing/pending/verified/blocked/failed/stale distinctions. Existence is not verification.
+- **Current choice:** most consequential gap, judgment/evidence, decisive unknowns, next authorized action/dependency and local exit/redirection; why optional work waits.
+- **Rework:** failures, attempts/new facts, affected assumptions/results, retest scope and genuine human decisions.
+- **Interruption:** last verified phase, actual code/data/config versions, original handles/state, possibly stale/unaccepted outputs, first check and next step. Check real files/processes; never save secrets.
+- **Final acceptance:** every mandatory requirement, actual checks/evidence, change/review scope, compatibility, material risks, final state and reasoning.

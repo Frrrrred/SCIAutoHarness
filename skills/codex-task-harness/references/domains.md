@@ -1,15 +1,15 @@
-# 领域路由：按当前任务读取
+# Domain routing for the current task
 
-科研读 research.md，只应用与研究类型匹配的条目；软件和一般交付只需本文件。不一次加载所有领域或全部技能。
+Research uses matching research.md rules. Software/general delivery use this reference. Do not load every domain or skill at once.
 
-## 软件
+## Software
 
-识别实际语言、构建/测试命令、模块边界、接口承诺和错误路径，复用项目约定。把真正需要的约束放进本任务阶段文件并为可机械检查部分设置实际行为/接口/架构检查；语义判断用可定位证据审查。不预设语言、构建工具、检查器、固定覆盖率或每次编辑都 TDD。
+Identify the language, build/test commands, module boundaries, interface commitments and failure paths; reuse project conventions. Put applicable constraints in the current phase. Use observed behavior/interface/architecture checks for mechanical requirements and exact evidence for semantic judgments. Do not impose one language, tool, coverage threshold or test-first method on every edit.
 
-每项验收写明问题如何被拒绝、失败后读哪些证据、先做哪项局部检查/修复、哪些依赖要复测以及何时停止。只修与当前目标相关的问题；新修改/失败/未解决风险才扩大复测。安装、发布、远端与破坏动作遵守实际授权。
+Acceptance states how defects are rejected, evidence to inspect after failure, next local check/repair, dependencies to retest and stopping/escalation rules. Repair relevant issues only. Broaden checks for a new change/failure/unresolved concern. Installation, publication, remote and destructive operations retain actual authorization requirements.
 
-## 文档、业务和其他复杂交付
+## Documents, business and other delivery
 
-先界定受众/用途、输入来源、交付规范、阶段依赖和真实接受证据。数据、法律等专业判断查真实来源，不把流畅叙述当证明；有版式要求时看实际渲染。外部发送/写入另按授权。
+Establish audience/purpose, provenance, specifications, phase dependencies and actual acceptance. Use real sources for data/legal/professional judgments, not fluent prose as proof. Inspect rendering when layout matters. External sending/writing requires applicable permission.
 
-采用总体规划→用户审查→分阶段执行→证据验收→反馈闭环，但不强制科研统计字段、软件测试、固定角色或目录数量。只拆分实际会读取和维护的内容，记录仍未完成的核心要求。
+Use complete planning → user review → staged execution → evidence acceptance → feedback. Do not impose research statistics, software tests, fixed roles or directory counts on unrelated work. Split only material actually read/maintained and keep unfinished core requirements visible.

@@ -16,11 +16,12 @@ export async function resolveCodex(explicit, {platform=process.platform,pathValu
   }
   throw new Error('Local Codex executable not found. Install/configure it only with explicit user authorization; no automatic download is performed.');
 }
-export async function runProcess(command,args,{cwd,input='',log,timeoutMs,prepareInput,launchGuard}={}) {
+export async function runProcess(command,args,{cwd,input='',log,timeoutMs,prepareInput,launchGuard,stdoutObserver}={}) {
   if (timeoutMs !== undefined && (!Number.isFinite(timeoutMs) || timeoutMs <= 0)) throw new Error('timeoutMs must be positive when specified.');
   if (typeof command !== 'string' || !Array.isArray(args) || !args.every(x=>typeof x==='string')) throw new Error('Use an executable and explicit argument array.');
   if(prepareInput!==undefined&&typeof prepareInput!=='function')throw new Error('prepareInput must be a function when specified.');
   if(launchGuard!==undefined&&typeof launchGuard!=='function')throw new Error('launchGuard must be a function when specified.');
+  if(stdoutObserver!==undefined&&typeof stdoutObserver!=='function')throw new Error('stdoutObserver must be a function when specified.');
   let handle;
   try { handle=await fs.open(log,'wx'); }
   catch(e) {e.processResult={processState:'not-started',code:null,exitCode:null,signal:null,error:e.message,errorStage:'log-open',timedOut:false,outputBytes:0};throw e;}
@@ -33,7 +34,7 @@ export async function runProcess(command,args,{cwd,input='',log,timeoutMs,prepar
   const start=()=>new Promise((resolve,reject)=>{
     let child,timer,started=false,finishing=false,timedOut=false,bytes=0,queue=Promise.resolve();
     const errors=[],controlErrors=[];
-    const remember=(stage,e)=>errors.push({stage,message:e.message,code:e.code??null});
+    const remember=(stage,e)=>errors.push({stage,message:e?.message??String(e),code:e?.code??null});
     const kill=()=>{try{if(child.kill('SIGKILL')===false)controlErrors.push({stage:'kill',message:'kill returned false'});}catch(e){controlErrors.push({stage:'kill',message:e.message,code:e.code??null});}};
     const append=data=>{if(finishing)return;bytes+=data.length;queue=queue.then(async()=>{try{let offset=0;while(offset<data.length){const {bytesWritten}=await handle.write(data,offset,data.length-offset);if(!bytesWritten)throw new Error('Log write made no progress');offset+=bytesWritten;}}catch(e){remember('log-write',e);kill();}});};
     // Only a never-started spawn failure or the actual close event can settle this promise.
@@ -48,7 +49,7 @@ export async function runProcess(command,args,{cwd,input='',log,timeoutMs,prepar
     try {child=spawn(command,args,{cwd,stdio:['pipe','pipe','pipe'],shell:false,windowsHide:true});}
     catch(e){remember('spawn',e);scheduleFinish('not-started',null,null);return;}
     child.on('spawn',()=>{started=true;});
-    child.stdout.on('data',append);child.stderr.on('data',append);
+    child.stdout.on('data',data=>{if(!finishing&&stdoutObserver)try{stdoutObserver(data);}catch(e){remember('stdout-observer',e);kill();}append(data);});child.stderr.on('data',append);
     child.stdin.on('error',e=>{if(e.code!=='EPIPE')remember('stdin',e);});
     child.on('error',e=>{
       if(started||child.pid){controlErrors.push({stage:'process',message:e.message,code:e.code??null});return;}

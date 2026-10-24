@@ -1,72 +1,114 @@
-# 科研：研究类型、阶段方法与证据边界
+# Research: study types, phase methods and evidence boundaries
 
-本文件是规划/审查指导，不是科学事实来源或自动效度认证。具体领域由实际可用的研究设计、计算、统计、文献、图文或写作 skill 主导；不因列了技能就声称已经调用或验证。
+This reference guides planning and review. It is not a source of scientific facts or an automatic validity certificate. Use applicable research-design, computing, statistics, literature, figure or writing skills that are actually available in the current host. Listing a skill does not establish that it was invoked or that its checks passed.
 
-## 先确定研究类型和需要回答的问题
+## Identify the research type and question first
 
-| 类型 | 主要证据与规划 | 条件性要求 |
+| Type | Main evidence and planning | Conditional requirements |
 |---|---|---|
-| 经验/干预/观察研究 | 总体、单位、设计、测量、数据来源、估计对象和不确定性 | 对照/混杂、重复/嵌套、随机化/盲法按实际设计说明，不补造 |
-| 预测/机器学习 | 预测对象、评价用途、样本相关性、切分/调参、基线和泛化证据 | 按患者/批次/时间等隔离；预处理/插补/筛选/调参只在相应训练折拟合，外部/测试集不参与选择 |
-| 理论/证明 | 定义、假设、命题、证明依赖、反例与适用边界 | 无样本或训练时不捏造 n/功效/训练集；验收针对逻辑和假设 |
-| 定性/综合/文献研究 | 问题、资料范围、来源/选择规则、编码或综合方法、反证与解释边界 | 不把统计抽样、效应检验或模型训练作为统一前置条件 |
-| 数值/计算复现 | 固定版本/协议、参考值、算法/算术核对、干净复跑和偏差 | 不因没有预测目标强制切分；区分一步未归一局部误差与固定区间全局误差：光滑解和适用稳定性条件下，通常单步法全局p阶对应一步误差O(h^(p+1))；若局部误差除以h须明说约定，不混用阶数；已知基准不构成新科学发现 |
+| Empirical, interventional or observational research | Population, units, design, measurements, sources, estimand and uncertainty | State controls, confounding, replication, nesting, randomization and blinding according to the actual design; do not invent them |
+| Prediction or machine learning | Prediction target, intended evaluation use, sample dependence, splitting and tuning, baselines and generalization | Separate patients, batches, times or other relevant units. Fit preprocessing, imputation, selection and tuning only within the appropriate training folds; external and test sets do not participate in selection |
+| Theory or proofs | Definitions, assumptions, propositions, proof dependencies, counterexamples and applicability | Without samples or training, do not invent n, power or training sets; acceptance concerns logic and assumptions |
+| Qualitative, synthesis or literature research | Question, material scope, source and selection rules, coding or synthesis methods, counterevidence and interpretive limits | Statistical sampling, effect tests and model training are not universal prerequisites |
+| Numerical or computational reproduction | Fixed versions and protocols, reference values, algorithm and arithmetic checks, clean reruns and deviations | Do not require a prediction split when there is no prediction target. Distinguish unnormalized one-step local error from fixed-interval global error: for smooth solutions under applicable stability conditions, a one-step method with global order p typically has one-step error O(h^(p+1)). State explicitly if local error is divided by h, and keep order conventions consistent. Reproducing a known benchmark is not a new scientific discovery |
 
-各类型可有交叉，按实际问题而非标签选择约束。协议中的关键未知会阻断依赖它的阶段；不适用条目写“不适用：理由及替代的验收证据”。文字非空或写 N/A 都不证明合理，必须实质审查。不要把关键未知伪装为不适用。
+Types may overlap. Select constraints from the actual question rather than its label. Important protocol unknowns block dependent phases. For an inapplicable item, state "Not applicable," the reason and alternative acceptance evidence. Nonempty text or N/A alone is not substantive justification. Do not disguise an important unknown as inapplicable.
 
-## 资料保真与参数溯源
+## Material integrity and parameter provenance
 
-数据研究在依赖分析前核验真实来源、样本/个体标识和相关字段映射，记录数据版本或校验值并保留原始输入。不得编造观测值、补造来源，或静默覆盖原始数值、标签与连接关系。纠错、排除和合法插补须明确方法与理由，生成可区分的派生或更正版本，保留原始资料、来源映射及影响范围，并遵守既有批准规则；冻结用于保护可追溯性，不等于禁止有依据的版本化纠错。
+Before dependent analysis, verify actual sources, sample or subject identifiers and relevant field mappings. Record data versions or checksums and preserve raw inputs. Never fabricate observations or provenance, or silently overwrite original values, labels or linkage relationships.
 
-计算/数据研究在使用前记录影响结论或复现的关键参数、随机设置与阈值及其原始来源定位或选择理由；不要求每个数值都有论文出处，也不得为预先声明的任意选择捏造文献依据。变更保留配置版本和理由，预先批准的搜索或适应性规则仍按原约定记录执行。无数据或随机过程的理论任务不强制填写样本、随机种子或运行记录。
+Corrections, exclusions and justified imputation require explicit methods and reasons. Produce distinguishable derived or corrected versions while retaining originals, source mappings and the affected scope, and respect existing approval rules. Freezing protects traceability; it does not prohibit justified, versioned correction.
 
-## 全程与阶段规划
+Before using conclusion- or reproducibility-relevant parameters, random settings and thresholds, record their original source locations or selection rationale. Not every number needs a paper citation, and an openly chosen arbitrary setting must not receive an invented literature justification. Retain configuration versions and reasons for changes. Execute prespecified search or adaptive rules under their approved recording requirements. A theoretical task without data or randomness does not require fabricated samples, seeds or run records.
 
-总体先定义用户目标、问题/主张类型、全程依赖、原始输入身份、产物、权限/预算、整体验收和停止条件。主要阶段按任务选取并在首次正式工作前写出实质方法/约束：问题与文献定位（需要时）、设计/协议、数据与质量、方法/模型/实验、证据复核、图文/写作、复现/交付。未知写出解决路径，不能用“后续再定”绕过应审的主要方法。
+## Whole-task and phase planning
 
-把用户已固定的问题与估计对象逐项绑定到契约、阶段、共享协议及其验收：总体/独立单位、结局、比较、尺度、时间原点、信息可得时点、预测时距、场景与评价对象均须一致。完整包封存前对照真实输入逐项核对，不能只有总体目标正确而详细协议变成另一任务。固定预测时距不能改为混合时距汇总；额外时距或分析另列为扩展，不能替换必做主目标或混入其验收。发现跨文件定义冲突先同步修正再review；机器检查和正常收尾不证明任务语义一致。
+First define the objective, question or claim type, complete dependencies, raw-input identities, deliverables, permissions, budget, overall acceptance and stopping conditions. Choose major phases for the actual task and state substantive methods and constraints before formal work: question and literature work when needed, design or protocol, data and quality, methods or experiments, evidence review, figures or writing, and reproduction or delivery. Give important unknowns a resolution route; "decide later" cannot bypass review of a major method.
 
-估计有效性按参数实际定义域、解的存在性和数值诊断判断：实值效应系数可为负或零，不能要求其为正、显著或靠近真值才算成功；标准误、方差等的有限性/正值条件须分别核对。实现验收包含有限的反向及接近零估计，失败分类和汇总分母不得筛掉合法负结果。 涉及Monte Carlo均值或偏差时，明确重复级评价量Z与独立有效重复数m，MCSE=sqrt(s_Z²/m)，其中s_Z²为样本方差；s_Z²/m是均值方差，不能标作标准误。MSE以平方误差作Z，RMSE按所用变换传播标准误并说明边界。封存前以确定性数例与量纲核对阶段、共享协议及验收中的不确定性公式一致。
+Bind each user-fixed question and estimand consistently across the contract, phases, shared protocols and acceptance. Population and independent unit, outcome, comparison, scale, time origin, information-availability time, prediction horizon, setting and evaluation target must agree. Compare these definitions with actual inputs before sealing the complete package. A correct overall goal does not compensate for a detailed protocol that describes another task.
 
-理论任务若要求正式证明，须为每项必做命题明确产出任务、已声明的证明文件及实质 review 标准，再把反例复核/主张一致性/文稿等使用者依赖到该任务的 verified 结果。证明任务可以与依赖设计合并，也可独立成阶段，不固定任务或文件数量；但产物必须包含完整正式证明，验收须逐项审读定义、量词、全部假设、推导步骤和边界情形，记录证据位置、理由及未决项。证明依赖图、拟证引理、计划链、文件存在和执行成功均不能代替完整证明；尚未闭合的核心证明不能通过验收或成为下游已证明主张。审查完整规划时逐项追踪“要求的结果→产出任务/声明输出→实质验收→下游前置”，发现缺环先修正规划，不以机器 review 成功推定科学完成。
+Do not replace a fixed prediction horizon with a pooled mixture of horizons. Label extra horizons or analyses as extensions; they cannot replace the mandatory primary objective or enter its acceptance silently. Resolve cross-file definition conflicts before review. Machine checks and a normal handoff do not prove semantic consistency.
 
-研究需要获取/整理数据或执行计算时，同样逐项追踪“必需产物→产出任务/明确计划路径→实质验收→下游 verified 前置”。完整规划须明确实际数据与元数据/整理样本、可运行的分析或模拟代码及配置、重复级/主结果、运行来源证据、图文和可执行复现交付的责任与位置；允许按实际项目合并成完整产物包，不固定文件数，但不能只声明报告或 README，正文却另承诺无人负责、无计划路径的数据和脚本。运行回执仍由运行时所有，引用其真实来源即可，不重复伪造。尚待取得或生成的文件是后续任务的 outputs，不伪装成已经存在的初始 inputs；资料或权限缺失要明确取得/核验的责任、所需输入与阻断阶段，不能因此省略其余主要规划。先导试验等门槛须由明确的产出任务先执行并验收，只有通过才允许下游开始；前置阶段不能要求后续任务才生产的 pilot/验证证据。多个步骤合并在一个阶段文件时，任务的产出归属、允许执行顺序和验收前置仍应一致且不循环。图像、整理数据和可运行代码须声明其实际成果或确实包含这些成员的产物包；图表索引、数据审计报告和 README 不能替代本体。 按任务的实际执行顺序，核对“本任务首次运行的程序及配置→契约输出ID/实际路径或明确包成员→生产任务→已验证前置”。合并脚本须列明所覆盖环节；目录只作组织方式，松散交付分别声明必要成员文件，合并交付声明真实归档文件并列明成员责任；若整个代码包只归后期分析任务，不能用它兜住更早整理阶段的脚本：应将包归首次需要它的任务并覆盖必要成员，或拆出早期代码/配置，且写明同任务先建后用。正文里的未来脚本承诺、笼统代码目录或复跑证据 Markdown 不能替代这条可执行交付链。尚未取得的真实整理数据和所需元数据，同样在当前完整契约列出具体计划路径或真实产物包、生产责任及验收，不能只在阶段称为未来工作产物、待资料到位才补声明；资料缺口阻断执行而不省略规划责任。展示前核对这条产物链，修复缺环后才封存。
+Evaluate estimates against the parameter's actual domain, existence of solutions and numerical diagnostics. A real-valued effect coefficient may be negative or zero; positivity, significance or proximity to truth is not a general success condition. Check separate finiteness and positivity requirements of standard errors, variances and related quantities. Implementation acceptance must include finite negative and near-zero estimates. Failure classification and summary denominators must retain legitimate negative results.
 
-普通文件与真实归档的完整生产—消费示例及隔离回归入口见 [产物文件与归档示例](artifact-examples.md)。归档必须先由已验收任务生产，才能消费其中成员；不能用后期打包替代早期代码或数据的生产责任。
+For a Monte Carlo mean or bias, define the replicate-level quantity Z and the number m of independent valid replicates. Use MCSE=sqrt(s_Z²/m), where s_Z² is the sample variance. s_Z²/m is the variance of the mean, not its standard error. For MSE, Z is squared error. For RMSE, propagate uncertainty through the transformation used and state its limitations. Before sealing, use deterministic numerical examples and dimensional reasoning to check uncertainty formulas across phases, shared protocols and acceptance criteria.
 
-### 先把计算产物链写入契约，再写阶段正文
+When formal proofs are required, assign every mandatory proposition a production task, declared proof file and substantive review criterion. Tasks using those results for counterexample review, claim consistency or manuscripts depend on the proof task's verified result. Proof production may share a phase with dependency design or have its own phase; no fixed task or file count is required.
 
-下表示意可调整的唯一输出 ID 与路径，不是固定文件数、通用设计或额外当前输入。按真实任务改名、合并或删除不适用项；每行均落实为 deliverables 中的路径、tasks.outputs 中的 ID 和实质 acceptance。当前 schemaVersion 1 的 deliverables[].path 绑定普通文件。松散目录分别声明必要成员文件；合并包声明真实归档文件，并在阶段说明必要成员、生产责任和内容验收；指向数据包清单.md、图表索引.md或README的输出只绑定该说明文件，不包含它描述的数据、代码、配置、结果或图像本体，须将本体另声明为真实产物路径。
+The deliverable must contain the complete formal proof. Acceptance reads definitions, quantifiers, every assumption, derivations and boundary cases, recording evidence locations, reasoning and unresolved items. A dependency graph, proposed lemma, plan chain, file existence or successful execution does not replace the proof. An incomplete core proof cannot pass or become an established downstream claim. During complete-plan review, trace each required result to its production task and declared output, substantive acceptance, and downstream prerequisite. Repair missing links instead of inferring scientific completion from machine review success.
 
-若机器检查报告输出目录与其内部文件重叠，保持实际交付不变，只重划归属：分别声明必要成员文件而不声明父目录，或声明实际归档文件并把清单/收据等纳入归档成员和内容验收，也可把独立收据放在归档外的非重叠路径。目录本身不是当前支持的输出类型。不能为消除路径冲突把真实包改成一份清单、把数值表改成仅叙述性报告、删除下游必需产物，或只保留运行说明而没有可执行复跑代码。修订后重取 refs、同步对应阶段产物和实质验收，再整包复检与正常待审交付。不能仅把这些成员写在方法段落，契约仍只声明 protocol/report/README。
+When research acquires or prepares data or runs computations, trace every required artifact through its producer, explicit planned path, substantive acceptance and downstream verified prerequisite. Assign actual data and metadata, prepared samples, executable analysis or simulation code and configuration, replicate-level and main results, execution provenance, figures and text, and executable reproduction deliverables.
 
-| 生产任务及 verified 前置 | 实际计划产物示意 | 验收与消费 |
+A project may combine these into coherent artifact bundles without a fixed file count. It cannot declare only a report or README while promising unowned data and scripts elsewhere in prose. The runtime owns execution receipts; cite their actual sources rather than making duplicate receipts.
+
+Files still to be obtained or generated are later task outputs, not supposedly existing initial inputs. Missing materials or permission require an acquisition or verification owner, necessary inputs and blocked phase; they do not justify omitting the rest of the major plan. A pilot gate needs a producer that runs and passes acceptance before downstream work starts. An early stage cannot require pilot or validation evidence assigned to a later dependent task.
+
+When several steps share one phase document, output ownership, permitted execution order and acceptance prerequisites must remain consistent and acyclic. Declare the actual images, prepared data and runnable code, or a real bundle containing them. A figure index, data audit or README is not the underlying artifact.
+
+For each task's first actual program and configuration use, trace the contract output ID, real path or explicit bundle member, producing task and verified prerequisite. A combined script must list its covered steps. Directories organize files; loose delivery requires individual declarations of necessary members, while combined delivery requires a real archive and explicit member responsibilities.
+
+A code bundle owned only by a late analysis task cannot supply an earlier preparation task's program. Assign the bundle to the first task that needs it with all necessary members, or declare early code and configuration separately. State create-before-use when a task produces and consumes its own artifact. Promises of future scripts, a generic code directory or a rerun-evidence Markdown file do not satisfy the executable delivery chain.
+
+For unavailable prepared data and metadata, the complete current contract must still state specific planned paths or a real bundle, production ownership and acceptance. Do not postpone those declarations until materials arrive. A material gap blocks execution without removing planning responsibility. Check and repair the artifact chain before presenting the package.
+
+See [Artifact files and archives](artifact-examples.md) for complete ordinary-file and real-archive production and consumption examples and their isolated regression entry. An accepted producer must create the archive before its members are consumed. Final packaging cannot replace early code or data production.
+
+### Put the computational artifact chain in the contract before writing phase prose
+
+The following table illustrates adjustable unique output IDs and paths. It is not a fixed file count, universal study design or list of additional current inputs. Rename, combine or remove inapplicable items for the actual task. Each applicable row must become deliverables paths, tasks.outputs IDs and substantive acceptance.
+
+Under schemaVersion 1, deliverables[].path binds an ordinary file. Declare necessary loose member files individually. For combined delivery, declare a real archive and explain its required members, ownership and content acceptance in the phase. An output pointing to a bundle inventory, figure index or README binds only that description; it does not bind the described data, code, configuration, results or images. Declare those artifacts separately.
+
+If a machine check reports overlap between a declared directory and its member files, retain actual delivery and revise ownership. Declare necessary member files without the parent directory, or declare a real archive with inventories and receipts as members covered by content acceptance. An independent receipt can also live at a nonoverlapping path outside the archive.
+
+Directories are not currently supported output types. Do not resolve path conflicts by replacing a bundle with an inventory, a numerical table with narrative prose, removing a downstream requirement, or retaining only run instructions without executable rerun code. After revision, refresh refs, synchronize phase deliverables and substantive acceptance, recheck the complete package and deliver the pending review normally. Mentioning members in a methods paragraph while the contract declares only protocol, report or README files is insufficient.
+
+| Producer and verified prerequisites | Illustrative planned artifacts | Acceptance and consumers |
 |---|---|---|
-| 来源取得与整理，前置为来源/设计核验 | raw-data: data/raw.csv；metadata: data/metadata.json；clean-data: data/analysis.csv；prep-code: code/prepare.R | 合法来源、字段/单位/独立单位、排除流水与脚本复跑一致；分析依赖本任务 |
-| 分析/预测，前置为已验收整理数据 | analysis-code: code/analyze.R；config: config/analysis.json；estimates: results/estimates.csv；predictions: results/predictions.csv | 脚本/配置可执行、估计与区间/诊断、预测折内处理及保存预测可追溯；图文依赖本任务 |
-| 模拟实现验证，前置为已冻结设计 | sim-code: code/simulate.R；scenarios: config/scenarios.json；checks: results/implementation-checks.json | 真值/DGP/缺失率/合并公式/随机流核对；pilot 依赖本任务 |
-| pilot，前置为实现验证，不要求 pilot 自己已通过 | pilot-results: results/pilot.csv；pilot-gate: results/pilot-gate.json | 正确性/失败/耗时及总预算是否允许主模拟；主模拟 dependsOn pilot |
-| 主模拟，前置为 verified pilot | replicates: results/replicates.csv；summary: results/summary.csv | 固定场景/重复、失败记录、指标和 MCSE；图文依赖本任务 |
-| 图文与复现，前置为所用结果 verified | figures: figures/main.png；manuscript: paper/manuscript.md；rerun: code/reproduce.R；environment: repro/environment.json | 图像本体与表/代码相符、主张支持、干净复跑；README只作使用说明 |
+| Source acquisition and preparation, after source and design checks | raw-data: data/raw.csv; metadata: data/metadata.json; clean-data: data/analysis.csv; prep-code: code/prepare.R | Lawful source, fields, physical and independent units, exclusion trail and executable preparation agree; analysis depends on this task |
+| Analysis or prediction, after accepted prepared data | analysis-code: code/analyze.R; config: config/analysis.json; estimates: results/estimates.csv; predictions: results/predictions.csv | Runnable code and configuration, estimates, intervals and diagnostics, fold-specific prediction processing and traceable saved predictions; figures and text depend on this task |
+| Simulation implementation checks, after frozen design | sim-code: code/simulate.R; scenarios: config/scenarios.json; checks: results/implementation-checks.json | Check truth, data-generating process, missingness rate, pooling formulas and random streams; pilot depends on this task |
+| Pilot, after implementation checks; the pilot need not already have passed itself | pilot-results: results/pilot.csv; pilot-gate: results/pilot-gate.json | Correctness, failures, runtime and total budget determine whether main simulation may proceed; main simulation dependsOn pilot |
+| Main simulation, after a verified pilot | replicates: results/replicates.csv; summary: results/summary.csv | Fixed scenarios and replicates, failure records, metrics and MCSE; figures and text depend on this task |
+| Figures, writing and reproduction, after verified results used by them | figures: figures/main.png; manuscript: paper/manuscript.md; rerun: code/reproduce.R; environment: repro/environment.json | Actual images agree with tables and code, claims are supported and clean reruns work; a README supplies usage instructions only |
 
-观察研究使用前两行及图文交付，模拟研究使用实现→pilot→主模拟→图文交付，交叉任务按实际依赖组合；补齐问题/文献、设计及领域约束。运行回执使用运行时真实来源，另写环境清单不替代回执。总计算预算包含实现核验、pilot和正式运行，不可擅自改成只计主运行。当前缺资料/权限阻断未来执行，仍要把未来真实数据、代码、结果和图像的生产责任规划齐全；不能据此将研究总目标改成“只交协议”。
+An observational study may use the first two rows plus figures and manuscript delivery. A simulation may use implementation checks, pilot, main simulation and figures or manuscript delivery. Combine mixed tasks by actual dependencies, adding question, literature, design and domain constraints as needed. Use actual runtime receipts; a separate environment inventory does not replace them.
 
-在缺失机制模拟中，按机制分别定义和验收校准方程，不能把依赖随机协变量的公式套给常数机制。例如目标边际缺失率为 p、M=1 表示缺失时，MCAR 的概率恒为 p；若用 logit 截距表示，则 a=log(p/(1-p))，不含随机协变量项。只有 MAR/MNAR 采用 logit Pr(M=1|V)=a+bV 时，才对其规定的 V 生成分布求 E[expit(a+bV)]=p；MAR 用实际指定的已观测 V，MNAR 用实际指定的未观测 V，b 按真实设计固定。配置、实现和验收逐机制核对同一方程及回代误差，并区分目标边际概率与有限样本实际缺失率。此条件性例子不要求其他研究采用缺失机制模拟。
+The total computational budget includes implementation checks, pilot and formal execution; do not silently count only the main run. Missing materials or permission may block future execution, but all future data, code, result and figure production responsibilities still belong in the complete plan. Do not reduce the objective to protocol-only delivery.
 
-对实际经验数据核对独立单位、生物/技术重复、重复测量/批次/嵌套、纳入排除、缺失/异常和混杂。细胞、视野、reads、技术重复或同一受试者时间点不能冒充独立 n。分析记录主要/探索性终点、模型与假设、效应量/区间、诊断、多重比较和敏感性；不适用说明原因。预测时采用上表的折内拟合与隔离规则，描述性/理论任务不机械套用。
+For missingness simulations, define and accept calibration equations separately for each mechanism. A covariate-dependent equation cannot be applied to a constant-probability mechanism. For target marginal missingness probability p with M=1 indicating missingness, MCAR has constant probability p. If expressed using a logit intercept, a=log(p/(1-p)), without a random-covariate term.
 
-原始数据/资料→派生处理或证明步骤→脚本/参数/环境与实际运行→数值/逻辑/统计证据→图表与正文/引用保持可定位关系。关键计算结果与图表须定位到实际输入、代码/配置版本和执行证据，不能以计划命令或文字自述代替真实执行；复用已有获授权记录，不另建通用账本。哈希只识别内容版本和变化，不能单独认证来源、证明某脚本确实生成该结果或证明科学正确。物理单位、数据许可/访问限制、来源缺口按真实材料报告。图例与正文中的单位、组别、n定义、区间含义和实际方法要一致。
+Only when MAR or MNAR uses logit Pr(M=1|V)=a+bV should calibration solve E[expit(a+bV)]=p over its specified generating distribution of V. MAR uses the designated observed V; MNAR uses the designated unobserved V. Fix b according to the actual design. Check that configuration, implementation and acceptance use the same mechanism-specific equation and verify substitution error. Distinguish target marginal probability from realized finite-sample missingness. This conditional example does not require other research to simulate missingness.
 
-## 变更与计划内迭代
+For actual empirical data, check independent units, biological versus technical replication, repeated measures, batch and nesting, inclusion and exclusion, missing or anomalous values, and confounding. Cells, fields of view, reads, technical replicates and repeated observations from one participant must not masquerade as independent n.
 
-不可变输入及受审协议变动暂停依赖工作并重审，不放宽摘要保护。单纯补足原始来源定位、参数依据或执行证据，且受审文件、绑定输入、方法、权限/资源与验收均未改变，证据恢复有效时，复核后按原批准继续，不把补证据本身当作新方案；任何受审文件或绑定输入的实际变动仍遵守摘要失效与重审。按已批准规则采集/生成的数据批次和中间结果作为阶段 outputs，验收后冻结交接；正常运行记录/状态变化不写回受审规范。新数据源、单位定义、主要终点/模型、排除、切分、主张、权限/成本或验收实质改变须修订。预先批准的适应性规则可以执行，但不能借此事后改终点/指标或无界采样；当前任务表达不了的变化先展示具体修订。
+Record primary and exploratory endpoints, models and assumptions, effect sizes and intervals, diagnostics, multiplicity and sensitivity. Explain inapplicable items. Prediction follows the training-fold fitting and isolation rules above; descriptive and theoretical tasks do not inherit them mechanically.
 
-## 验收与反馈
+Maintain traceable links from raw materials through derived processing or proof steps, code, parameters, environment and actual execution, numerical, logical or statistical evidence, and finally figures, manuscripts and citations. Important computational results and figures must identify actual inputs, code and configuration versions and execution evidence. Planned commands or prose assertions do not replace observed execution. Reuse existing authorized records instead of creating a generic ledger.
 
-对可能污染下游的资料身份、数据质量、关键配置/参数和结论，显式声明生产/消费依赖及放行标准；首次下游消费前完成实质验收。即使数值门槛通过，仍检查与研究类型和主张相关的科学/数据失败模式。记录实际检查对象与方法、证据位置、失败/例外、未决不确定性、放行或阻断理由及受影响下游；未验证或失效的结果不能作依赖前置，上游更正后按影响范围失效并重验。按现有批准和验收规则推进，除已批准协议要求外，不逐检查点重复索取同一人工批准。
+Hashes identify content versions and changes. They do not independently authenticate sources, establish that a particular script generated a result or prove scientific correctness. Report physical units, data licenses and access restrictions, and source gaps from actual materials. Legends and text must agree on units, groups, definitions of n, interval interpretation and actual methods.
 
-过程退出、文件存在、字段齐全、模型涨点、显著性、哈希一致、review=pass 或 AI 同意均不等于科学成立。结构化 review 记录只能追踪复核者、依据和理由；关键主张仍要直接读来源、独立计算/证明核查或实际复跑。相同模型/上下文、同一人员组织的两算法与独立实验室复现分别表述。
+## Changes and approved iteration
 
-保留零效应、反向、失败复现、不稳定与质量不合格。非显著不等于无效应，显著不等于重要/因果/机制；因果识别或机制证据不足时不得升级主张，也不能擅自换目标后宣称完成。
+Changes to immutable inputs or reviewed protocols pause dependent work and require review; do not weaken digest protection. If only source locations, parameter rationale or execution evidence are supplemented, and reviewed files, bound inputs, methods, permissions, resources and acceptance remain unchanged, reassess the restored evidence and continue under the original approval. Supplementing evidence alone is not a new plan. Actual changes to reviewed files or bound inputs still follow digest invalidation and re-review rules.
 
-失败先区分实现/数值错误、数据/测量缺陷、设计/假设不适用、信息不足和可信反证。反馈写具体证据、下一项区分检查、允许修复与复测依赖、停止条件。不得为追求阳性无依据改变数据/阈值/模型；合法纠错、排除或插补按前述资料保真、版本和既有审批规则处理，并重验受影响结果。按约定得到有效负结果或明确不确定性可以合格交付。
+Data batches and intermediate results collected or produced under approved rules are phase outputs and are frozen for handoff after acceptance. Do not write ordinary run records or state changes back into the reviewed specification.
+
+Material changes to sources, unit definitions, primary endpoints or models, exclusions, splits, claims, rights, cost or acceptance require revision. Approved adaptive rules may be executed, but they do not permit post hoc endpoint changes or unbounded sampling. Present a concrete revision before making a change that the current approved task cannot express.
+
+## Acceptance and feedback
+
+For source identities, data quality, key configuration and parameters, and conclusions that can affect downstream validity, make producer-consumer dependencies and release criteria explicit. Complete substantive acceptance before first downstream use.
+
+Even when numerical gates pass, check scientific and data failure modes relevant to the study type and claim. Record actual objects and methods checked, evidence locations, failures and exceptions, unresolved uncertainty, release or block reasons, and affected downstream work. Unverified or stale results cannot satisfy prerequisites. After an upstream correction, invalidate and reaccept affected results.
+
+Proceed under existing approval and acceptance rules. Do not request the same human approval at every checkpoint unless the approved protocol requires it.
+
+Process exit, file existence, complete fields, model improvements, statistical significance, matching hashes, review=pass or AI agreement does not establish scientific validity. Structured review records identify the reviewer, evidence and reasoning; important claims still require reading primary sources, independent calculation or proof checks, or actual reruns. Distinguish evidence from the same model and context, two algorithms organized by one person, and reproduction by an independent laboratory.
+
+Preserve null effects, opposite effects, failed reproductions, instability and quality failures. Nonsignificance does not establish absence of an effect, and significance does not establish importance, causation or mechanism. Insufficient causal or mechanistic evidence cannot support stronger claims. Do not silently change the objective and then declare completion.
+
+After failure, distinguish implementation or numerical errors, data or measurement defects, inapplicable design or assumptions, insufficient information and credible counterevidence. Report specific evidence, the next discriminating check, permitted repair, affected retest dependencies and stopping conditions.
+
+Do not change data, thresholds or models without justification to pursue a positive result. Apply material-integrity, versioning and approval rules to legitimate corrections, exclusions and imputation, then reaccept affected results. A valid negative result or explicitly supported uncertainty can satisfy the agreed delivery.

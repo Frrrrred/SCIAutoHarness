@@ -1,40 +1,47 @@
-# 贡献指南
+# Contributing
 
-请先阅读 [README](README.md)、[架构](docs/ARCHITECTURE.md)、[兼容边界](docs/COMPATIBILITY.md)和[来源说明](ATTRIBUTION.md)。
+Read [README](README.md), [architecture](docs/ARCHITECTURE.md), [hosts](docs/HOSTS.md), [compatibility](docs/COMPATIBILITY.md) and [attribution](ATTRIBUTION.md).
 
-## 提交问题
+## Reporting a problem
 
-使用仓库的 [Issues](https://github.com/Frrrrred/codex-task-harness/issues)，提供明确目标、复现步骤、实际与预期行为、Node/系统/文件系统环境和脱敏证据。安全问题按 [SECURITY](SECURITY.md)处理。
+Use [Issues](https://github.com/Frrrrred/codex-task-harness/issues). Include objective, steps, expected/actual behavior, host/mode, Node/OS and relevant filesystem conditions, with minimal sanitized evidence. Security issues follow [SECURITY](SECURITY.md).
 
-## 修改边界
+## Change boundaries
 
-- 技能逻辑放在 skills/codex-task-harness；仓库介绍、CI 和开发文档留在技能外。
-- 变更聚焦实际问题，说明影响的状态、入口、兼容分支和验收标准。
-- 保留 MIT 通知和可核实的来源；不要从当前渲染器重新生成旧金样来让兼容测试通过。
-- schemaVersion、templateVersion、任务 revision 是有效接口。涉及状态或模板迁移时，审查旧包批准、pending_acceptance、verified、active run、事实闭合及异常组合。
-- 测试批准/进程是 SYNTHETIC，不把它们当作真实用户授权或实际模型运行。
-- 不提交个人规则、凭据、聊天、工作现场、安装备份或测试日志。
+- Keep the installable product under skills/codex-task-harness; repository docs/CI stay outside it.
+- Focus on a concrete problem, affected states/entrypoints/profiles and acceptance.
+- Preserve one shared state/evidence engine and small host adapters.
+- Retain MIT/source notices. Never regenerate an old golden with the candidate to make compatibility pass.
+- Treat schema/template/revision/host policy/executor/safety metadata as interfaces.
+- For persistence/render changes cover approved, pending, verified and active work, original-run closure, replay, drift and failures.
+- Preserve user originals and immutable evidence; English prose must not weaken Unicode or old input behavior.
+- Label controlled authorization/processes SYNTHETIC. Keep personal rules, secrets, conversations, real state, backups and logs out of the public tree.
 
-## 本地验证
+## Local validation
 
-核心不需要 npm install。在仓库根运行：
+Core requires no package installation. From the repository root:
 
 ```powershell
 npm run check:skill
 npm run help
 npm run help:submit
-
 $workRoot = Join-Path ([IO.Path]::GetTempPath()) ('codex-task-harness-test-' + [guid]::NewGuid())
 npm test -- --work-root $workRoot
 if ($LASTEXITCODE -ne 0) { throw 'Main regression failed' }
 ```
 
---work-root 必须是你明确允许创建测试夹具的绝对目录。完整测试还使用 Python、pwsh、链接/ACL/NTFS 流能力，参见[验证说明](docs/VALIDATION.md)。结果在该根的 fixtures 子目录中，报告明确选择、实际总数、失败和准备重试；完整数量必须与 CI 的精确门禁一致，用例 ID 不得缺失或重复。不要用筛选子集或静默跳过不支持场景冒充全套通过。
+The root must be absolute and authorized for synthetic writes. Full tests also require Python/pwsh and link/ACL/NTFS capabilities. See [validation](docs/VALIDATION.md). The actual result contains selection, totals, failures and preparation retries. Complete execution must match the exact CI roster, with every required ID once. A filtered or silently skipped subset is not a full pass.
 
-检查文档链接、公开命令和安装预览边界。涉及执行/恢复时，补覆盖完整生命周期、组合状态和故障恢复的行为证据。退出零、文件非空或正向样例不替代验收。
+Check all maintained English prose, metadata, links/anchors, commands, source notices and installation boundaries. Execution changes require lifecycle, combined-state and failure recovery checks. Exit0, files or positive examples do not establish acceptance.
 
-**84 项跨运行时升级需要单独、真实且摘要匹配的冻结外部基线。当前未执行。** 不用当前包、教程版本或临时生成的旧实现替代它，不将既有结果写成新一轮通过。
+## Host evidence
 
-## Pull request
+Separate source inspection, executable probes, controlled processes and live host/model runs. Use authorized local clients only; never implicitly install/download/enable services/change settings/call models. Assert exact argv/stdin/EOF, close, raw exit/signal, timeout/log errors and original identity. Test reviewed host selection without fallback. Synthetic install/rollback must cover shared roots, locks, drift, partial changes and original bytes.
 
-说明具体问题、最终行为、实际验证、未执行项和兼容影响；保留失败和负结果。CI 失败时先查原始日志再判断原因，不通过删断言、伪造固定金样或弱化门禁来取得绿色结果。
+Check DSH's pinned official contract; an imitation child is not live DSH. Preserve all original main IDs and purposes, adding separate cases for new defaults.
+
+**The original84 upgrade suite has not run.** It requires the real digest-matching external frozen baseline. The candidate, tutorial and reconstructed older code are not substitutes. Current-baseline and host tests are separate evidence.
+
+## Pull requests
+
+Describe concrete problem, final behavior, actual checks, unexecuted checks and compatibility. Preserve failed/negative evidence. Read real CI logs; fix behavior rather than weakening assertions or exact gates.

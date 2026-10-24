@@ -5,6 +5,7 @@ import { atomicWrite, contained, digest, exists, hash, json, locked, now, safeId
 import { renderContract, reviewSnapshot, skeleton, validateContract } from './contract.mjs';
 import { resolveCodex, runProcess } from './process.mjs';
 import { buildTaskContext, nativeSubmissionAction } from './context.mjs';
+import {draftPolicy,selectHost,executionBinding as makeExecutionBinding,validateExecutionBinding,executorProfile,executorFor,hostProfile,hostRunArgs,resolveHostExecutable,hostOutputObserver} from './hosts.mjs';
 
 export async function taskDirectory(project, id) {
   const name = safeId(id);
@@ -14,12 +15,14 @@ export async function taskDirectory(project, id) {
   if (hasCurrent && hasLegacy) throw new Error(`Task exists in both current and legacy locations; resolve the identity conflict explicitly: ${id}`);
   return hasLegacy ? legacy : current;
 }
-export async function draft(project, id, goal, domain, layout) {
+export async function draft(project, id, goal, domain, layout, options={}) {
   if(layout!==undefined&&layout!=='layered')throw new Error('Use --layout layered or omit it for a legacy draft.');
+  const policy=draftPolicy(options);
   const dir = await taskDirectory(project,id);
   if (await exists(dir)) throw new Error('Task already exists; do not overwrite. Edit contract and increment revision.');
   await fs.mkdir(dir,{recursive:true});
   const c = skeleton(id,goal,domain);
+  c.execution=policy;
   if(layout==='layered')Object.assign(c,{layout,contextFiles:[],recoveryFile:'RECOVERY.md'});
   await fs.writeFile(path.join(dir,'contract.json'),`${JSON.stringify(c,null,2)}\n`,{flag:'wx'});
   await fs.writeFile(path.join(dir,'HARNESS.md'),renderContract(c),{flag:'wx'});
@@ -48,6 +51,19 @@ function resolveRunBinding(state,step,runId,closures=[]) {
   return {digest:conflicts.length?null:first?.digest??null,known:!!first&&!conflicts.length,source:first?.source??'legacy-unbound',conflicts};
 }
 const bindingRecord=b=>({version:1,status:b.known?'known':'unknown',source:b.known?b.source:'legacy-unbound'});
+function resolveExecutionBinding(state,step,runId,closures=[]){
+  const observed=[],conflicts=[];
+  const add=source=>{
+    if(!source||!Object.hasOwn(source,'executionBinding'))return;
+    try{const b=validateExecutionBinding(source.executionBinding);observed.push(makeExecutionBinding(b.host,b.mode));}
+    catch(e){conflicts.push(e.message);}
+  };
+  for(const e of state.events??[])if(e.type==='begin'&&e.step===step&&e.runId===runId)add(e);
+  if(state.tasks?.[step]?.runId===runId)add(state.tasks[step]);
+  for(const e of closures)if(e.step===step&&e.runId===runId)add(e);
+  if(new Set(observed.map(x=>JSON.stringify(x))).size>1)conflicts.push('Conflicting original host/mode/executor bindings.');
+  return {binding:conflicts.length?null:observed[0]??null,conflicts};
+}
 function deriveExecutions(state) {
   const active=new Map(),closed=new Set(),ambiguous=[],closures=[];
   const add=r=>{if(r?.runId&&r.step&&!closed.has(r.runId)&&!active.has(r.runId))active.set(r.runId,r);};
@@ -74,6 +90,9 @@ function deriveExecutions(state) {
     const b=resolveRunBinding(state,r.step,r.runId,closures);
     if(b.conflicts.length)ambiguous.push({runIds:[r.runId],message:`${b.conflicts.join('; ')}: ${r.step}/${r.runId}`});
     Object.assign(r,{reviewDigest:b.digest,reviewBinding:bindingRecord(b)});
+    const execution=resolveExecutionBinding(state,r.step,r.runId,closures);
+    if(execution.conflicts.length)ambiguous.push({runIds:[r.runId],message:`${execution.conflicts.join('; ')}: ${r.step}/${r.runId}`});
+    Object.assign(r,{executionBinding:execution.binding,executionBindingStatus:execution.conflicts.length?'conflict':execution.binding?'known':'legacy-unbound'});
   }
   state.activeExecutions=[...active.values()];
   state.executionBlockers=ambiguous.filter(x=>!x.runIds||x.runIds.some(id=>active.has(id))).map(x=>x.message);
@@ -128,10 +147,10 @@ async function mutate(project,id,action) {
   });
 }
 export async function status(project,id) { const {dir,c,state} = await read(project,id); return {...await refresh(project,dir,c,state),derivedAt:now(),persisted:false}; }
-export async function taskContext(project,id,step) {
+export async function taskContext(project,id,step,options={}) {
   const {dir,c,state}=await read(project,id);
   await refresh(project,dir,c,state);
-  return {...await buildTaskContext(project,dir,c,state,step),persisted:false};
+  return {...await buildTaskContext(project,dir,c,state,step,options),persisted:false};
 }
 export async function render(project,id) {
   return mutate(project,id,async(dir,c,state)=>{
@@ -183,17 +202,18 @@ function ready(c,state,id) {
   if (failed.length) throw new Error(`Dependencies need current acceptance: ${failed.join(', ')}`);
   return task;
 }
-export async function begin(project,id,step) {
+export async function begin(project,id,step,options={}) {
   let candidate;
   try{return await mutate(project,id,async(dir,c,state)=>{
     ready(c,state,step);
+    const executionBinding=makeExecutionBinding(selectHost(c,options.host),options.mode??'native');
     const runId = randomUUID();
-    candidate={runId,reviewDigest:state.review.digest};
+    candidate={runId,reviewDigest:state.review.digest,executionBinding};
     const history=state.tasks[step]?.acceptanceAttempts;
-    state.tasks[step] = {status:'executing',runId,startedAt:now(),reviewDigest:state.review.digest,...(history?{acceptanceAttempts:history}:{})};
-    state.activeExecutions.push({step,runId,startedAt:state.tasks[step].startedAt,reviewDigest:state.review.digest});
-    state.phase = 'executing'; event(state,'begin',{step,runId,reviewDigest:state.review.digest});
-    return {phase:'executing',runId,reviewDigest:state.review.digest,...(c.layout==='layered'?{submission:nativeSubmissionAction(project,id,step,runId)}:{})};
+    state.tasks[step] = {status:'executing',runId,startedAt:now(),reviewDigest:state.review.digest,executionBinding,...(history?{acceptanceAttempts:history}:{})};
+    state.activeExecutions.push({step,runId,startedAt:state.tasks[step].startedAt,reviewDigest:state.review.digest,executionBinding});
+    state.phase = 'executing'; event(state,'begin',{step,runId,reviewDigest:state.review.digest,executionBinding});
+    return {phase:'executing',runId,reviewDigest:state.review.digest,executionBinding,...(c.layout==='layered'||c.templateVersion===4?{submission:nativeSubmissionAction(project,id,step,runId,executionBinding.executor)}:{})};
   });}catch(e){if(candidate)e.beginCandidate=candidate;throw e;}
 }
 // Canonical caller facts preserve unknown JSON fields; runtime bindings are checked separately.
@@ -218,7 +238,8 @@ async function publishReceipt(file,value){
 }
 export async function submit(project,id,step,receipt,{sourceFile}={}) {
  return mutate(project,id,async(dir,c,state)=>{
-  if(!receipt||typeof receipt!=='object'||typeof receipt.runId!=='string'||!['codex-native','codex-cli'].includes(receipt.executor)||typeof receipt.reference!=='string'||!receipt.reference.trim()||!['ok','failed'].includes(receipt.result))throw new Error('Receipt needs actual Codex executor, execution reference, runId and result.');
+  if(!receipt||typeof receipt!=='object'||typeof receipt.runId!=='string'||typeof receipt.reference!=='string'||!receipt.reference.trim()||!['ok','failed'].includes(receipt.result))throw new Error('Receipt needs actual host executor, execution reference, runId and result.');
+  executorProfile(receipt.executor);
   if(!['not-applicable','positive','negative','opposite','inconclusive'].includes(receipt.outcome??'not-applicable'))throw new Error('Invalid result outcome.');
   const begins=state.events.filter(e=>e.type==='begin'&&e.runId===receipt.runId);
   const active=state.activeExecutions.find(r=>r.step===step&&r.runId===receipt.runId);
@@ -227,6 +248,9 @@ export async function submit(project,id,step,receipt,{sourceFile}={}) {
   if(!active&&!closed.length)throw new Error('No matching active or factually closed execution.');
   const original=active??begins[0]??closed[0];
   if(!original)throw new Error('Original run identity is unavailable; inspect legacy evidence.');
+  const execution=resolveExecutionBinding(state,step,receipt.runId,deriveExecutions(state).closures);
+  if(execution.conflicts.length)throw new Error(execution.conflicts.join('; '));
+  if(execution.binding?receipt.executor!==execution.binding.executor:!['codex-native','codex-cli'].includes(receipt.executor))throw new Error('Receipt executor conflicts with the original host/mode binding; legacy unbound runs retain Codex facts only. Preserve the original active run.');
   let task=state.tasks[step];
    const binding=resolveRunBinding(state,step,receipt.runId,deriveExecutions(state).closures);
    if(binding.conflicts.length)throw new Error(binding.conflicts.join('; '));
@@ -271,13 +295,15 @@ export async function submit(project,id,step,receipt,{sourceFile}={}) {
    if(!allowed)task.reason='Execution factually closed after its approval, dependency or task identity became stale; result is not accepted.';
   }
   state.activeExecutions=state.activeExecutions.filter(r=>r.runId!==receipt.runId);
-   event(state,'execution_receipt',{step,runId:receipt.runId,reviewDigest:originalDigest,reviewBinding:bindingRecord(binding),receiptReviewDigest:savedReceipt.reviewDigest??null,result:receipt.result,reference:receipt.reference,acceptedForVerification:allowed,receiptSha256:saved.sha256});
+   event(state,'execution_receipt',{step,runId:receipt.runId,reviewDigest:originalDigest,reviewBinding:bindingRecord(binding),...(execution.binding?{executionBinding:execution.binding}:{}),receiptReviewDigest:savedReceipt.reviewDigest??null,result:receipt.result,reference:receipt.reference,acceptedForVerification:allowed,receiptSha256:saved.sha256});
   await refresh(project,dir,c,state);
   return {phase:allowed?task.status:'stale',receipt:saved,executionClosed:true,replayed,acceptedForVerification:allowed,warning:'Receipt records an actual end, not process cancellation, acceptance or identity authentication. A stale closure does not restore approval.'};
  });
 }
 function assertOriginalRun(c,state,step,started) {
   const b=resolveRunBinding(state,step,started.runId,deriveExecutions(state).closures);
+  const execution=resolveExecutionBinding(state,step,started.runId,deriveExecutions(state).closures);
+  if(execution.conflicts.length||!execution.binding||execution.binding.executor!==started.executionBinding?.executor||selectHost(c,execution.binding.host)!==execution.binding.host)throw new Error('Original host/mode binding is no longer valid; execution was not started.');
   const s=state.tasks[step],t=c.tasks.find(t=>t.id===step),a=state.approval;
   if(!a||state.blocker||a.actor!=='user'||a.decision!=='approve'||a.taskId!==c.taskId||a.revision!==c.revision||a.digest!==started.reviewDigest||state.review?.digest!==started.reviewDigest||!b.known||b.digest!==started.reviewDigest||b.conflicts.length||s?.runId!==started.runId||s.status!=='executing'||!t||t.dependsOn.some(id=>state.tasks[id]?.status!=='verified')||state.executionBlockers.length||state.activeExecutions.length!==1||state.activeExecutions[0].runId!==started.runId)throw new Error('Original run approval, identity, review snapshot or dependencies are no longer valid; execution was not started.');
 }
@@ -288,7 +314,7 @@ async function prepareRunInput(project,id,step,started) {
   const context=layered?await buildTaskContext(project,initial.dir,initial.c,initial.state,step):null;
   const body=layered?JSON.stringify(context,null,2):renderContract(initial.c);
   const masterPath=context?await fs.realpath(context.master.path):null;
-  const prompt=`Use the approved task harness at ${path.join(initial.dir,'HARNESS.md')}. Task ${step}, runId ${started.runId}, review digest ${started.reviewDigest}. This run has already begun; execute this run rather than starting another. Execute only this task's authorized scope with available native Codex tools. User permission is limited by the reviewed contract and actual chat authorization; ask when needed. Do not change review files or state, self-approve, invoke a second orchestrator, install packages, or report verified. Report actual changes, evidence, failures and negative findings.\n\n${body}`;
+  const prompt=`Use the approved task harness at ${path.join(initial.dir,'HARNESS.md')}. Task ${step}, runId ${started.runId}, review digest ${started.reviewDigest}. This run has already begun; execute this run rather than starting another. Execute only this task's authorized scope with available native ${hostProfile(started.executionBinding.host).label} tools. User permission is limited by the reviewed contract and actual chat authorization; ask when needed. Do not change review files or state, self-approve, invoke a second orchestrator, install packages, or report verified. Do not submit or verify this run yourself; the supervisor records actual completion after this process closes. Report actual changes, evidence, failures and negative findings.\n\n${body}`;
   const last=await read(project,id);await refresh(project,last.dir,last.c,last.state);assertOriginalRun(last.c,last.state,step,started);
   if(hash(JSON.stringify(initial.c))!==hash(JSON.stringify(last.c)))throw new Error('Prepared contract changed before launch.');
   const pathKey=p=>process.platform==='win32'?path.resolve(p).toLowerCase():path.resolve(p);
@@ -298,9 +324,12 @@ async function prepareRunInput(project,id,step,started) {
 }
 export async function run(project,id,step,options={}) {
   if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<=0))throw new Error('timeoutMs must be positive when specified.');
-  const invocation=await resolveCodex(options.codex);const dir=await taskDirectory(project,id);
+  const initial=await read(project,id),host=selectHost(initial.c,options.host);
+  if(options.codex!==undefined&&options.executable!==undefined)throw new Error('Do not combine --codex and --executable.');
+  if(options.codex!==undefined&&host!=='codex')throw new Error('--codex is a Codex-only executable alias.');
+  const invocation=await resolveHostExecutable(host,options.executable??options.codex);const dir=initial.dir;
   let started,result,originalError,beginPersisted=true;
-  try{started=await begin(project,id,step);}catch(e){
+  try{started=await begin(project,id,step,{host,mode:'cli'});}catch(e){
     originalError=e;started=e.completedResult?.runId?e.completedResult:e.beginCandidate;
     if(!started)throw e;
     beginPersisted=e.completedResult?.runId?true:'unknown';
@@ -308,16 +337,21 @@ export async function run(project,id,step,options={}) {
     result={processState:'not-started',pid:null,code:null,exitCode:null,signal:null,error:formatRuntimeError(e),errorStage:'begin',timedOut:false,outputBytes:0};
   }
   const log=path.join(dir,`execution-${started.runId}.jsonl`);
+  const outputObserver=hostOutputObserver(host);
   const recovery=extra=>Object.assign(new Error(`Execution ${step}/${started.runId}: ${result?.error??'factual closure failed'}. Preserve the original run and submission facts.`,{cause:originalError}),{runId:started.runId,reviewDigest:started.reviewDigest,beginPersisted,processResult:result,...extra});
   if(beginPersisted!==true)throw recovery({executionClosed:false,closureError:'Begin persistence is unconfirmed or absent; inspect this candidate without restarting.'});
   if(!result){
-    const args=[...invocation.prefix,'exec','--sandbox','workspace-write','-c','approval_policy="on-request"','--skip-git-repo-check','--json','-'];
-    try{result=await runProcess(invocation.command,args,{cwd:project,log,timeoutMs:options.timeoutMs,prepareInput:()=>prepareRunInput(project,id,step,started),launchGuard:action=>locked(dir,action)});}
+    const args=[...invocation.prefix,...hostRunArgs(host)];
+    try{result=await runProcess(invocation.command,args,{cwd:project,log,timeoutMs:options.timeoutMs,prepareInput:()=>prepareRunInput(project,id,step,started),launchGuard:action=>locked(dir,action),...(outputObserver?{stdoutObserver:outputObserver.write}:{})});}
     catch(e){originalError=e;result=e?.processResult??{processState:'unknown-active',code:null,error:e?.message??String(e)};}
   }
   if(!['closed','not-started'].includes(result.processState))throw recovery({executionClosed:false});
+  if(outputObserver&&result.processState==='closed'){
+    const hostProtocol=outputObserver.finish();result={...result,hostProtocol};
+    if(!hostProtocol.ok)result={...result,error:[result.error,...hostProtocol.errors].filter(Boolean).join('; '),errorStage:result.errorStage??'host-protocol'};
+  }
   const logs=[];try{if(await exists(log))logs.push({path:log,sha256:await digest(log)});}catch(e){result={...result,error:[result.error,`log-digest: ${e.message}`].filter(Boolean).join('; '),errorStage:result.errorStage??'log-digest'};}
-  const submissionFacts={runId:started.runId,executor:'codex-cli',reference:log,result:result.code===0&&!result.error&&!result.controlErrors?.length?'ok':'failed',process:result,logs,outcome:'not-applicable'};
+  const submissionFacts={runId:started.runId,executor:executorFor(host,'cli'),reference:log,result:result.code===0&&!result.error&&!result.controlErrors?.length?'ok':'failed',process:result,logs,outcome:'not-applicable'};
   let closureResult;
   try{closureResult=await submit(project,id,step,submissionFacts);}catch(closureError){throw recovery({submissionFacts,executionClosed:closureError.completedResult?.executionClosed===true,closureResult:closureError.completedResult??null,closureError});}
   if(originalError&&result.processState==='not-started')throw recovery({submissionFacts,executionClosed:true,closureResult});

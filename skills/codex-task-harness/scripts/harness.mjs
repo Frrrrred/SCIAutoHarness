@@ -10,15 +10,17 @@ import { json, contained, inside, exists, locked, atomicWrite, formatRuntimeErro
 import { resolveCodex, runProcess } from './lib/process.mjs';
 import os from 'node:os';
 import { EXECUTION_SUMMARY } from './lib/templates.mjs';
+import {hostProfile,resolveHostExecutable} from './lib/hosts.mjs';
 
 const HELP = `codex-task-harness (local Node.js; no automatic downloads)
   help
   classify --intent review --stages 3 [--research] [--read-only]
   init [--project PATH]                         installation preview only
-  install-preview --codex-home PATH --skill-root PATH [--out FILE] [--replace-skill]
+  install-preview [--host HOST] --host-home PATH --skill-root PATH [--out FILE] [--replace-skill]
+                  --codex-home PATH remains a Codex-only home alias
   install --plan FILE                          apply an already reviewed preview
   rollback --manifest FILE                    explicit rollback, refuses user drift
-  draft --project PATH --id ID --goal TEXT [--domain software|research|general] [--layout layered]
+  draft --project PATH --id ID --goal TEXT [--domain software|research|general] [--layout layered] [--host HOST] [--allow-host HOST ...]
   refs --project ABSOLUTE_PATH --id ID [--next | --document PACKAGE_RELATIVE_MD] [--allow-root AUTHORIZED_ROOT ...]
   prepare-review --project ABSOLUTE_PATH --id ID [--repair-output-refs] [--handoff-only] [--allow-root AUTHORIZED_ROOT ...]
   handoff --project ABSOLUTE_PATH --id ID [--allow-root AUTHORIZED_ROOT ...]  read-only current pending-review Markdown
@@ -26,24 +28,28 @@ const HELP = `codex-task-harness (local Node.js; no automatic downloads)
   review --project PATH --id ID                 validate and seal review package
   decision --project PATH --id ID --record FILE direct user decision record
   status --project PATH --id ID                 read-only current evidence status
-  context --project PATH --id ID --task STEP    read-only selected stage and constraints
-  begin --project PATH --id ID --task STEP      host-native Codex execution boundary
+  context --project PATH --id ID --task STEP [--host HOST]  read-only current stage and original active identity
+  begin --project PATH --id ID --task STEP [--host HOST]    host-native execution boundary
   submit --project PATH --id ID --task STEP --receipt FILE
   submit --project PATH --id ID --task STEP --run-id RUN --executor codex-native --reference TEXT --result ok|failed
-  run --project PATH --id ID --task STEP [--codex LOCAL_EXECUTABLE] [--timeout-ms N]
+  run --project PATH --id ID --task STEP [--host HOST] [--executable LOCAL_ENTRY] [--timeout-ms N]
+      --codex LOCAL_ENTRY remains a Codex-only executable alias
   verify --project PATH --id ID --task STEP [--reviews FILE]
-  doctor                                       version/help probes only; no model
+  doctor [--host HOST] [--executable LOCAL_ENTRY] version/help probes only; no model
 
 Fill the draft contract before review. A generated skeleton is not ready for approval.
 Decision JSON: actor=user, decision=approve|reject|revise, taskId, revision, digest,
 message, source. The caller must have a real user message; this records, not authenticates,
 identity. ${EXECUTION_SUMMARY}
-Install/global enable and real codex run require the user's applicable authorization.`;
+Hosts: codex, claude-code, deepseek-harness. New template4 binds allowedHosts/defaultHost.
+Unchanged templates1-3 retain Codex behavior; a host switch never relabels an active run.
+Install/global enable and real independent run require the user's applicable authorization.`;
 
 const SUBMIT_HELP={
   command:'submit',
   inlineRequired:['project','id','task','run-id','executor','reference','result'],
   inlineOptional:['summary','outcome'],
+  executors:['codex-native','codex-cli','claude-code-native','claude-code-cli','deepseek-harness-native','deepseek-harness-cli'],
   inlineExampleArgs:['submit','--project','<PROJECT>','--id','<ID>','--task','<STEP>','--run-id','<RUN_ID>','--executor','codex-native','--reference','<REFERENCE>','--result','ok'],
   fileMode:'Alternatively use --receipt FILE containing runId, executor, reference, result, optional summary/outcome. Do not mix file and inline fields.',
   ownership:'File mode takes a separate input payload. Never create receipt-<runId>.json or state.json yourself; runtime-owned files are created by the runtime. Inline mode needs no payload file.',
@@ -140,7 +146,7 @@ function reviewPresentation(directory,contract,review,pathCheck) {
     const file=path.resolve(directory,relative).split(path.sep).join('/').replaceAll('%','%25').replaceAll('#','%23');
     return `- [${label}](<${file}>)`;
   }).join('\n');
-  const handoffMarkdown=`完整 Harness 已准备，当前状态为 pending_user_review，等待最终用户审查。\n\n任务 ID：${review.taskId}；修订：${review.revision}。\n\n审查摘要：${review.digest}\n\n路径检查：${pathCheck.documents} 份 Markdown 文档，0 个问题、0 个未覆盖项；机器 review 已成功。总控已与当前契约一致，并已纳入当前受审摘要。总体边界、阶段方法、验收及未解决项见以下完整审查包：\n\n${navigation}\n\n请最终用户审查当前 ID、修订和摘要绑定的完整版本，并直接批准、拒绝或提出修改。批准前不开始正式工作；机器检查不替代内容和科学有效性审查。`;
+  const handoffMarkdown=`The complete Harness is ready and pending_user_review. Final-human review is required.\n\nTask ID: ${review.taskId}; revision: ${review.revision}.\n\nReview digest: ${review.digest}\n\nPath check: ${pathCheck.documents} Markdown documents, 0 issues, 0 uncovered items; machine review succeeded. The master matches the current contract and is included in this review digest. Review the complete boundaries, stage methods, acceptance and unresolved items through this package:\n\n${navigation}\n\nThe final human must directly approve, reject or request changes to this complete ID/revision/digest-bound version. Formal work waits for that decision. Machine checks do not establish semantic or scientific validity.`;
   return {documents,handoffMarkdown,next:'Use handoffMarkdown for the normal final reply. Preserve literal link targets: E:/..., never /E:/.... Wait for direct final-user approval.'};
 }
 async function repairOutputReferences(project,id,allowRoots) {
@@ -231,10 +237,10 @@ async function currentHandoff(project,id,allowRoots) {
 export async function main(argv=process.argv.slice(2)) {
   const command=argv[0]??'help';
   if(['help','--help','-h'].includes(command)) { console.log(command==='help'&&argv[1]==='submit'?JSON.stringify(SUBMIT_HELP,null,2):HELP);return; }
-  const allowed={classify:['intent','stages','deliverables','research','read-only'],init:['project','path','out'], 'install-preview':['codex-home','skill-root','out','replace-skill'],install:['plan'],rollback:['manifest'],draft:['project','id','goal','domain','layout'],refs:['project','id','document','allow-root','next'],'prepare-review':['project','id','allow-root','repair-output-refs','handoff-only'],handoff:['project','id','allow-root'],render:['project','id'],review:['project','id'],decision:['project','id','record'],status:['project','id'],context:['project','id','task'],begin:['project','id','task'],submit:['project','id','task','receipt','run-id','executor','reference','result','summary','outcome'],run:['project','id','task','codex','timeout-ms'],verify:['project','id','task','reviews'],doctor:[]};
+  const allowed={classify:['intent','stages','deliverables','research','read-only'],init:['project','path','out','host'], 'install-preview':['host','host-home','codex-home','skill-root','out','replace-skill'],install:['plan'],rollback:['manifest'],draft:['project','id','goal','domain','layout','host','allow-host'],refs:['project','id','document','allow-root','next'],'prepare-review':['project','id','allow-root','repair-output-refs','handoff-only'],handoff:['project','id','allow-root'],render:['project','id'],review:['project','id'],decision:['project','id','record'],status:['project','id'],context:['project','id','task','host'],begin:['project','id','task','host'],submit:['project','id','task','receipt','run-id','executor','reference','result','summary','outcome'],run:['project','id','task','host','executable','codex','timeout-ms'],verify:['project','id','task','reviews'],doctor:['host','executable','codex']};
   if(!allowed[command])throw new Error(`Unknown command ${command}. Use help.`);
   const authoring=['refs','prepare-review','handoff'].includes(command);
-  const o=options(argv.slice(1),[...allowed[command],'help'],authoring?['allow-root']:[]);
+  const o=options(argv.slice(1),[...allowed[command],'help'],[...(authoring?['allow-root']:[]),...(command==='draft'?['allow-host']:[])]);
   if(o.help){console.log(command==='submit'?JSON.stringify(SUBMIT_HELP,null,2):HELP);return;}
   if(authoring&&!path.isAbsolute(requireOption(o,'project')))throw new Error('--project must be absolute for authoring commands.');
   const project=authoring?await fs.realpath(o.project):path.resolve(o.project??o.path??process.cwd());
@@ -243,21 +249,26 @@ export async function main(argv=process.argv.slice(2)) {
     const number=(value)=>{const n=Number(value??1);if(!Number.isInteger(n)||n<1)throw new Error('Stages/deliverables must be positive integers.');return n;};
     result=classify({intent:o.intent,stages:number(o.stages),deliverables:number(o.deliverables),research:o.research,readOnly:o['read-only']});
   } else if(command==='init' || command==='install-preview') {
-    result=await previewInstall(command==='init'?{codexHome:project,skillRoot:path.join(project,'.agents','skills')}:{codexHome:requireOption(o,'codex-home'),skillRoot:requireOption(o,'skill-root'),replaceSkill:o['replace-skill']});
+    const host=o.host??'codex';hostProfile(host);
+    if(o['host-home']!==undefined&&o['codex-home']!==undefined)throw new Error('Use only one of --host-home and --codex-home.');
+    result=await previewInstall(command==='init'?{host,hostHome:project,skillRoot:path.join(project,host==='codex'?'.agents':host==='claude-code'?'.claude':'.dsh','skills')}:{host,hostHome:o['host-home'],codexHome:o['codex-home'],skillRoot:requireOption(o,'skill-root'),replaceSkill:o['replace-skill']});
     if(o.out)await fs.writeFile(path.resolve(o.out),`${JSON.stringify(result,null,2)}\n`,{flag:'wx'});
   } else if(command==='install') result=await applyInstall(await json(requireOption(o,'plan')));
   else if(command==='rollback')result=await rollbackInstall(requireOption(o,'manifest'));
   else if(command==='doctor') {
-    const invocation=await resolveCodex(); const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'codex-task-harness-doctor-'));
+    const host=o.host??'codex',profile=hostProfile(host);
+    if(o.codex!==undefined&&(host!=='codex'||o.executable!==undefined))throw new Error('--codex is a Codex-only alias and cannot be combined with --executable.');
+    const invocation=await resolveHostExecutable(host,o.executable??o.codex); const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'codex-task-harness-doctor-'));
     const versionLog=path.join(tmp,'version.txt'),helpLog=path.join(tmp,'help.txt');
     const version=await runProcess(invocation.command,[...invocation.prefix,'--version'],{cwd:project,log:versionLog,timeoutMs:10000});
-    const help=await runProcess(invocation.command,[...invocation.prefix,'exec','--help'],{cwd:project,log:helpLog,timeoutMs:10000});
+    const help=await runProcess(invocation.command,[...invocation.prefix,...profile.helpArgs],{cwd:project,log:helpLog,timeoutMs:10000});
     const helpText=await fs.readFile(helpLog,'utf8');
-    result={node:process.version,codex: (await fs.readFile(versionLog,'utf8')).trim(),versionExit:version.code,helpExit:help.code,execArgumentsSupported:['--sandbox','--skip-git-repo-check','--json','--config'].every(x=>helpText.includes(x)),actualModelRun:false,evidenceDirectory:tmp};
+    const versionText=(await fs.readFile(versionLog,'utf8')).trim(),required=host==='codex'?['--sandbox','--skip-git-repo-check','--json','--config']:host==='claude-code'?['--print']:['--json'];
+    result={host,node:process.version,version:versionText,...(host==='codex'?{codex:versionText,execArgumentsSupported:required.every(x=>helpText.includes(x))}:{}),versionExit:version.code,helpExit:help.code,helpArgumentsSupported:required.every(x=>helpText.includes(x)),actualModelRun:false,evidenceDirectory:tmp};
   } else {
     const id=requireOption(o,'id');
     if(command==='draft'){
-      result=await draft(project,id,requireOption(o,'goal'),o.domain,o.layout);
+      result=await draft(project,id,requireOption(o,'goal'),o.domain,o.layout,{host:o.host,allowHosts:o['allow-host']??[]});
       if(o.layout==='layered')Object.assign(result,{next:'Fill and check the contract first. For a stable complete contract, use authoring.refs once to obtain every document mapping, then write all substantive documents from those mappings without repeating unchanged refs calls. Use authoring.next for partial authoring or after mapping changes. Review the complete content before sealing; normally deliver the successful Markdown next.',authoring:{refs:authoringAction('refs',project,id),next:{...authoringAction('refs',project,id),args:[...authoringAction('refs',project,id).args,'--next']},prepareReview:{...authoringAction('prepare-review',project,id),args:[...authoringAction('prepare-review',project,id).args,'--repair-output-refs','--handoff-only']}}});
     }
     if(command==='refs'){
@@ -273,15 +284,15 @@ export async function main(argv=process.argv.slice(2)) {
     if(command==='review')result=await prepareReview(project,id);
     if(command==='decision')result=await recordDecision(project,id,await json(requireOption(o,'record')));
     if(command==='status')result=await status(project,id);
-    if(command==='context')result=await taskContext(project,id,requireOption(o,'task'));
-    if(command==='begin')result=await begin(project,id,requireOption(o,'task'));
+    if(command==='context')result=await taskContext(project,id,requireOption(o,'task'),{host:o.host});
+    if(command==='begin')result=await begin(project,id,requireOption(o,'task'),{host:o.host});
     if(command==='submit'){
       const fields=['run-id','executor','reference','result','summary','outcome'];
       if(Object.hasOwn(o,'receipt')&&fields.some(key=>Object.hasOwn(o,key)))throw new Error('File and inline submission fields are mutually exclusive. Use help submit.');
       if(Object.hasOwn(o,'receipt')){const sourceFile=path.resolve(requireOption(o,'receipt'));result=await submit(project,id,requireOption(o,'task'),await json(sourceFile),{sourceFile});}
       else result=await submit(project,id,requireOption(o,'task'),{runId:requireOption(o,'run-id'),executor:requireOption(o,'executor'),reference:requireOption(o,'reference'),result:requireOption(o,'result'),...(o.summary===undefined?{}:{summary:o.summary}),...(o.outcome===undefined?{}:{outcome:o.outcome})});
     }
-    if(command==='run')result=await run(project,id,requireOption(o,'task'),{codex:o.codex,timeoutMs:o['timeout-ms']===undefined?undefined:Number(o['timeout-ms'])});
+    if(command==='run')result=await run(project,id,requireOption(o,'task'),{host:o.host,executable:o.executable,codex:o.codex,timeoutMs:o['timeout-ms']===undefined?undefined:Number(o['timeout-ms'])});
     if(command==='verify')result=await verify(project,id,requireOption(o,'task'),o.reviews?await json(o.reviews):{});
   }
   console.log(command==='handoff'?result:command==='prepare-review'&&o['handoff-only']&&result.handoffMarkdown?result.handoffMarkdown:JSON.stringify(result,null,2)); return result;

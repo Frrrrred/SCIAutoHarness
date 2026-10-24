@@ -1,53 +1,54 @@
-# 恢复、失败反馈与语义维护
+# Recovery, failure feedback and semantic maintenance
 
-只在新会话、真实中断、证据陈旧、阶段结束或连续失败时读取；正常阶段执行不每次重载全部历史。
+Read on new sessions, interruption, stale evidence, phase end or repeated failure. Normal execution does not reload all history.
 
-## 续接顺序
+## Continuation order
 
-1. 已给出入口时，首批项目读取只读该总控和任务 RECOVERY；可读取 skill 的 runtime 说明，随后立即 context。不要先目录枚举、跨项目/包宽搜或全文读旧 state/前置回执/验收报告；搜索命中行也是载入。只有入口未知或指定文件缺失时，在指定任务目录作有限文件名定位，不扩大范围或读全部正文。
-2. context 取得当前阶段、有效批准的 ID/修订/摘要与原文/来源摘录，以及当前依赖证据摘要。摘录截断会明确标记，记录仍非身份认证；结合真实用户授权判断，不以文件自称批准替代。正常有效时不再翻旧账本重复确认；有具体缺口才说明缺口，读取所指文件/字段，不输出完整 status 历史。state.json 是旧快照，不能代替重新派生。
-3. 核对本阶段输入、环境和前置证据仍有效，选择依赖已验收的下一项。 context 后重新核对剩余必做项、关键依赖、实际费用/算力配额或容量、操作权限与当前优先级；需要判断或重选行动时按需读 [判断与全局推进](execution-judgment.md)，不把它变成 context 前的输入。原批准有效且范围未变时连续推进，不重复请求。科研 context、当前新事实或诊断涉及来源/字段身份、资料纠错/排除/插补、参数/随机设置/阈值或关键依赖放行时，再按需读 [科研资料、参数与关键验收](research.md) 的对应条款，决定当前检查、局部返工、证据失效与交接；不作为 context 前输入，已读且未变化时复用。
-4. 先查看 context.activeExecutions/executionBlockers，不能只查任务的 executing 标签：证据或批准失效可使任务 stale，但原 run 仍活动。核查真实工具/进程/产物，仍运行就观察，不明则阻断重复启动；不要用 review/prepare-review 清空活动或待验收结果。确认结束后，用原 step/runId 和真实位置通过 submit 回交 ok/failed 事实。正常当前运行的成功结果仍需验收；失效/孤立运行只作事实收尾，acceptedForVerification=false，不恢复批准或接受产物。没有真实结果不能虚构回执，submit 不会停止/取消进程。
-5. 不自动杀进程、清锁或创建后台恢复任务；原运行/锁的归属不明时报告具体阻塞。继续独立可做的必做项，不把一个分支受阻当整任务完成。
+1. Supplied entry: first project reads ONLY master/recovery. Runtime.md may be read, then immediately context. No enumeration/broad search/full old state/predecessor receipts/reports first; matches count as loading. Only unknown or actually missing entry permits narrow lookup inside the explicit directory.
+2. Obtain current phase, approval identity and text/source excerpts, and verified dependency summaries. Truncation is marked. Combine runtime records with real user authorization; a file is not identity authentication. Do not reread old ledgers merely to confirm. Follow a pointer for a specific gap. Old state.json is not freshly derived evidence.
+3. Confirm relevant inputs/environment/dependencies; choose verified prerequisites. After context check all mandatory work, rights, costs/capacity and priority. Load [judgment](execution-judgment.md) only after context. Continue unchanged approval. For research identity/mappings/corrections/exclusions/imputation/parameters/random settings/thresholds/critical-release questions apply matching [research rules](research.md) after context, reusing unchanged material.
+4. Inspect activeExecutions/executionBlockers, not merely task status. Approval/freshness can expire while a run lives. Observe actual tools/processes/outputs and block duplicates if termination is unknown. Never review/restart to clear active/pending work. After confirmed end submit original step/runId and real ok/failed facts. Eligible success needs acceptance; stale/orphaned closure has acceptedForVerification=false and restores no approval/eligibility. Submit does not stop a process.
+5. Preserve original host/mode/executor from begin/context. Different observers, requested defaults, revised policy or approvals do not relabel activity. New work obeys reviewed policy; old closure obeys original identity. Do not infer non-Codex identity for old unbound records or activate policy from arbitrary old fields.
+6. No automatic kills/lock removal/background recovery. Unknown ownership needs a precise block. Continue independent executable requirements.
 
-verify 返回 HARNESS_ACTIVE_EXECUTION 时，先沿消息给出的原运行句柄观察真实结束，再以该原运行的 step/runId submit，最后重新取得 context；不能在持有验收控制锁时等待该 submit。被拒绝验收的任务仍为合资格 pending_acceptance 时才重试验收；原验证仍有效、currentStatus=verified 时沿用既有验证，无需为了消除拒绝摘要而重验或重启；stale 则按真实失效原因返工。原运行闭合或活动解除不恢复批准，也不使 stale 自动变回 verified。execution-guard 尝试只是未启动本次验收的拒绝记录，保留旧历史；记录、state 或清锁失败分别按实际错误核查，不能据缺少新报告推断没有原运行，也不能要求拒绝后的 state 字节完全不变。字段语义见 runtime.md 的活动门禁与验收恢复。
+After HARNESS_ACTIVE_EXECUTION, observe original termination, submit original run, then context. Never hold the acceptance lock while waiting for submission. Reverify only eligible pending work. Retain current verified evidence despite a refusal summary; rework stale results by actual cause. Factual closure restores neither approval nor verified status.
 
-工具等待、单次命令超时或上下文压缩不表示任务已结束，也不是停止整个任务的条件；按原句柄核查真实状态，继续仍可执行的已授权必做项。只有实际费用/算力配额或容量不可用、操作越权、用户叫停或真实平台中断时，准确处理对应分支或中断状态。任务复杂、网络变慢和执行耗时本身不构成停止或降级任务的理由。
+Execution-guard refusal is a failed attempt before acceptance began. Recording/state/cleanup errors are separate; absent reports do not prove a run absent, and refusal can change state bytes. See [runtime](runtime.md).
 
-输入/规范变更使批准失效，输出/验收证据变更使相关任务及下游陈旧；按实际范围返工。新鲜会话能读旧状态不证明已经恢复所有科研理解，关键判断仍查来源和当前证据。
+Waiting/timeouts/compaction do not establish end or justify downgrading. Actual resources, rights, user stop or platform interruption govern the affected branch. Changed reviewed inputs invalidate approval; changed outputs/evidence stale affected work and dependents. A fresh session's old state does not restore all scientific understanding; use current evidence.
 
-技能升级后，未修改的旧包（缺省templateVersion或显式数值1）仍使用冻结v1完整模板，显式数值2保持冻结v2正文；approved/pending_acceptance/verified和原active身份按当前证据续接，不为新默认v3自动render、补字段或重新review。主动更改模板版本属于新受审修订，先完成pending验收、事实闭合active，再递增revision、完整审查并等待最终用户批准。若运行中模板字段被改成未知值，status/context保留原身份及失效诊断，新正式动作被阻断，真实结束后原run仍可stale事实闭合；闭合不恢复批准。正文/版本错配不得通过猜版本或同时接受两份正文消除，版本及旧运行时回退边界见[模板版本](runtime.md#总控模板版本)。
+After updates, omitted/1 remains frozen v1 and2/3 retain their masters. Continue original approved/pending/verified/active work without adding fields/rendering/reviewing merely for new default4. Deliberate upgrades resolve activity/pending, increment revision and obtain complete direct-human review. Unknown version during activity blocks new work but retains diagnostics/original identity for stale closure. Do not guess versions or accept multiple alternate master bodies. Older-runtime limits are in runtime.md.
 
-## 进程与回执中断
+## Process and receipt interruptions
 
-已 spawn 后的 error、kill false/抛错/EPERM 或日志故障不证明进程结束；保留原观察和 active，等实际 close。processResult 的 processState、原始 exitCode/signal 与 timeout 策略码分别核对；没有确认终态则 unknown-active，禁止凭 cleanup 错误重启。已 close 的日志/清理失败按 failed 事实收尾：engine.run 的实际退出与日志错误查看执行 receipt.process；verify 失败查看 acceptance 报告的 processResult。没有验收报告不能据此推断执行未结束。
+After spawn, error/failed kill/throw/EPERM/log failure is not termination. Preserve observation until actual close. Keep processState, raw exitCode/signal and timeout policy code distinct. Unknown-active is not restart permission. Known closed logging/cleanup errors are failed facts. Run receipts contain process; failed acceptance reports contain processResult. No report does not imply no execution.
 
-submit 中断且固定 final 已存在时，先确认原运行真实结束及完整证据，再以原 step/runId 和相同 caller 事实重放：原内联提交复用原字段；文件模式或含额外事实的执行回执用保留全部事实的独立输入载荷或直接 API 对象，不能把正式 final 或其别名作 sourceFile。正常原生内联提交不需要新建载荷。完整 final 可恢复 state 指针；已闭合相同重放无额外事件/降级，stale 不恢复资格。坏 JSON、身份/hash/事实冲突保留原件，按 runtime.md 定位后阻断，不删回执、手改 state 或重审清空。发布/清理双错都保留，已有完整 final 与自身临时 hardlink 残留不等于可丢弃证据；平台不支持排他 link 发布也不私自降级。
+If a complete final receipt exists after interrupted submit, first confirm actual end and complete evidence; replay same step/runId and identical caller facts. Inline submissions reuse original fields; file/execution mode with extra facts uses separate input or direct API preserving all facts. Formal final/aliases cannot be sourceFile. Normal native inline needs no payload file. Complete final can repair state-pointer publication. Already closed identical replay adds no event/downgrade and cannot revive stale eligibility. Preserve malformed/partial/hash/identity/fact conflicts; never delete/edit/review away the problem.
 
-启动准备失败先区分是否已调用 spawn。原运行的末次门禁和同步spawn共用写锁；并发审批因占锁被拒绝时不能声称已撤销批准。启动后释放该锁失败，仍等待实际close并保留活动身份，不按准备未启动处理。已知未调用时按 not-started 保留原运行事实；begin报错也可能已有状态落盘，应核本次 candidate/完成结果，不能重新begin。恢复提交仅使用原 submissionFacts；closureError是恢复信息，不能混入回执事实。状态/契约不可读写时保留待闭合身份与具体错误，恢复后沿原submit继续，不新增状态写入器。
+Retain publication plus temporary-cleanup errors. A final with its own temporary hardlink residue is not disposable. Do not downgrade exclusive-link publication on unsupported platforms.
 
-旧 begin 缺摘要且当前 task 属于其他 run 时，旧 active 中的摘要可能是历史污染缓存，不能当批准来源。未知原绑定与完整旧 final 的摘要分开；后者只作观测，可 stale 收尾但不能验收。已闭合 task-only 的可信来源由运行时闭合标记保留，不能通过当前 step 的新运行补造。
+For preparation failures establish whether spawn occurred. Final authorization check and synchronous spawn share a lock; rejected approval commands did not change authority. Releasing a launch lock after spawn can fail, but still await close. Pre-spawn failures record not-started on the original run. Begin may fail after persisting; inspect its actual candidate/completed result, never begin again as repair.
 
-LOCK_CLEANUP_FAILED 先读 actionStatus。completed 时查看 completedResult，操作可能已经安装/回退或提交完成；failed 时查看 actionError，可能已有部分写入。cleanupError与statePersistenceError分别保留，确认原错误和恢复路径后再决定下一步。不要因退出非零重做操作，不自动清锁。
+Recover using original submissionFacts only; closureError is diagnostic, not receipt facts. Preserve original pending identity/error when storage/contract/state/locks prevent closure, then resume original submit without another writer.
 
-安装/回退不是事务回滚。I/O 中断先按错误给出的目标、prepared 清单及 backup 位置核实际已发生变化；不自动恢复/删未知目标。旧安全字段缺失、身份/链接/备份/内容不符必须审查，不能只因字节相同强行回退。安装政策与编码/元数据边界见 runtime.md。
+If an old begin lacks digest and current task is another run, cached old active digests may be historical pollution. Unknown original binding stays distinct from an observed old-final digest, which supports stale closure only. Runtime provenance markers preserve trusted closed task-only identities; new runs cannot create old provenance.
 
-回退先按 recovery.stage 和 failedTarget 定位逻辑处理目标，再结合 completedTargets/totalTargets 核文件现场。若原始异常来自源或备份读取/校验，结合 cause 中实际提供的信息、清单对应项和备份目录区分失败源与逻辑目标；不能把 failedTarget 直接当源路径或认定该目标已写坏。cleanup-directories 失败时先确认全部目标文件已处理及实际失败目录，不能因清单仍为 installed 就重做文件恢复；manifest 失败核实际清单的提交状态。恢复/删除报错的目标可能已有字节变化，成功计数不替代逐目标核查。内部阶段失败与回调成功后的外层清锁失败分开处理，后者仍读取 completedResult；原清单、备份与错误证据保留，不能自动重试。字段、阶段与计数的完整定义仅见 runtime.md 的安装与回退。
+LOCK_CLEANUP_FAILED: completed callbacks may already have installed/rolled back/submitted; inspect completedResult. Failed callbacks may have partial writes in actionError. Retain cleanupError, cleanupErrors, root acquisition/release facts and statePersistenceError separately. Nonzero is not retry or clear-lock permission. Release only acquired roots and inspect all actual outcomes.
 
-## 失败应给出的反馈
+Install/rollback are not transactions. Inspect real target changes, logical failed target, prepared manifest and backups; no automatic destructive restoration. Missing safety, identity/link/content/backup mismatch requires review, even with equal bytes. Complete old Codex safety1 manifests keep their actual rollback route, not silent conversion. Encoding/metadata policy is in runtime.md.
 
-实体包先结合 context.currentStatus 与 context.acceptance 最近摘要：status、criterion、error、log、exitCode、report、next 和 receipt，判断当前状态和该次调用结果。需要具体缺口才按指针读取日志或报告；state.tasks[step] 的 acceptanceAttempts/lastAcceptance 保留失败与成功重试，命令启动或日志创建前失败可能没有日志/退出码。不能把最近失败直接等同于当前任务未验证，也不能把“没有日志”当未运行，或把最近成功覆盖成从未失败。会话包在聊天中维护同样的实际证据与失败摘要，不虚构这些机器字段。
+Rollback stage/failedTarget identify logical current work. Source/backup reads may involve another path; use actual cause information, corresponding manifest item and backupDirectory. failedTarget is not necessarily the I/O source and does not prove target damage. completedTargets counts full returned successes, not absence of partial change at the failure.
 
-- 问题与定位证据：输入/期望/实际、命令/日志或来源位置。
-- 下一项有区分力的检查或最小修复，不能只是“再试一次”。
-- 需复验的阶段/依赖，停止或升级条件，以及对应规范位置。
+At cleanup-directories every file operation returned; an installed manifest does not justify repeating restoration. At manifest stage inspect whether commit reached disk. A failed restore/delete can partially or fully change bytes. Separate internal failure from outer cleanup after successful callback, which still has completedResult. Preserve manifests/backups/errors rather than automatically retrying.
 
-运行时可提供日志和通用下一步，但任务阶段要把具体领域的判断/修复边界写清。科研反证不是待修的实现错误；保留负结果，不为获取阳性而无依据改变数据/标准。合法纠错、排除和插补须遵守科研规则中的原始保留、版本/理由、既有审批与下游重验；不能把这类有依据的处理一概禁止。没有新依据不原样盲重试。
+## Failure feedback
 
-## 除哈希之外的语义维护
+Combine currentStatus with latest acceptance summary: status, criterion, error, log, exitCode, report, next, receipt. Read pointed raw evidence for a specific gap only. acceptanceAttempts/lastAcceptance retain failed and successful calls; startup/log failures may have null log/exit. Latest failed does not imply current unverified; missing log does not prove no run; later success never erases failure. Session-only tasks keep equivalent real summaries without fake machine fields.
 
-阶段结束、重要新事实、续接或重复失败时检查：总目标/主张是否仍与事实一致；过时计划是否仍被当当前依据；阶段方法/产物与文档是否一致；同一数值/定义/限制在图表、正文和交接摘要中是否冲突；多份约束是否互相抵触。
+Report problem/locating evidence; next discriminating check or focused repair; affected phases/dependencies/retests, escalation/stops and governing rule. Generic runtime suggestions do not replace domain judgment. Scientific counterevidence is not a code defect. Preserve negative results; justified corrections/exclusions/imputation follow source preservation, reason/version, approval and downstream reacceptance. No unchanged blind retries.
 
-只维护当前任务需要的规范与引用，记录哪些证据已失效及为什么，保留历史/负结果，不自动删原始数据或旧运行。受审规范实质变更修订并重审，普通进度写状态/回执。不要自动安排文档园丁、定时任务、外部 PR 或无关重构。
+## Semantic maintenance
 
-最后核对所有必做项与当前证据；完成、失败、受阻与未验证分别报告。不能只交一个阶段计划就结束整个已授权任务。
+At phase end/new facts/resumption/repeated failure, check objectives/claims against evidence, obsolete explanations, methods/outputs versus docs, definitions/numbers/limits across figures/text/handoffs and conflicting constraints.
+
+Maintain only necessary specifications/references. Record stale evidence and cause; preserve history and raw data. Material specifications need revision/review; progress belongs to runtime records. Do not automatically create documentation jobs, schedules, external pull requests or unrelated refactors. Final comparison covers all mandatory work and real complete/failed/blocked/unverified states. One phase plan does not complete an approved whole task.

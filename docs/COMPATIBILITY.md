@@ -1,46 +1,68 @@
-# 兼容性与使用限制
+<a id="兼容性与使用限制"></a>
+# Compatibility and limits
 
-[返回 README](../README.md) · [验证结果](VALIDATION.md)
+[README](../README.md) · [Host profiles](HOSTS.md) · [Validation](VALIDATION.md)
 
-## 环境
+<a id="环境"></a>
+## Environment
 
-| 范围 | 已知条件 |
+| Scope | Established conditions |
 | --- | --- |
-| 核心技能与本地 CLI | 使用 Node 内置模块和相对模块，无第三方 npm 依赖 |
-| 已建立的本地行为证据 | Windows / Node v26.12.1；新打包结果见 VALIDATION |
-| 完整主回归 | 还调用 python 标准库、pwsh，并实际检查链接、ACL 和 NTFS 命名流 |
-| 其他 OS / Node | 未建立完整行为证据；没有声明最低 Node 版本 |
-| 宿主原生路线 | 需要实际支持技能和原生工具的 Codex 环境 |
-| 独立 run | 需要本机可执行 Codex 和适用的额外模型/执行授权，不自动下载 |
+| Core | Node built-ins and bundled modules; no npm dependencies |
+| Local baseline | Windows / Node v26.12.1; exact current evidence in VALIDATION |
+| Complete regressions | Python standard library, pwsh, links, ACLs and NTFS streams |
+| Other OS / minimum Node | Full behavior and a minimum version are not established |
+| Native workflows | Actual supported discovery and native tools |
+| Independent run | Supported local client entry and applicable execution/model authorization |
 
-CI 在 Windows 和 Node 26 上执行；其结果只证明实际执行的环境与断言。不能从 .mjs 可解析推断所有平台行为兼容。
+CI evidence applies to its real environment/assertions. Parsing modules does not establish cross-platform behavior. Help/version probes are distinct from live discovery and model/tool execution.
 
-## 模板与旧任务
+<a id="模板与旧任务"></a>
+## Templates and existing tasks
 
-当前 schemaVersion 为 1。templateVersion 与它独立：旧包缺省或显式数值 1 选择冻结 v1；显式数值 2 保留原 v2 正文；新 draft 写入数值 3，使用中性的产品说明及准确状态摘要。其他版本或类型严格拒绝。任务 revision 是受审修订号。
+State schema remains 1; template selection is separate:
 
-未改动的 v1/v2 包可沿原批准续接 approved、pending_acceptance、verified 或 active run。不给旧契约自动补字段、重排、render 或迁移。主动更改受审文件，包括给缺省旧包补写 templateVersion，需先解决 pending/active 工作，再递增 revision、完整 review 并等待真实用户批准。
+| Value | Rendering and effective host |
+| --- | --- |
+| Omitted or numeric 1 | Frozen v1, Codex |
+| Numeric2 | Frozen v2, Codex |
+| Numeric3 | Frozen v3, Codex |
+| Numeric4 | Current template with reviewed allowedHosts/defaultHost |
+| Other values/types | Rejected for new formal work |
 
-未知模板或受审内容变化不会允许新正式工作，但不应封死原运行按真实身份 stale 闭合的通道。事实收尾不恢复批准或验收资格。新 v3 包不保证由不支持它的旧运行时读取，不能删除字段或降版本来复用旧批准。
+Unchanged old approved, pending, verified and active packages continue without added fields, contract reordering, rerendering or reinterpretation of arbitrary old execution JSON. Deliberate template/policy changes require resolving pending acceptance and factually closing activity first, then incrementing revision, completing review and obtaining direct human approval.
 
-完整细则见[运行接口](../skills/codex-task-harness/references/runtime.md)与[恢复规则](../skills/codex-task-harness/references/recovery-maintenance.md)。
+Unknown versions and reviewed-file changes block new formal work while preserving original stale factual closure. Closure does not restore eligibility. Older runtimes need not understand template 4; deleting fields or downgrading cannot restore approval. See [runtime](../skills/codex-task-harness/references/runtime.md) and [recovery](../skills/codex-task-harness/references/recovery-maintenance.md).
 
-## 安装与文件系统
+<a id="安装与文件系统"></a>
+## Installation and filesystems
 
-仅把仓库的技能子目录作为源。安装预览不会自动授权应用；真实目标应由使用者显式指定并审查。安装不修改 config.toml 或持久模型设置。
+Install only the nested skill, with explicit host/home/skill roots and fixed instruction names. No credentials, providers, persistent models or unrelated settings are configured. New previews/manifests use safety2. Old previews need regeneration and exact review. Complete legacy Codex safety1 manifests retain safe rollback; incomplete or unsupported ones require manual review rather than fabricated fields.
 
-UTF-8 个人规则支持原文、BOM、CRLF 和无末尾换行保留；不能无损处理的编码拒绝。符号链接、多硬链接或不可靠文件身份会触发安全拒绝。身份检查不能替代 OS 沙箱或抵御所有恶意并发改链。
+Valid UTF-8, optional BOM, CRLF, Unicode and missing final newline survive. Unsafe links, multiple hard links, unreliable identities and unsupported encodings are refused. Existing-file writes preserve their validated handle and metadata under the documented normal path; timestamps may change. This is not protection against every malicious filesystem race.
 
-旧安装的托管块与当前规则不同、或含当前分发清单外的多余文件时，预览保持安全拒绝；--replace-skill 不会绕过这些检查。必须明确目标、审查实际内容和处理影响后重新生成预览，没有自动迁移或静默删除。该安装限制不改变未修改旧任务包的运行兼容承诺。
+Different managed blocks or extra installed files remain safe refusals. Replacement does not bypass them. Review manual handling before a fresh preview. This restriction does not change unchanged old-task continuation.
 
-安装/回退可能部分完成，非零退出不能证明没有写入。failedTarget 是当前阶段的逻辑目标，不保证是底层异常 I/O 的源路径；回退备份源应结合 cause、清单 backup 与 backupDirectory 定位。不要自动重跑或清锁。
+All current install/rollback entrypoints acquire canonical mutation roots in stable order, releasing only acquired locks. Different homes sharing a skill root therefore coordinate. Older/unrelated writers without that protocol must be quiesced; the runtime is not a global OS lock or authentication system.
 
-## 宿主与教程边界
+Install/rollback may partially complete. A nonzero exit does not prove no changes. Use stage, logical failedTarget, original cause, manifest, backup directory and successful operation counts to inspect real state. Preserve evidence; do not automatically retry or clear a lock.
 
-本仓库不内置模型服务、后台守护、cron、MCP server、通用长期记忆或完整 Agent Teams。可用宿主能力仍需按当前会话工具和授权判断。原生子代理与独立 codex exec 有不同执行和资源语义。
+<a id="宿主与教程边界"></a>
+## Hosts and tutorial boundaries
 
-本地批准记录不是身份认证；摘要不是来源真实性或科学正确性证明。外部写入、环境安装、长期资源任务和额外模型仍受用户权限限制。
+[HOSTS](HOSTS.md) distinguishes Codex sandbox options, Claude normal print-mode permissions and DSH's configured headless profile. No bypass or equivalent-enforcement promise is added. DSH headless does not automatically use GUI sign-in; see its pinned credentials contract.
 
-## 升级实测边界
+The repository supplies no model service, daemon, scheduler, MCP server, general long-term memory or complete team service. Check actual host capabilities and authorization. Approval records do not authenticate operators; hashes do not establish origin or scientific truth. External writes, installation, resource use and model execution retain actual user permission requirements.
 
-**84 项跨运行时升级回归未执行。** 匹配的外部冻结基线当前不可用。运行这套验证前必须另行取得真实基线、核对完整摘要及固定金样来源；当前包或当前教程都不能作为替代。主回归、金样全文比较和其他兼容检查不能改写这个结论。
+## DeepSeek Harness evidence
+
+Support targets [official commit 687f282e8625c6b8d11ff58211a90524be2e4317](https://github.com/deepseek-ai/deepseek-harness/tree/687f282e8625c6b8d11ff58211a90524be2e4317), with `@deepseek-ai/dsh` `0.2.1-rc.2`. Source and strict local fixtures test that fixed contract. Developer-preview changes may require renewed adapter checks.
+
+DSH was not installed for this work. Live discovery, provider integration and model execution remain unverified. No real model run for any host is part of validation.
+
+<a id="升级实测边界"></a>
+## Upgrade-test boundary
+
+**The original 84 cross-runtime upgrade cases were not run.** Their matching external frozen baseline is unavailable. Its full identity and fixed-oracle provenance must be verified before that suite can run. Main regressions, goldens, current-baseline continuations and host/install tests are separate evidence. The current package and tutorial are not substitutes.
+
+Non-English anchor IDs preserve old links.

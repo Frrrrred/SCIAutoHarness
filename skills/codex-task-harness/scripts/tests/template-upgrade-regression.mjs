@@ -115,7 +115,7 @@ if(argv.includes('--prepare-only')){
     await checkpoint(f,'baseline-active');const keep=await evidence(f);assert.equal(child.isActive(),true);await readonly(f,step);
     if(mode==='approval')await fs.appendFile(path.join(f.project,'input.txt'),'SYNTHETIC drift');
     if(mode==='dependency')await fs.appendFile(path.join(f.project,'out/a.txt'),'SYNTHETIC drift');
-    if(['unknown','v2'].includes(mode)){const c=await json(path.join(f.directory,'contract.json'));c.templateVersion=mode==='unknown'?4:2;await write(path.join(f.directory,'contract.json'),c);}
+    if(['unknown','v2'].includes(mode)){const c=await json(path.join(f.directory,'contract.json'));c.templateVersion=mode==='unknown'?5:2;await write(path.join(f.directory,'contract.json'),c);}
     const stale=['approval','dependency','unknown','v2'].includes(mode),lost=['approval','unknown','v2'].includes(mode);
     const seen=await readonly(f,step,!lost,!stale);assert.equal(seen.status.activeExecutions[0].runId,b.runId);assert.equal(seen.status.activeExecutions[0].reviewDigest,b.reviewDigest);assert.equal(child.isActive(),true);
     const criterionFiles=Object.fromEntries(Object.entries(await tree(f.project)).filter(([p])=>p.startsWith('criterion-')));

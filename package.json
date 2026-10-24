@@ -1,7 +1,7 @@
 {
   "name": "codex-task-harness",
   "private": true,
-  "description": "Codex task planning, execution records and evidence acceptance; based on learn-claude-code Harness engineering principles.",
+  "description": "Shared task planning, execution records and evidence acceptance for Codex, Claude Code and official DeepSeek Harness; based on learn-claude-code Harness engineering principles.",
   "license": "MIT",
   "repository": {
     "type": "git",

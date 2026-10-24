@@ -1,123 +1,133 @@
-# 分层任务包：编写、完整审查与按需读取
+# Layered packages: authoring, complete review and selective loading
 
-## 创建之前
+## Choose the medium
 
-先选择载体：复杂只读请求且没有计划文件授权时，使用下述会话包；已获文件授权且需要实体包/机器状态时，使用后续实体包编写路线。两者都必须完整规划并经最终用户直接审查，不能用其中一条的工具要求阻断另一条。
+For complex read-only work without file authorization, use a complete in-session package. Authorized files/machine state use the disk route. Both require complete planning and direct final-human review; one route's tools must not block the other.
 
-### 完整会话包（无文件授权）
+### In-session package
 
-在聊天中给出稳定的任务 ID/修订和完整当前正文：目标/非目标、输入身份与来源、读范围/权限、全部主要阶段的方法与假设、阶段依赖、交付方式、验收证据、失败/停止与恢复、关键未知。总控用会话中的阶段名称导航，每阶段有实质内容；最终结果仍待批准后产出。没有实体文件的阶段使用会话标题引用，不假设 HARNESS.md、contract.json、state.json 或 CLI context 已存在。
+Present stable ID/revision and complete current text: objective/non-goals, input identities/sources, read scope/rights, every major phase's methods/assumptions/dependencies, deliverables, acceptance, failure/stops/recovery and unknowns. Navigate by substantive conversation sections, not imaginary files/state/context. Formal results wait.
 
-实际引用的本地输入先在明确授权目录内只读核验存在、项目相对路径解析和真实边界；未知或缺失项明确记录。保留实际检查结果，不把这种输入核验称为实体包路径检查通过。没有实体包时不调用 check-harness-paths、draft、prepare-review 或创建临时包来满足文件检查，也不编造机器 digest。
+First verify cited local inputs read-only in authorized explicit directories: existence, project-relative resolution and real containment. Record actual unknowns/results. This is input verification, not disk-package path checking. Do not create a temporary package, call draft/prepare-review/check-harness-paths, or invent a machine digest without file authorization.
 
-展示完整当前会话版本并等待最终用户直接批准该 ID/修订/正文；记录真实用户原文/来源与对应版本，不用初始请求、沉默或父代理自批替代。批准后会话内维护当前阶段、已验收依赖、实际证据和下一授权动作；续接先恢复这些约束及批准摘要，再读取本阶段输入。对未变化的批准不重复询问。
+Present the complete version and await direct approval of its ID/revision/text. Record original user wording/source; initial requests, silence and parent self-approval do not count. Maintain current phase, accepted dependencies/evidence and next action in-session. Resume by restoring those constraints/approval, then current inputs, without repeating unchanged approval.
 
-后来获得持久化授权时，明确转换范围；需要机器状态则按实体包路线生成、检查并绑定完整实体版本，提交最终用户审查后正式使用。新增权限或实质方法/范围变化同样需修订；普通会话进度不因此落盘。
+Later authorized persistence requires explicit conversion scope and complete disk creation/check/binding/review before formal use. Additional rights or material methods/scope require revision. Normal progress does not automatically authorize files.
 
-### 实体包编写
+### Disk authoring order
 
-首建编写顺序：完成实际结果产物及依赖的 contract → 立即调用 draft 返回的 authoring.refs → 用该映射写齐阶段、协议和恢复文件 → 语义复核及 prepare-review → 正常最终待审交付。不要读完空契约就跳过 refs 直接写正文；恢复文件也必须采用它自己的 inputs 映射，不能把项目相对输入名放入反引号充作文件引用。输入路径不会被 --repair-output-refs 自动修复。refs 的 inputs 另给出 absoluteMarkdown：固定输入在总控、阶段、共享协议和恢复文件均优先逐字使用这份规范绝对链接，避免重算 ../；既有 reference/markdown 仍保留给明确需要相对引用的调用者。诊断指向输入时，按该文档的输入身份替换为 absoluteMarkdown，不能加 planned 豁免或改绑输入；复检失败须修正并重跑，直到真实成功再正常最终交付，不以诊断或进度消息结束。计算科研填写契约时先采用 research.md 的产物链示意核对本体，并把计划中的全链复跑入口绑定到已声明的代码路径或某个脚本的运行模式，说明它从原始输入依序重建哪些必做数据、结果和图文。可以复用现有计划代码，不要求另建一个脚本；但输出ID即使叫 reproduction，若路径只有 README、环境清单或回执，仍未绑定可执行入口。先补足该责任再写阶段正文，不把正式结果任务缩成方案文件。
+1. Complete actual result deliverables and dependencies in contract.
+2. Immediately obtain draft's authoring.refs mapping.
+3. Write all substantive phases/protocols/recovery from that mapping.
+4. Semantically review the complete meaning, then prepare-review.
+5. Normally deliver the complete pending package and wait for the final human.
 
-先明确完整目标、输入/来源、全部必做交付、权限、实际工具和关键未知。根据真实依赖划分主要阶段，而非把每个工具调用拆成文件。简单任务不启用此结构。复杂只读任务只有文件授权时落盘；否则在会话内展示同样完整的规划与读取分段。
+Do not skip refs after reading an empty contract. Recovery uses its own mapping too. A project-relative input in backticks is not a link. Output-reference repair does not repair inputs. Prefer exact inputs.absoluteMarkdown in all documents; existing reference/markdown serve deliberate relative uses. Repair diagnosed inputs using their identity/absoluteMarkdown, never planned exemptions or changed bindings. Actually rerun until success and deliver normally, not only diagnostics/status.
 
-新建任务默认目录为项目内的 `harness/<task-id>/`，以便在 workspace-write 下持续更新普通工作文件；不将可变任务状态放入受保护的 .codex 配置目录。已有 `.codex/harness/<task-id>/` 包原位识别，不自动迁移；同一 ID 在两个位置同时存在时拒绝操作，先明确身份冲突。沿用已有任务身份，不覆盖别的任务。总控写全程地图，每个主要阶段有可执行内容；共用协议只在确有复用时拆分。正式工作前完成所有主要阶段规划并一次交用户审查，不用空标题或“后续再规划”代替。关键未知说明其阻断的阶段、需要的证据和解决路径，不编造数字/工具/设计。
+For computational research trace promised result/code/data/figure chains before prose. Bind an actual declared rerun code path or script mode that rebuilds every mandatory output from raw inputs; existing code can do it. A reproduction ID pointing only to README/environment/receipt is insufficient. Assign execution ownership; do not turn result work into plan-only delivery.
 
-## 总控与阶段文件
+Define the whole objective, sources, mandatory outputs, rights, actual tools and unknowns before major phases. Use real dependencies, not one file per call or fixed counts. Default task directory is project harness/<id>, keeping mutable records out of protected client settings. Existing .codex/harness/<id> stays in place. Dual locations require explicit identity resolution. Preserve existing IDs/paths and other tasks. Empty headings or future planning do not complete the major plan. Unknowns state blocked phase, required evidence and resolution route without invented values/tools.
 
-HARNESS.md 保留任务 ID/修订、总体目标/非目标、全程硬边界/权限、主要产物、阶段依赖和整体验收摘要，并用表格说明“进入哪一阶段→读哪个文件”。运行记录不放这里。详细方法只放在对应阶段或共享协议，避免多份定义相互漂移。
+## Master and phase content
 
-阶段文件至少交代：本块服务的必做项、预期证据、质量/证据上的局部退出/转向条件及实际资源/权限约束（仅指费用、算力配额/容量与操作权限，不含任务时长；判断与重选行动按需读 [判断与全局推进](execution-judgment.md)）；输入身份/前置验收；具体方法及其适用假设；允许读写和产物归属；真实验收及证据；失败后的下一项区分检查/局部修复、复测范围、停止/升级条件；交接给后续的结果语义、路径与限制。科学效度不能由结构校验替代。RECOVERY.md 说明续接/中断/失效处理及阶段性的语义维护。恢复文件开头直接采用总控的入口摘要：“续接先读总控与本恢复文件，立即调用 context；由其派生当前批准、依赖和阶段，只为当前具体缺口再读 SCOPE 或原始证据。”输入链接放在这个条件读取说明之后，不另写“先读任务范围/输入再 context”。阶段及共享协议只链接总控继承续接入口，不另写“先读本阶段再 context”等入口步骤；其输入读取要求仅在 context 已选出本阶段之后适用。封存前逐条核对整包各文件中的默认读取动作与总控入口相同，不能把输入引用误写成 context 的前置，也不先核对完整契约、原始状态或旧回执。
+Master: ID/revision, objective/non-goals, global constraints/rights, major products, dependencies, overall acceptance and phase-to-document map. No execution log. Own detailed rules once, in phase/protocol.
 
-用户审查覆盖总控和全部阶段/协议/恢复规则。阶段名和数量随任务而定；全流程科研可包含问题与文献定位、设计、数据、方法/实验、复核、图文和复现，但对已限定的复现不强制重做选题。理论工作使用定义/假设/证明/反例/复核路径，不生成虚假的抽样/训练要求。
+Every phase states requirement served/evidence/local quality exit or redirection; actual fees/capacity/operational rights (not duration); input identities/verified prerequisites; methods/assumptions; allowed reads/writes/ownership; substantive checks; next discriminating check and repair/retest/stops after failure; handoff meaning/paths/limits. Use [judgment](execution-judgment.md) as needed. Structural checks do not certify science.
 
-编写适用的科研阶段/协议前，按需读 [科研资料、参数与关键验收](research.md)，把当前阶段的来源/身份/版本与原始资料保留、关键参数依据与变更记录、下游依赖检查及放行证据落实到输入、方法和实质验收。细则在科研参考保留一处，任务包仅写本任务适用约束；不复制全篇，也不把 skill 参考直接塞入任务包 contextFiles。
+Recovery starts with master/recovery → immediate context, deriving current authority/dependencies/phase; SCOPE/raw evidence follows only a stated gap. Put input links after this conditional route. Phases/protocols link the master and read inputs only after selection, without competing pre-context contract/state/history reads. Before sealing check all routes agree.
 
-## 路径基准与展示前检查
+Review covers every major phase/protocol/recovery. Research phase selection follows actual goals (theory is definitions/proofs/counterexamples, not invented samples/training). Bounded reproduction does not force topic discovery. Before applicable research prose load [research](research.md), applying current source/version/raw integrity, parameter rationale, downstream checks and release evidence. Keep general rules in research.md; record task-specific constraints in phase or protocol documents. Do not add the Skill's reference files themselves to task contextFiles.
 
-工具工作目录及 contract 的 inputs/deliverables 等项目路径以用户明确的项目目录为基准；Markdown 相对链接以每个文档自身目录为基准，不能将总控的 ../ 层级直接复制到 phases。输入在总控给出规范绝对文件链接；阶段按输入身份引用该位置，必要的链接也按阶段文件位置解析。实际文件引用使用 `[名称](<字面路径>)`，不要藏在命令示例或模糊自然语言中。
+## Path bases and presentation checks
 
-展示完整包前运行 `node <skill>/scripts/check-harness-paths.mjs --project <绝对项目目录> --package <绝对Harness目录>`。它只读扫描该包Markdown正文，解析内联文件链接及明确的单反引号路径，返回文档/行号/解析目标/存在或错误；不是完整Markdown解析器，也不验证科学内容或批准身份。程序检查全包不等于让模型重载所有正文。
+Tool cwd and contract paths use the user's explicit project. Markdown paths use each containing document. Do not copy master ../ depths into phases. Give master canonical absolute inputs; use actual links such as `[name](<literal path>)`, not commands/vague prose as references.
 
-尚待正式工作生成的产物须标为“计划产物”，用重复的 `--planned <项目相对产物路径>` 明确列出；只豁免这些目标的存在检查，当前输入、阶段/恢复文件不能因此豁免。输出归属和审批仍由原契约处理。项目外已授权输入需显式 `--allow-root <已授权绝对根>`；这仅声明校验范围，不授予权限，脚本不读取输入正文。默认不越出项目/链接后的真实范围，不联网。使用这种输入前先核实已有用户权限。
+Before disk presentation actually run:
 
-返回 ok=true、无未覆盖项后才报告路径校验通过；保留实际命令/结果，并按用户目标核对输入/主要阶段是否全部列出。引用式链接、通配/模板、带标题的复杂链接等报未覆盖，改为受支持的字面引用再检查；围栏示例、远端链接和片段锚点的有效性不在此检查范围。不能用该结果证明未声明的引用或完整任务正确。
+```text
+node <skill>/scripts/check-harness-paths.mjs --project <absolute-project> --package <absolute-package>
+```
 
-### 机器分层包：直接调用编写接口
+This read-only scanner resolves inline file links/unambiguous single-backtick paths, reporting document/line/target/existence/errors. It is not a full Markdown parser, scientific check or approval mechanism, nor a reason for the model to reload every body.
 
-新建任务先填写并核对有效 contract，然后优先运行 draft 返回的 authoring.refs，即 `node <skill>/scripts/harness.mjs refs --project <绝对项目目录> --id <id>`。它一次只读提供全部声明文档各自的输入/产物规范引用，不载入未来阶段正文、不生成文件或批准。契约及其输入、产物和文档路径保持不变时，复用这一份映射编写全部实质阶段/协议/恢复文件，无需每写一份再次调用相同 refs。按实际文档采用返回的 markdown，不手算层级、不把项目相对产物路径原样写入反引号。每份文件实际落盘；可在一次原生工具调用中分别写入多份独立文档，不与契约修改混成大补丁，也不先生成空标题占位。完整主要规划优先于可选扩写，没有固定字数或文件数标准。正文保留阶段特有的输入/前置、方法/假设、产物/归属、验收证据、失败处理与交接；以总控及适用共享协议链接继承通用约束，避免重复。全部齐备后对完整内容作语义复核再封存，不能以批量写入或非空声称通过。
+Mark future outputs as planned and list repeated --planned project-relative paths; only those targets receive existence exemption. Never exempt current inputs/plans/recovery. Ownership/review remain in contract. Already authorized external inputs need explicit --allow-root; it declares scope, grants no permission, reads no input body and does not enable networking. Respect real containment.
 
-已有部分包、需要定位缺失/空文件，或映射发生变化时使用 draft 返回的 authoring.next，即 `refs --project <绝对项目目录> --id <id> --next`。它只读报告 missing/empty/present，给当前一份待写文档的用途、任务/验收、输入/产物及 inherits 总控/适用协议引用；立即写该文件，再按实际需要取下一项。非空只表示present，contentReviewed仍为false。只取特定文档映射可加 `--document phases/<实际文件>.md`，不能与--next混用。文档可以尚未创建；引用含真实target、按该文件位置计算的reference及markdown。外部输入必须已有授权并显式传重复的 `--allow-root <绝对根>`，契约声明不授予范围外权限。
+Report pass only with ok=true and no uncovered items, retaining actual command/results and objective coverage. Complex titled/reference-style links, wildcards/placeholders or unsupported syntax must be replaced/rechecked. Fences, remote validity and anchor correctness are outside this scanner and need other checks. Pass does not certify undeclared references or meaning.
 
-先单独完成并核对契约，再取得 refs 后写全实质阶段/协议/恢复文件；不要先写完再取映射，也不要反复获取未变的映射占用收尾时间。文件齐备后，先核对阶段承诺的计算与作图是否由实际声明的普通代码文件或已声明真实归档的明确成员覆盖（松散目录逐项声明必要成员；归档在成员首次消费前完成生产与验收；合并入口明确覆盖范围），再按阶段正文及共享协议对配置、字典、数据、代码和验证证据规定的首次消费、事前冻结或审查时点，先明确冻结相对于资料接收、配置生成还是查看比较结果；资料未到位时，先固定可确定的科学目标、方法原则和核验标准；实际组值、事件码等未知字段事实只列来源核验项，不能猜测或要求在资料到位前已冻结。由来源审计确认并产出字段映射后，再冻结依赖这些事实的配置并开始相应整理或比较分析；区分设计原则预设与资料身份确认，不让前者必须等待后者的后续任务才能验收。除非任务或设计确有要求，不把“结果分析前”擅自写成“资料到位前”。再逐项逆查契约中的生产任务与可用顺序；适用于早期阶段的共享规则也须纳入该阶段的按需读取，不能等其冻结时点已过才加载。要求事前冻结的文件须在约定时点之前或当时有明确生产者，不能只在协议写“事前”、却仍归给之后的分析任务：需要已有的产物必须来自已验证上游；同一任务内现建现用的产物须归该任务并写明先生成后消费；不能让前阶段读取由后续依赖阶段才生产的配置或其他产物。仅列齐输出或确认任务图无环不能代替这项覆盖与消费—生产核对。修正正文和契约的缺环、顺序冲突后，再运行 draft 返回的 authoring.prepareReview，即 `node <skill>/scripts/harness.mjs prepare-review --project <绝对项目目录> --id <id> --repair-output-refs --handoff-only`，完成产物引用修正→render同步总控→原整包路径检查→review。计划产物由契约自动列出。外部输入沿用显式 allow-root。路径错误或未覆盖项返回非零退出、全部 issues/uncovered 和 review=null；按 refs 映射局部修正后重跑同一命令，取得真实当前结果。不要跳过失败直接调用独立 review。
+### Machine-managed authoring
 
-显式 --repair-output-refs 只用于未review、未批准且未执行的draft，沿用写锁；保留普通内联产物链接修正规则：标签为唯一产物ID或文件名、旧目标不存在、与唯一声明产物仅差前导../层数，只换链接目标。另可转换围栏外的单反引号独立路径：完整内容必须恰等于唯一声明产物的项目相对路径，旧的文档相对目标不存在，替换整个反引号记号为 refs 的规范 Markdown。返回 outputRefRepair 的 documents 及逐项 document/line/old/new/output；单反引号分支另标 syntax=single-backtick，其他文字和换行原样保留。输入、输入/产物身份重叠、已有目标、远程链接、多反引号、围栏示例、链接标签内代码、命令/其他代码、歧义或其他路径错误不猜测，仍由原校验拒绝。无该选项的prepare-review行为不变，refs仍只读。有效review形成后不再用该选项重跑，缺结果按下方handoff路线处理。曾有review而正在修订的包也不能使用该draft专用选项；以递增的revision和当前实质规划运行不带该选项的prepare-review，引用修复按refs明确处理。refs --next的收尾action会按真实状态选择是否包含该选项，优先采用其返回参数，不把初建draft的建议命令原样复用到修订包。
+Finish/check contract first, then use actual draft action:
 
---handoff-only仅在成功时直接输出完整待审Markdown，默认JSON和逐项修正报告仍保留；失败仍为非零及诊断，不能输出成功文本。内容复核、必要回读和修订在封存前完成；成功文本明确确认总控与当前契约一致、已纳入当前受审摘要；这是已有实际机器绑定检查的结果，不是内容正确性的保证。成功结果已经实际收到后，下一步就是正常最终回复，不为重复确认总控同步而回读总控，也不默认重读整包或重取handoff。只有发现具体新缺陷才重新检查和修订；结果确实缺失才走只读handoff恢复。
+```text
+node <skill>/scripts/harness.mjs refs --project <absolute-project> --id <id>
+```
 
-成功仅表示 pending_user_review；不证明科学内容正确，不记录用户批准。成功结果的 handoffMarkdown 已含本次 ID、revision、digest、含机器契约的完整导航、真实检查摘要及最终用户审查请求，直接据此正常最终回交；括号内链接目标逐字保留，Windows 的 E:/ 路径不补成 /E:/。详细方案留在受审文件，无需在回复里重新展开全部阶段。若发现真实缺陷，先修正并重新审查后交付。仅生成该文本仍不等于已经正常回交。写好了脚本、修改了文件或启动检查不等于完成；调用被中断而未返回时记为已启动但未完成，续接取得真实结果后再交付。独立 render、路径检查、review 接口仍可用于旧包及非机器包。
+It returns per-document input/output target/reference/Markdown maps read-only, without future bodies/files/approval. Reuse while path mappings remain unchanged. Write all documents using returned markdown/absoluteMarkdown, not hand-calculated depths/backticks. Independent planning documents can share a native tool call, but edit contract separately and avoid placeholders. Keep substantive phase-specific content and linked common constraints; batch write/nonempty is not review.
 
-调用本地命令须保留完整返回及原运行句柄，按宿主实际工具续取同一调用，见 runtime.md。已有有效review但结果丢失时，先确认原调用终态，再用 `node <skill>/scripts/harness.mjs handoff --project <绝对项目目录> --id <id>` 只读重取待审Markdown，外部输入仍需显式授权的allow-root。handoff实际复核当前绑定和路径，不render、不重新review、不写状态；缺失/漂移/状态冲突则拒绝。不能因空输出重跑prepare-review，也不能以工具返回退出0或旧文本替代真实接收。
+For partial/changed packages use refs --next. It reports missing/empty/present, next purpose/task/acceptance, scoped outputs/inputs and inherits links to master/applicable protocols. Write it, then ask for the next when useful. Present means nonempty; contentReviewed remains false. --document phases/actual.md selects a declared map and is mutually exclusive with --next; documents may not exist yet. External roots still need authorization/allow-root.
 
-## 机器管理（需要可执行状态时）
+Before sealing, trace computations/figures to declared code or explicit real archive members. Declare required loose members; produce/accept archives before first consumption. A combined entry names covered steps. Inspect first-use/prior-freeze/review rules for data/dictionaries/config/code/evidence. Specify freeze relative to acquisition, configuration or viewing results. When material is unavailable, fix scientific principles/standards now; unknown actual groups/event codes need source verification, not guessed values or impossible pre-acquisition freezes.
 
-新draft为两种布局明确写入templateVersion: 3；手工新建契约同样明确声明数值3。未声明版本的既有契约与显式数值1使用冻结v1模板，显式数值2保持冻结v2正文，读取时不补字段或自动升级。layout选择布局，templateVersion选择该布局的固定模板，二者独立。主动升级旧包属于受审修订，先解决pending/active工作，再递增revision、生成完整新包并重新交最终用户批准；具体未知版本、事实收尾和旧运行时回退边界见[模板版本](runtime.md#总控模板版本)。后续JSON片段只示意分层字段，不能覆盖draft已经声明的模板版本。
+After source audit establishes mappings, freeze dependent configurations before their use. Earlier principles must not depend on a later task supplying source facts. Do not turn before-analysis into before-materials without justification. Trace producers/availability backward; load shared rules before their first applicability. Advance-frozen artifacts need producers by that point, not later analysis owners. Prerequisites come from verified upstream; same-task artifacts require ownership and create-before-use. Acyclic graphs/output lists alone do not establish this chain. Correct prose and contract, then use draft's action:
 
-`node <skill>/scripts/harness.mjs draft --project <project> --id <id> --goal <goal> --domain research --layout layered`
+```text
+node <skill>/scripts/harness.mjs prepare-review --project <absolute-project> --id <id> --repair-output-refs --handoff-only
+```
 
-draft 只生成空契约和总控草稿，并返回 authoring.refs（首建整包映射）、authoring.next（部分编写）与 authoring.prepareReview 的当前本机 command/args；填齐契约后使用这些实际参数调用，无需另写检查脚本。创建全部实质阶段/协议/恢复文件后才能通过 prepare-review。schemaVersion 仍为1；旧任务不加 layout，保持原渲染和审批摘要。新任务声明：
+It repairs eligible output references, renders master, path-checks complete package and seals review. Planned outputs come from contract; external roots stay explicit. Failure returns nonzero/all issues/uncovered and review=null. Correct via refs and rerun this action; do not bypass with independent review.
 
-更新已有 contract.json 用 Update 或等效的保留原文件的更新方式，不在同一补丁中对同一路径同时 Delete 和 Add，也不要先删除再另行重建。先完成并检查契约，再逐个主要阶段和恢复文件落盘，避免一个整包大补丁失败后丢失全部进展。补丁失败先核对实际文件是否存在及其当前内容，再修正对应局部；不能假定任何修改已经成功。所有主要文件完成后才 prepare-review，分步编写不等于分批批准或允许提前正式工作。已有部分包先补当前缺失文件并保存进展，保留契约已用的任务ID和文档路径，不为插入一个阶段重新编号或移动其他阶段。新阶段用单独的文件写入，不与契约修改拼成多文件大补丁；HARNESS由render或prepare-review生成，不手编同步。补丁语法或上下文失败后只核对受影响文件并修正该次写入，不能反复套用旧上下文；契约结构修改可用解析JSON后保留其他字段的局部更新。
+Draft-only repair requires unreviewed/unapproved/unexecuted state and writer lock. Ordinary inline labels must name a unique output ID/filename; old target absent and only leading ../ depth differs. It changes the target only. Standalone single-backtick exact unique output project paths outside fences can become canonical links only if old document-relative target is absent. Returned outputRefRepair lists documents and document/line/old/new/output; backticks add syntax=single-backtick. Other text/newlines stay intact.
+
+No guessing for inputs, input/output overlap, existing targets, remote/multiple-backtick/fenced/link-label code, commands, ambiguous or other errors. Without the flag behavior is unchanged; refs is read-only. A valid or prior review disables draft-only repair. Revised packages increment revision and use prepare-review without that flag, correcting links explicitly. refs --next's final action chooses arguments from real state; use them, not stale draft instructions.
+
+Handoff-only emits complete Markdown only after success; normal JSON/repair facts remain available. Finish content review and repairs before sealing. Received success confirms master/contract/current digest binding, not substantive correctness. Normally deliver next without redundant full reread/handoff. Only a specific new defect justifies rechecking; genuinely lost results use recovery after actual original-call terminal state.
+
+Success is pending_user_review, never scientific proof or approval. Handoff includes ID/revision/digest, contract/master/all navigation, real checks and final-human request. Deliver normally with literal Windows E:/ targets, never /E:/. Keep details in reviewed files. Generating text/starting scripts/exit0 is not actual receipt or final delivery. Interrupted calls retain original handles and actual state, not blind reruns. Legacy/non-machine packages retain separate render/path/review interfaces.
+
+With valid review but lost result, establish original end, then read-only handoff --project ABS --id ID with authorized allow-root. It rechecks bindings/paths without render/review/state writes and refuses drift/missing/conflicts. Empty output and old success text do not prove current receipt.
+
+## Machine contract and host policy
+
+New drafts explicitly use numeric templateVersion4 in either layout. Hand-authored new contracts should too. Omitted/1 stays frozen v1;2/3 retain their own full bodies. Reading adds no fields or migrations. Layout and template selection are independent. Schema remains 1.
+
+New execution.allowedHosts/defaultHost are reviewed. Draft --host selects default; repeated --allow-host adds explicit alternatives. Actual host references load conditionally: [Codex](hosts/codex.md), [Claude](hosts/claude-code.md), [DSH](hosts/deepseek-harness.md). Tools are host-specific. Old arbitrary execution data retains Codex semantics. Do not edit policy/version to clear activity/pending. Resolve them, increment revision and obtain direct-human complete review for deliberate upgrade. Stale closure restores no eligibility. See [template versions](runtime.md#master-template-versions).
+
+```text
+node <skill>/scripts/harness.mjs draft --project <project> --id <id> --goal <goal> --domain research --layout layered --host <selected-host>
+```
+
+Draft creates scaffolds and actual local command/args for refs/next/prepareReview. Complete all substantive documents before machine review. JSON examples illustrate fields; never overwrite draft's chosen template/policy with a fragment.
+
+Update existing contract with an edit preserving the file; never delete/re-add it or replace the whole package in one brittle patch. Finish contract then individual documents. On patch failure inspect affected actual files and correct locally rather than assume success or repeat stale context. Incremental authoring does not grant incremental approval. Preserve IDs/paths when adding phases, and generate master through render/prepare-review.
 
 ```json
 {
   "layout": "layered",
   "recoveryFile": "RECOVERY.md",
   "contextFiles": [
-    {"path":"phases/source.md","kind":"phase","tasks":["source"],"purpose":"来源与数据界定","loadWhen":"进入 source"},
-    {"path":"phases/analysis.md","kind":"phase","tasks":["analysis"],"purpose":"分析与反例验证","loadWhen":"进入 analysis"},
-    {"path":"protocols/method.md","kind":"reference","tasks":["analysis"],"purpose":"分析方法与适用边界","loadWhen":"需要分析方法时"}
+    {"path":"phases/source.md","kind":"phase","tasks":["source"],"purpose":"Source and data definition","loadWhen":"Entering source"},
+    {"path":"phases/analysis.md","kind":"phase","tasks":["analysis"],"purpose":"Analysis and counterexamples","loadWhen":"Entering analysis"},
+    {"path":"protocols/method.md","kind":"reference","tasks":["analysis"],"purpose":"Method and applicability","loadWhen":"Method needed"}
   ]
 }
 ```
 
-此片段不是完整 contract。沿用原 tasks/deliverables/inputs/permissions/acceptance 字段；每个 task 至少关联一个 phase，可把同一主要阶段的几个细任务映射到同一文件。contextFiles 与 recoveryFile 自动纳入审批摘要，不能靠漏填 reviewFiles 漏掉未来阶段。路径必须是本任务包内的相对 Markdown 文件，不能别名到状态/回执、指向范围外或重复绑定同一物理文件。
+This is incomplete. Keep actual tasks/deliverables/inputs/permissions/acceptance. Every task maps to a phase; coherent tasks can share one. Context/recovery are automatically digest-bound even absent reviewFiles. Use in-package relative Markdown, not control evidence/outside/duplicate physical identities. Research inapplicability needs specific reason/evidence, not empty/UNKNOWN. Immutable inputs bind path; generated approved data/results are outputs, not expected-to-change initial inputs.
 
-科研协议字段仍需说明适用性，见 research.md；不适用写具体理由，不用空字符串或 UNKNOWN 充数。固定输入作为 inputs[].path 绑定；按已批准规则生成的数据/中间结果声明为阶段 outputs，验收后交接，不把预期会更新的工作输出误绑成不可变初始输入。
+### IDs, artifacts and acceptance
 
-### 产物、归属与验收的机器字段
+IDs are real strings, lowercase-letter start, lowercase/digit/hyphen,1–64 chars. No coercion of booleans/arrays/objects/numbers. Inputs and outputs require distinct normalized/case/real/dev-ino identities; hardlinks cannot disguise originals. Equal independent bytes are fine. Unreliable multiply-linked identities reject.
 
-所有 taskId、任务/产物/验收 ID 必须是真实字符串，沿用小写字母开头、后接小写字母/数字/连字符、总长 1–64 的规则；布尔、数组、对象或数字不会自动转成 ID。
+Review attachments in both layouts exclude runtime state/locks/receipt/acceptance/check/execution evidence and aliases. Master/contract already bind and cannot be repeated. Ordinary nested attachments remain supported.
 
-不可变 inputs 文件与任何 deliverable 必须有不同文件身份：规范路径、平台大小写比较、真实目标或 dev/ino 相同均在 review 前拒绝，硬链接不能把原始输入伪装成工作输出；相同字节但独立文件仍可使用。多链接文件缺可靠身份时拒绝绑定。旧布局和分层布局的 reviewFiles 均排斥 state/lock/receipt/acceptance/check/execution 控制证据及其规范路径、符号链接或硬链接别名；contract/master 已按基础职责绑定，不能再作为附件重复绑定。普通嵌套附件仍支持。
+For required proofs, declare definitions, actual complete proof and manuscript files with owning tasks. Proof depends on accepted definitions, manuscript on verified proof. Criteria are objects; research has review. Proof acceptance reads definitions/quantifiers/all assumptions/derivations/boundary cases and evidence positions. A plan/lemma/file/command/DAG does not replace formal proof or unlock established manuscript claims. Preserve unresolved conjectures/counterexamples. Other research uses actual matching criteria, not mechanical proof phases. Trace production → substantive acceptance → consumption before review.
 
-下面以需要正式证明的理论任务为例，给出可并入契约的产出与验收依赖；它不包含 goal、permissions、protocol、分层映射等完整契约所需字段。每个中间产物和最终产物都声明唯一 ID，tasks[].outputs 引用该 ID，而非文件路径。acceptance 的每项是对象，不能直接填字符串；科研任务至少包含一个 review 标准。
+Every input requires real source; path additionally binds actual local existence/hash. Description/id do not substitute. Example SCOPE must exist and be read, or be replaced/removed, never fabricated. Finish contract→refs→documents→prepare-review; correct all diagnostics. Normally return full pending navigation/checks to the final human and wait, not a request for the parent to write/approve or formal results.
 
-```json
-{
-  "inputs": [{"source":"用户提供的任务范围与授权说明","path":"SCOPE.md"}],
-  "deliverables": [
-    {"id":"definitions-note","path":"proof/definitions-checked.md"},
-    {"id":"formal-proofs","path":"proof/formal-proofs.md"},
-    {"id":"manuscript","path":"manuscript.md"}
-  ],
-  "tasks": [
-    {"id":"definitions","title":"核对定义与假设","dependsOn":[],"outputs":["definitions-note"],"acceptance":[{"id":"definitions-valid","type":"review","description":"逐项核对定义、量词和适用假设，记录依据与未解缺口"}]},
-    {"id":"formal-proofs","title":"完成并逐项复核正式证明","dependsOn":["definitions"],"outputs":["formal-proofs"],"acceptance":[{"id":"proofs-valid","type":"review","description":"逐项审读每项必做命题的完整正式证明，核对定义、量词、全部假设、每步推导与边界情形，给出证明文件中的证据位置和理由；核心证明未闭合不得通过，依赖图或计划链不能替代证明"}]},
-    {"id":"manuscript","title":"汇总经核验的文稿","dependsOn":["formal-proofs"],"outputs":["manuscript"],"acceptance":[{"id":"claims-supported","type":"review","description":"每项核心主张均追溯到已验收的正式证明或经审计反例，保留条件、限制及未决项，不将待证计划写为已证结论"}]}
-  ]
-}
+## Enter a phase
+
+```text
+node <skill>/scripts/harness.mjs context --project <project> --id <id> --task <step>
 ```
 
-理论任务的正式证明不可只隐含在“证明结构”或文稿说明中：按实际目标绑定证明产出、实质 review 及下游 verified 依赖。可与证明设计合并或拆分，但不能只验收计划链就解锁文稿；其他研究类型按实际结果采用对应验收，不照搬证明阶段。完整包送审前逐项核对这一产出—验收—消费链。
-
-填写契约后调用 refs，按返回引用写入文件，再运行 prepare-review；无效契约会按字段位置报错且不覆盖已有总控。修正所有诊断后实际重跑；成功只把完整版本置为 pending_user_review。正常最终回复交付任务 ID、revision、digest、总控及全部阶段/协议/恢复文件导航和实际检查结果，等待最终用户审查；不要向父代理索要代写或批准，也不要在待审时开始正式证明或生成结果。
-
-inputs 每项必填 source，说明真实来源；有本地文件时再填相对项目目录的 path，review 会核对存在并绑定摘要。description 或 id 不能替代 source。上例中的 SCOPE.md 必须是实际已读取的输入；按任务替换或移除不适用输入，不能虚构文件来满足示例。
-
-## 进入阶段
-
-`node <skill>/scripts/harness.mjs context --project <project> --id <id> --task <step>`
-
-这是只读上下文选择：程序核对整包当前摘要，但仅输出全程硬约束、当前阶段/适用协议、当前任务验收与已验证前置证据摘要，不输出未来阶段全文或全部历史事件。canBegin=false 时按 blockers 解决批准、依赖或真实执行状态；读取计划不授权执行。原生宿主在开始阶段前取得它或按同一路由取材，独立 run 对新布局使用同一选择器。
-
-只在证据缺口出现时读取链接的原始日志/产物。阶段执行前核对仍在原权限和研究方案中；已经批准的正常推进不再索取同一批准。创建全套规划需要总体思考；按需加载减少的是执行/续接时重复读取的内容，不保证所有任务的总 token 或耗时下降。
+Context checks whole binding read-only but emits selected phase/protocols, global constraints, current acceptance and verified dependency summaries, not future bodies/history. Resolve blockers; reading is not authority. Native and independent layered execution share this route. Select only reviewed allowed hosts; do not assume portable tool names. Read raw evidence for a specific gap. Recheck approved boundaries before work; normal progress needs no new approval. Selective loading reduces repeated execution/resume reads, not necessarily total tokens/time.

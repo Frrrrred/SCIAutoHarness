@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "protocol": "harness-ambition-upgrade-20261024 r1; exploratory paired tasks, not general efficacy",
+  "protocol": "SCIAutoHarness Paired Research Task Evaluation Protocol; exploratory paired tasks, not general efficacy",
   "sourceBase": "https://www.itl.nist.gov/div898/strd/lls/data/LINKS/DATA/",
   "certification": "https://www.itl.nist.gov/div898/strd/lls/data/LINKS/c-Filip.shtml",
   "licensing": "https://www.nist.gov/open/license",

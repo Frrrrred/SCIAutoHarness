@@ -12,8 +12,10 @@ An active run retains its original binding even if evidence becomes stale. Ident
 
 ## Installation
 
-New installation records use safety format `4`. Complete original formats `1`, `2` and `3` retain their own validation and recovery paths. Changing a format number does not convert a record. Old previews need a fresh current preview and exact approval.
+On Windows, safety format `5` preview, installation and recovery also require an existing `pwsh` that can enumerate directory alternate streams. Missing or incomplete metadata support refuses the operation; PowerShell is not installed automatically. The preview states its metadata coverage. SACLs and extended attributes are outside that coverage.
 
-The installer requires ordinary single-link files with reliable identity and checks roots, contents and managed rules. It retains original files outside discovery through same-volume retirement where migration requires it. Restore the latest migration before applying an earlier installation rollback. Prepared or partial records require diagnosis, not automated rollback.
+New installation records use safety format `5`. Complete original formats `1`–`4` retain their own validation and recovery paths. Changing a format number does not convert a record. Old previews need a fresh current preview and exact approval.
 
-Existing explicit entries share the formal runtime and task state. Current instructions use `$sciautoharness`; no second engine or approval store is introduced. For exact formats and refusal conditions, see the [runtime reference](../skills/sciautoharness/references/runtime.md).
+The installer requires ordinary single-link files with reliable identity and checks roots, contents and managed rules. Recognized legacy directory trees leave skill discovery through same-volume rename, preserving their original roots, descendants and recorded identity and metadata bindings. Restore the latest migration before applying an earlier installation rollback. Prepared or partial records require diagnosis, not automated rollback.
+
+`sciautoharness` is the sole current skill entry. Existing tasks, approvals, runs and receipts retain their original identities and recovery rules through the canonical CLI. Removing old entrypoints does not migrate or reapprove task state. For exact formats and refusal conditions, see the [runtime reference](../skills/sciautoharness/references/runtime.md).

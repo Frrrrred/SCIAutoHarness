@@ -45,7 +45,7 @@ jobs:
       - name: Check all module syntax
         run: |
           $modules = @(Get-ChildItem -LiteralPath 'skills' -Recurse -File -Filter '*.mjs')
-          if ($modules.Count -ne 25) { throw 'Unexpected module inventory' }
+          if ($modules.Count -ne 19) { throw 'Unexpected module inventory' }
           foreach ($module in $modules) {
             node --check $module.FullName
             if ($LASTEXITCODE -ne 0) { throw ('Syntax failure: ' + $module.FullName) }
@@ -112,6 +112,13 @@ jobs:
           $roots = @(Get-ChildItem -LiteralPath $migrationRoot -Directory -Filter 'sciautoharness-*')
           if ($roots.Count -ne 1) { throw 'Unexpected migration root count' }
           $migration = Get-Content -LiteralPath (Join-Path $roots[0].FullName 'results.json') -Raw | ConvertFrom-Json
-          if ($migration.suite -ne 'sciautoharness-migration' -or $migration.failed -ne 0 -or $migration.tests -ne 30 -or $migration.passed -ne 30) {
+          if ($migration.suite -ne 'sciautoharness-migration' -or $migration.failed -ne 0 -or $migration.tests -ne 57 -or $migration.passed -ne 57) {
             throw 'Incomplete or failed migration suite'
+          }
+          $migrationResults = @($migration.results)
+          if ($migrationResults.Count -ne 57 -or @($migrationResults | Where-Object { $_.pass -cne $true }).Count -ne 0 -or @($migrationResults.id | Sort-Object -Unique).Count -ne 57) {
+            throw 'Incomplete individual migration results'
+          }
+          if (@($migrationResults | Where-Object { $_.id -like 's4-*' }).Count -ne 30 -or @($migrationResults | Where-Object { $_.id -like 's5-*' }).Count -ne 27) {
+            throw 'Historical or current migration coverage changed'
           }

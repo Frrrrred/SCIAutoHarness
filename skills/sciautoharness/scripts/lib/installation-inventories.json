@@ -86,5 +86,68 @@
     "scripts/check-skill.mjs": "8163c4fda6bb7702adb3f188d1b5d624bd55559235e0bc839b09abae8780e9bf",
     "scripts/harness.mjs": "71ba0785602ead7a7fc60364b0d7d9edcf9fe2be7d4d814c72a1eea909a96b78",
     "SKILL.md": "3a97d618843ac4d7d374c8190b5203c4e9123f8305ef69d21bbb7d72764859ab"
+  },
+  "canonicalSafety4": {
+    "commit": "a2d42cf061fb3f1491d828f775865c92fc165998",
+    "files": {
+      "LICENSE": "a45ba66fa502c49ad108440536d8aa91dfe9c04575a32a01287839bee336199c",
+      "SKILL.md": "92946761575a94c125fe44c6d35294f6126a6ee39f12a48b0ed06ccd1b1b6972",
+      "agents/openai.yaml": "4d0be3be80343abee722265dc5d16cb106ae81c8d1eb24ca45c2cf4c293694e5",
+      "references/artifact-examples.md": "a9b2bff3fac1faf1a4774e691c4a382caf8055d0a62e52b6096856333fce6e73",
+      "references/authoring.md": "c9f958199b1ca8c960e40ecc30145c2bb047752d00e9fe49179a06c62e936cc8",
+      "references/context-hygiene.md": "797f4bcba5c4298561c4fed0dd5b74d8db0cf0c3c1a3f55ea0782bc5d1f94bb5",
+      "references/domains.md": "992475b4ce40d3b10298d7890cc7c92b3f2c20c7b7c708866055a3fc43e2065f",
+      "references/execution-judgment.md": "76d06f68d20832479873d6af63fe3d6f14adc4d43f202f6bb87c686cae68d856",
+      "references/hosts/claude-code.md": "f615ef1fa96c73ac3f9e7053d264f13c90ce8e5039acda9a3c883fcbef1b43d1",
+      "references/hosts/codex.md": "fb02364938b9e265f368ae6bc93c6bec372aa9ff685c84c61f82e0def9d20b8d",
+      "references/hosts/deepseek-harness.md": "fd787a69043028e5fe87e8f2ecb45c02dabfba506e6c6bf85731c48feffb14e9",
+      "references/outcome-oriented-work.md": "ab680a7115328a18f1ef23e86e2a7bdf14bcc5342ef97193f001ca8fb73a0b24",
+      "references/recovery-maintenance.md": "d87908f35722d5d71fc9cfad5514c784ca907a008562c657274f192ccd3ac659",
+      "references/research.md": "e4847fee44d517caf40da5c393d588c3af12116f2a7ca283c0f4c7a687686b14",
+      "references/runtime.md": "737109b78d18f83204b0e312ee48770444cc2af73991954f09f5ae3390937969",
+      "scripts/check-harness-paths.mjs": "683a0426c2cf8d7dd85264ed826e8da17e94530417cc5904e343ef2acb5be296",
+      "scripts/check-skill.mjs": "b2353a07b4933d4a4da13accad3888784d358ddc7d38fa6bcde3fe185eec3926",
+      "scripts/harness.mjs": "9266f33a48225c93e910a5986eaf7a4798f78f4f2b2e4115cb762d0bcedeb8d0",
+      "scripts/lib/context.mjs": "0012cd53c0cfd2b7a03cf6162d121475a0db79d38b67609ede2c6bd9ead38db5",
+      "scripts/lib/contract.mjs": "946b5a4164117663a94de413062214fc7539252f6102e410bdf5c5349c71378c",
+      "scripts/lib/engine.mjs": "11440cd21bd094df967fefc76d7dd2b88a1877731e7a1ee31d8153bf4b6ff46f",
+      "scripts/lib/files.mjs": "6fe5ec0c5ca8099265b0945acc51d85fb8f07bd576beccc5e25404ce5046466d",
+      "scripts/lib/hosts.mjs": "54a5202478652e1e125037eb03ea842bbb40dec3ab95f9bea5356d21972f0639",
+      "scripts/lib/identity.mjs": "7346704c87ca7c33c0d6ca35273cf3f7f47b2bb008141aa836ee6ed85bc95d3f",
+      "scripts/lib/install.mjs": "a00d3840dce7ecaec6daa99aafbba20c0bf360dd3ca01672ec028ff05848c682",
+      "scripts/lib/installation-inventories.json": "2b71613e77484d3bde5ed6c0c03440471c1838dda9563eb0ad010a3dfb6bbe4f",
+      "scripts/lib/process.mjs": "22075447b44faf8813695c9c85545ae9d8abe3d3bd0d78d2bc12d195ff8173ea",
+      "scripts/lib/templates.mjs": "086f958a3746f6dd525c803d5d20a09114e3c8e203543762e424088ce0f55329",
+      "scripts/tests/fixtures/accepted-portable-delta.json": "8f2594437b5b403c15db3f0320d6df49ab26b105fea7c6e693899fbd46ae8595",
+      "scripts/tests/harness-regression.mjs": "9fd2b60299b765927f1094e6591c58a0cf13a2c2b9a44386d71b86f877e58976",
+      "scripts/tests/helpers/artifact-example.mjs": "5a29aebd4f5215162988e54f85330fdb105d19637ae5617ec5bcf24cee45bc0b",
+      "scripts/tests/helpers/controlled-child.mjs": "e2484cacba22465fd24a43bc442bc81f86d954c4f73f41d6619bbb26a53d74aa",
+      "scripts/tests/helpers/host-child.mjs": "8755fe2e864b670f31d2ba76b68a8975e111fbc8981903a34a8a14131c847fc9",
+      "scripts/tests/rename-regression.mjs": "38cef21d1b9cfbf2bb89f14952d7a29b4b57b0f8d760c02756a39b4d0f1ec428",
+      "scripts/tests/sciautoharness-migration-regression.mjs": "f685d3cd1779850a9c460000e2b4d0f142484f3c76d9c71d7184e74ca9135c8b",
+      "scripts/tests/template-upgrade-regression.mjs": "8632265695f6276083e51d3dfc0016c8975626c82bb196349147eca445790421",
+      "scripts/tests/template-v1-golden.json": "61cb474fab3a43b0be9a6ea342e8b3dfff58818b39383e7594cb133f7d23becb",
+      "scripts/tests/template-v2-golden.json": "df83fdd18a4cac84ec1a75bd0c61e3d923759eb32b5898f82775c98692c639dc",
+      "scripts/tests/template-v3-golden.json": "5247df78cb213c0a90748c0ffe55b669ab4dab62ebfb1cc5039789ca57b75338",
+      "scripts/tests/template-v4-golden.json": "1d368a401e314289ed947f4b64af89d98f9c4eb6bd7d711a84d124bd83a8b3e1"
+    }
+  },
+  "currentThin": {
+    "agentCompat": {
+      "LICENSE": "a45ba66fa502c49ad108440536d8aa91dfe9c04575a32a01287839bee336199c",
+      "SKILL.md": "4bd20d6fc8a44f79288299165e1b79dff093afac39070e59cba66148c12234f3",
+      "agents/openai.yaml": "fc42c7a0b98d77f2db4a647c993f0c189987a62f1af9f7028955de7eda97815b",
+      "scripts/check-harness-paths.mjs": "efd721177022c376db659d83c1c53f8bc4fc2e2c535b5cc0ea6fa0660a34644b",
+      "scripts/check-skill.mjs": "bbe720ce303f5bf746b2ca728aabad173a96189f2826d41a5cef4e0df5f10ead",
+      "scripts/harness.mjs": "a1c7114ee9a14660be5a1fd255af5eb609eda10784bdb3a3f1b5501c2f3c7b48"
+    },
+    "legacyCompat": {
+      "LICENSE": "a45ba66fa502c49ad108440536d8aa91dfe9c04575a32a01287839bee336199c",
+      "SKILL.md": "57735f3510a144ec5487d5e588e85321cd1beccf7de1e339c1a714728fbe66d4",
+      "agents/openai.yaml": "f3a2ed885a4de13915c6316c63e757784bfdb2ad4f3ce9d027c2dcd011571fef",
+      "scripts/check-harness-paths.mjs": "efd721177022c376db659d83c1c53f8bc4fc2e2c535b5cc0ea6fa0660a34644b",
+      "scripts/check-skill.mjs": "bbe720ce303f5bf746b2ca728aabad173a96189f2826d41a5cef4e0df5f10ead",
+      "scripts/harness.mjs": "a1c7114ee9a14660be5a1fd255af5eb609eda10784bdb3a3f1b5501c2f3c7b48"
+    }
   }
 }

@@ -26,9 +26,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Retain the preview diagnostics' }
 Get-Content -LiteralPath $harnessPlan -Raw
 ```
 
-Review every target, its content and identity, the instruction change, source, digest and recovery effect. The skill root is the parent directory. The preview contains the formal skill and compatibility entries. A preview does not change the installation or grant approval.
+Review every target, its content and identity, the instruction change, source, digest and recovery effect, including any directory trees to be retired. The skill root is the parent of the installed `sciautoharness` directory. New installations provide only this entry. A preview does not change the installation or grant approval.
 
-Different installed content needs a fresh preview with `--replace-skill`. A recognized full installation additionally needs `--migrate-legacy`. Extra files, custom managed rules, nearby instruction overrides or unsafe identities require explicit treatment; these options do not bypass safeguards. Keep the diagnostics and originals instead of editing a preview to make it pass.
+Different installed content needs a fresh preview with `--replace-skill`. Migrating a recognized full or thin legacy entry additionally requires `--migrate-legacy`; review both options and the exact retirement effect together. Extra files, modified or unknown inventories, custom managed rules, nearby instruction overrides or unsafe identities require explicit treatment; these options do not bypass safeguards. Keep the diagnostics and originals instead of editing a preview to make it pass.
 
 After the exact preview receives approval:
 

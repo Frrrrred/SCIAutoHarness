@@ -12,7 +12,7 @@ An active run retains its original binding even if evidence becomes stale. Ident
 
 ## Installation
 
-On Windows, preview, installation and recovery also require an existing `pwsh` that can enumerate directory alternate streams. Missing or incomplete metadata support refuses the operation; PowerShell is not installed automatically. The preview states its metadata coverage. SACLs and extended attributes are outside that coverage.
+On Windows, safety format `5` preview, installation and recovery also require an existing `pwsh` that can enumerate directory alternate streams. Missing or incomplete metadata support refuses the operation; PowerShell is not installed automatically. The preview states its metadata coverage. SACLs and extended attributes are outside that coverage.
 
 New installation records use safety format `5`. Complete original formats `1`–`4` retain their own validation and recovery paths. Changing a format number does not convert a record. Old previews need a fresh current preview and exact approval.
 

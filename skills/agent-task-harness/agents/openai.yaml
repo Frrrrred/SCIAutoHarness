@@ -1,6 +1,0 @@
-interface:
-  display_name: "SCIAutoHarness (compatibility entry)"
-  short_description: "Forward an explicit name to SCIAutoHarness"
-  default_prompt: "Use $agent-task-harness to load the adjacent sciautoharness skill and follow its complete workflow."
-policy:
-  allow_implicit_invocation: false

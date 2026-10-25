@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Deliberately checks this package's simple single-line metadata subset.
 // It is not a general YAML parser or the upstream Python quick_validate tool.
-import{compatibilityFiles,compatibilityNames}from'./lib/identity.mjs';
+import{compatibilityNames}from'./lib/identity.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,8 +32,6 @@ if(!parsed.interface?.default_prompt.includes(`$${data.name}`))throw new Error('
 const n=Array.from(parsed.interface?.short_description??'').length;if(n<25||n>64)throw new Error('UI short description length.');
 for(const name of compatibilityNames){
  const alias=path.join(path.dirname(root),name);
- for(const[file,content]of Object.entries(compatibilityFiles(name)))if(await fs.access(alias).then(()=>true,()=>false)){
-  if(await fs.readFile(path.join(alias,file),'utf8')!==content)throw new Error('Compatibility entry differs: '+name+'/'+file);
- }
+ if(await fs.access(alias).then(()=>true,()=>false))throw new Error('Retired skill entry remains in discovery: '+name);
 }
 console.log(JSON.stringify({valid:true,checker:'portable single-line metadata/link/UI subset',name:data.name,descriptionCharacters:data.description.length,implicitInvocation:true,upstreamPythonValidatorRun:false},null,2));

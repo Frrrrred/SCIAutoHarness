@@ -18,4 +18,4 @@ Research plans connect questions to sources, identifiers, parameters, methods an
 
 ## Runtime and installation
 
-The formal runtime lives in `skills/sciautoharness`. Compatibility entries forward directly to it. Installation previews bind the source, exact targets and original identities. Migration preserves originals and journals progress; recovery validates the completed record and original objects. Host settings and model credentials remain outside runtime authority.
+The runtime and sole current skill entry live in `skills/sciautoharness`. Installation previews bind the source, exact targets and original identities. Safety format `5` retires recognized legacy directory trees outside skill discovery by same-volume rename and journals each confirmed change. Completed rollback restores those original trees; historical installation formats retain their own readers. Host settings and model credentials remain outside runtime authority.

@@ -1,6 +1,6 @@
 # Ordinary files and real archives: production, acceptance and consumption
 
-Read when bundling code/data or resolving parent-directory/member overlaps. Schema1 outputs are ordinary files; directories organize. Declare necessary loose members individually or one real archive. A README/index/manifest binds only itself.
+Read when bundling code/data or resolving parent-directory/member overlaps. Current contract outputs are ordinary files; directories organize. Declare necessary loose members individually or one real archive. A README/index/manifest binds only itself.
 
 These executable examples are SYNTHETIC: raw.json=[1,2,3], factor=2 must produce 3 prepared rows and summary sum=12. They are not observations, and synthetic approvals are not human authorization.
 

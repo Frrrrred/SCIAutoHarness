@@ -58,7 +58,7 @@ See [Artifact files and archives](artifact-examples.md) for complete ordinary-fi
 
 The following table illustrates adjustable unique output IDs and paths. It is not a fixed file count, universal study design or list of additional current inputs. Rename, combine or remove inapplicable items for the actual task. Each applicable row must become deliverables paths, tasks.outputs IDs and substantive acceptance.
 
-Under schemaVersion 1, deliverables[].path binds an ordinary file. Declare necessary loose member files individually. For combined delivery, declare a real archive and explain its required members, ownership and content acceptance in the phase. An output pointing to a bundle inventory, figure index or README binds only that description; it does not bind the described data, code, configuration, results or images. Declare those artifacts separately.
+In the current namespace (format=sciautoharness, schemaVersion=1), deliverables[].path binds an ordinary file. Declare necessary loose member files individually. For combined delivery, declare a real archive and explain its required members, ownership and content acceptance in the phase. An output pointing to a bundle inventory, figure index or README binds only that description; it does not bind the described data, code, configuration, results or images. Declare those artifacts separately.
 
 If a machine check reports overlap between a declared directory and its member files, retain actual delivery and revise ownership. Declare necessary member files without the parent directory, or declare a real archive with inventories and receipts as members covered by content acceptance. An independent receipt can also live at a nonoverlapping path outside the archive.
 

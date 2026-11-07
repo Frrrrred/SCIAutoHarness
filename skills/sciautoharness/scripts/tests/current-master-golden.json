@@ -1,0 +1,132 @@
+{
+  "format": "sciautoharness",
+  "schemaVersion": 1,
+  "kind": "master-oracle",
+  "contract": {
+    "format": "sciautoharness",
+    "schemaVersion": 1,
+    "kind": "contract",
+    "taskId": "synthetic-current-oracle",
+    "revision": 1,
+    "domain": "general",
+    "goal": "Produce two synthetic artifacts and independently review the second against the first.",
+    "execution": {
+      "allowedHosts": [
+        "codex"
+      ],
+      "defaultHost": "codex"
+    },
+    "nonGoals": [
+      "No real observations, model calls or external writes."
+    ],
+    "inputs": [
+      {
+        "source": "Synthetic fixture authored for the current contract oracle.",
+        "path": "input.txt"
+      }
+    ],
+    "deliverables": [
+      {
+        "id": "first",
+        "path": "out/first.txt"
+      },
+      {
+        "id": "second",
+        "path": "out/second.txt"
+      }
+    ],
+    "skills": [],
+    "assumptions": [
+      "Local CPU and existing tools suffice."
+    ],
+    "risks": [
+      "File existence does not prove meaningful completion."
+    ],
+    "stops": [
+      "Stop affected work when reviewed inputs change."
+    ],
+    "permissions": {
+      "localWrites": true,
+      "network": false,
+      "install": false,
+      "externalWrites": false,
+      "longGpu": false
+    },
+    "resources": {
+      "budget": "Existing local tools only.",
+      "stopConditions": [
+        "Unknown edits block overwrite."
+      ]
+    },
+    "reviewFiles": [],
+    "contextFiles": [
+      {
+        "path": "phases/first.md",
+        "kind": "phase",
+        "tasks": [
+          "first"
+        ],
+        "purpose": "Produce the first synthetic artifact.",
+        "loadWhen": "After context selects first"
+      },
+      {
+        "path": "phases/second.md",
+        "kind": "phase",
+        "tasks": [
+          "second"
+        ],
+        "purpose": "Produce the second artifact and review it against the first.",
+        "loadWhen": "After context selects second"
+      },
+      {
+        "path": "protocols/evidence.md",
+        "kind": "reference",
+        "tasks": [
+          "first",
+          "second"
+        ],
+        "purpose": "Preserve source and execution evidence.",
+        "loadWhen": "When evaluating evidence"
+      }
+    ],
+    "recoveryFile": "RECOVERY.md",
+    "tasks": [
+      {
+        "id": "first",
+        "title": "Produce first artifact",
+        "dependsOn": [],
+        "outputs": [
+          "first"
+        ],
+        "acceptance": [
+          {
+            "id": "artifact",
+            "type": "artifact",
+            "description": "The first artifact must exist."
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "title": "Produce reviewed second artifact",
+        "dependsOn": [
+          "first"
+        ],
+        "outputs": [
+          "second"
+        ],
+        "acceptance": [
+          {
+            "id": "review",
+            "type": "review",
+            "description": "Review the second artifact against the first.",
+            "requiredFiles": [
+              "out/first.txt"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": "# Task harness: synthetic-current-oracle · revision 1\n\nGoal: Produce two synthetic artifacts and independently review the second against the first.\n\nDomain: general. Formal execution requires direct user approval of this complete version.\n\n## Entry: resume or review\n\nOn resumption with this supplied entry, first project reads are only this master and recovery instructions; read the skill runtime interface as needed, then immediately use context. Do not enumerate or broadly search the project/package, load full state or predecessor reports before context. Search matches also count as loading. Only locate filenames narrowly when the supplied entry is actually missing. Runtime: context --project <this project> --id synthetic-current-oracle --task <current task>. It derives current approval, dependencies and the next permitted action. Use the current approval provenance and dependency summaries, then the returned current-stage context; do not reread old state merely to confirm them. Do not load the complete contract or old receipts by default; inspect linked raw evidence only for a specific unresolved gap.\n\nIf approval is missing or the plan changes, use the complete review route below. Preparing authorized planning files precedes formal work; formal content in chat, files or subagent handoffs requires user review first.\n\nWhen feasibility is refuted, critical acceptance repeatedly stalls or a critical dependency has no viable path, follow the installed skill references/replanning.md after context for comprehensive self-audit and complete replanning. Preserve original goals, constraints, evidence and the original controller; settle actual active/pending work through supported operations before changing the live plan. A materially revised complete package requires direct final-user approval. Normal waiting or one timeout alone does not justify rewriting.\n\n## Reviewed host policy\n\n{\"allowedHosts\":[\"codex\"],\"defaultHost\":\"codex\"}\n\nOnly a reviewed allowed host may begin new work. Preserve the original host/mode/executor when closing active work. Host selection grants no extra tools or permissions; use the selected host reference and actual native capabilities.\n\n## Collaboration and acceptance\n\nThe primary agent is the sole business writer and Harness controller. Native delegates investigate independently and read-only. Creation of separate chats, communication, business writes and control writes are distinct permissions. Confirm the old writing activity has actually stopped before transfer or acceptance. Preserve original run/host/executor and actual approval. Changed closed pending/verified/stale artifacts require rework before a repair run; failed executions retain their direct retry route. Material changes require a revised user review. Unknown termination preserves the original run and handle and blocks another writer. Submit records ended work; it does not stop a process.\n\nReview criteria declare requiredFiles explicitly; [] is allowed. After execution ends and submit closes the original run, review-snapshot binds the actual content, run, dependencies and prior attempt. It gives no semantic verdict. Review the actual bound version. Verify checks every review before commands and checks drift after every command and before acceptance. Failed acceptance requires an actual recheck and fresh snapshots for applicable review criteria. Hashes identify observed versions; they do not authenticate evidence or provide OS isolation.\n\n## Overall boundaries\n\nNon-goals: [\"No real observations, model calls or external writes.\"]\nPermissions: {\"localWrites\":true,\"network\":false,\"install\":false,\"externalWrites\":false,\"longGpu\":false}\nResources: {\"budget\":\"Existing local tools only.\",\"stopConditions\":[\"Unknown edits block overwrite.\"]}\nAssumptions: [\"Local CPU and existing tools suffice.\"]\nRisks: [\"File existence does not prove meaningful completion.\"]\nStop conditions: [\"Stop affected work when reviewed inputs change.\"]\n\n## Whole-task map and acceptance\n\n| Task | Depends on verified | Outputs | Acceptance | Phase plans |\n|---|---|---|---|---|\n| first: Produce first artifact | none | out/first.txt | The first artifact must exist. | [phases/first.md](<phases/first.md>) |\n| second: Produce reviewed second artifact | first | out/second.txt | Review the second artifact against the first. | [phases/second.md](<phases/second.md>) |\n\n## Conditional reading\n\n- [phases/first.md](<phases/first.md>) — Produce the first synthetic artifact.; read when: After context selects first; tasks: first.\n- [phases/second.md](<phases/second.md>) — Produce the second artifact and review it against the first.; read when: After context selects second; tasks: second.\n- [protocols/evidence.md](<protocols/evidence.md>) — Preserve source and execution evidence.; read when: When evaluating evidence; tasks: first, second.\n\nRecovery and semantic maintenance: [RECOVERY.md](<RECOVERY.md>). Load on a new session, interruption, stale evidence or phase maintenance; do not load all phase bodies by default.\n\n## Inputs and complete review (initial approval or revision only)\n\nInputs and sources: [{\"source\":\"Synthetic fixture authored for the current contract oracle.\",\"path\":\"input.txt\"}]\n\nThe full machine contract is [contract.json](contract.json). For initial approval or a substantive revision, review this map, the complete contract and every linked phase/reference/recovery file. For approved execution, use the context-first entry above. All belong to the review digest even when not loaded into a particular execution context. A skeleton or a structure check is not a semantic or scientific review.\n\nWithin a valid approved version, proceed by verified dependencies without repeating the same approval. Changed immutable inputs or reviewed plans invalidate approval; normal declared outputs and execution records are handled through acceptance and downstream evidence status. Never self-approve. Authorization records do not authenticate users or impose OS isolation.\n\nOn first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are stale. A receipt and exit zero do not verify a task. For spawned CLI work, direct process close is only an observation; actual business end requires explicit same-run controller submission. Only actual current acceptance evidence verifies a task. Preserve negative, opposite and inconclusive findings. Final completion requires all mandatory outputs and acceptance, with limitations and unresolved items reported.\n"
+}

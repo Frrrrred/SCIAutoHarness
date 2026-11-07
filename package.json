@@ -11,7 +11,6 @@
     "check:skill": "node skills/sciautoharness/scripts/check-skill.mjs",
     "help": "node skills/sciautoharness/scripts/harness.mjs help",
     "help:submit": "node skills/sciautoharness/scripts/harness.mjs help submit",
-    "test": "node skills/sciautoharness/scripts/tests/harness-regression.mjs",
-    "test:migration": "node skills/sciautoharness/scripts/tests/sciautoharness-migration-regression.mjs"
+    "test": "node skills/sciautoharness/scripts/tests/harness-regression.mjs"
   }
 }

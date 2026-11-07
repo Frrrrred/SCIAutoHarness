@@ -2,10 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { inspect } from 'node:util';
+import {parseJsonBytes,assertRecord} from './identity.mjs';
 
 export const hash = data => createHash('sha256').update(data).digest('hex');
 export const now = () => new Date().toISOString();
-export const json = file => fs.readFile(file, 'utf8').then(JSON.parse);
+export const json = async(file,kind)=>{const value=parseJsonBytes(await fs.readFile(file));return kind?assertRecord(value,kind):value;};
 export async function exists(file) { try { await fs.lstat(file); return true; } catch (e) { if (e.code === 'ENOENT') return false; throw e; } }
 export async function digest(file) { return hash(await fs.readFile(file)); }
 export function inside(root, file) { const rel = path.relative(root, file); return rel === '' || (!path.isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${path.sep}`)); }
@@ -20,7 +21,7 @@ export async function contained(root, relative) {
   if (!inside(base, await fs.realpath(ancestor))) throw new Error(`Symlink/junction escapes declared root: ${relative}`);
   return target;
 }
-export async function writeJson(file, data) { await atomicWrite(file, `${JSON.stringify(data, null, 2)}\n`); }
+export async function writeJson(file, data) { assertRecord(data,data.kind);await atomicWrite(file, `${JSON.stringify(data, null, 2)}\n`); }
 export async function atomicWrite(file, data) {
   const tmp = `${file}.${randomUUID()}.tmp`;
   await fs.writeFile(tmp, data, { flag: 'wx' });

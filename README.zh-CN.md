@@ -16,6 +16,8 @@ cd SCIAutoHarness
 npm run help
 ```
 
+升级现有安装或恢复活动任务前，请先阅读[兼容与升级说明](docs/COMPATIBILITY.md)。当前记录契约不自动迁移旧模板或旧安装格式，原任务应保留匹配的控制器。
+
 按[安装与日常使用](docs/GETTING_STARTED.md)生成安装预览，审查具体目标后再应用。在新的 Codex 会话中调用 `$sciautoharness`。
 
 ## 完成一项任务

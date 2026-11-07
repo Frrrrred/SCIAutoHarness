@@ -3,6 +3,8 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { exists } from './files.mjs';
 
+export const processSucceeded=result=>result?.processState==='closed'&&result.code===0&&result.exitCode===0&&!result.signal&&!result.timedOut&&!result.error&&!result.errors?.length&&!result.controlErrors?.length&&(!result.hostProtocol||result.hostProtocol.ok===true);
+
 export async function resolveCodex(explicit, {platform=process.platform,pathValue=process.env.PATH??''}={}) {
   const candidates = explicit ? [path.resolve(explicit)] : pathValue.split(path.delimiter).filter(Boolean).flatMap(dir => platform === 'win32' ? [path.join(dir,'codex.exe'),path.join(dir,'node_modules','@openai','codex','bin','codex.js'),path.join(dir,'codex.cmd')] : [path.join(dir,'codex')]);
   for (const file of candidates) {

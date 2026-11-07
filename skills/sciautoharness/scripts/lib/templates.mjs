@@ -1,9 +1,3 @@
-// Template versions are part of the reviewed contract, separate from state schema.
-export const CURRENT_TEMPLATE_VERSION=4;
-export const EXECUTION_SUMMARY='Process exit alone never verifies a task. On first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are reported stale.';
-
-export function templateVersion(contract){
-  if(!Object.hasOwn(contract,'templateVersion'))return 1;
-  if(![1,2,3,4].includes(contract.templateVersion))throw new Error('Unsupported templateVersion: use numeric 1, 2, 3 or 4; an omitted field preserves the frozen v1 template. Preserve original active runs and obtain a revised review before changing this field.');
-  return contract.templateVersion;
-}
+export const EXECUTION_SUMMARY="On first factual closure, eligible ok results enter pending_acceptance, eligible failed results enter failed, and ineligible results are stale. A receipt and exit zero do not verify a task. For spawned CLI work, direct process close is only an observation; actual business end requires explicit same-run controller submission.";
+export const COLLABORATION_ROUTE="The primary agent is the sole business writer and Harness controller. Native delegates investigate independently and read-only. Creation of separate chats, communication, business writes and control writes are distinct permissions. Confirm the old writing activity has actually stopped before transfer or acceptance. Preserve original run/host/executor and actual approval. Changed closed pending/verified/stale artifacts require rework before a repair run; failed executions retain their direct retry route. Material changes require a revised user review. Unknown termination preserves the original run and handle and blocks another writer. Submit records ended work; it does not stop a process.";
+export const REVIEW_EVIDENCE_SUMMARY="Review criteria declare requiredFiles explicitly; [] is allowed. After execution ends and submit closes the original run, review-snapshot binds the actual content, run, dependencies and prior attempt. It gives no semantic verdict. Review the actual bound version. Verify checks every review before commands and checks drift after every command and before acceptance. Failed acceptance requires an actual recheck and fresh snapshots for applicable review criteria. Hashes identify observed versions; they do not authenticate evidence or provide OS isolation.";

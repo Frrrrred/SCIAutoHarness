@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Deliberately checks this package's simple single-line metadata subset.
 // It is not a general YAML parser or the upstream Python quick_validate tool.
-import{compatibilityNames}from'./lib/identity.mjs';
+import {envelope,assertRecord} from './lib/identity.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,9 +10,15 @@ const text=await fs.readFile(path.join(root,'SKILL.md'),'utf8');
 const match=text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
 if(!match)throw new Error('Missing frontmatter.');
 const data={};
+function stringValue(raw,label){
+ raw=raw.trim();
+ if(raw.startsWith('"')){const value=JSON.parse(raw);if(typeof value!=='string')throw new Error(label+' must be a string.');return value;}
+ if(!raw||/^[\[\]{}#&*!|>'"%@`,?:]/.test(raw)||/^-\s|:\s|\s#/.test(raw)||/^(?:~|null|true|false|yes|no|on|off|[+-]?(?:0[xob][0-9a-f_]+|\d[\d_]*(?:\.[\d_]*)?(?:e[+-]?\d+)?|\.\d+(?:e[+-]?\d+)?|\.(?:inf|nan))|\d{4}-\d\d-\d\d(?:[Tt ].*)?|\d+(?::\d+)+(?:\.\d+)?)$/i.test(raw))throw new Error(label+' needs a quoted string or an unambiguous plain string in this checker subset.');
+ return raw;
+}
 for(const line of match[1].split(/\r?\n/)) {
   const pair=line.match(/^([a-z-]+): (.+)$/);if(!pair || Object.hasOwn(data,pair[1]))throw new Error('Unsupported or duplicate metadata; this checker accepts a simple single-line subset.');
-  data[pair[1]]=pair[2].startsWith('"')?JSON.parse(pair[2]):pair[2];
+  data[pair[1]]=stringValue(pair[2],pair[1]);
 }
 if(Object.keys(data).some(k=>!['name','description','license'].includes(k)))throw new Error('Unexpected frontmatter field.');
 if(!/^[a-z][a-z0-9-]{0,63}$/.test(data.name)||data.name!==path.basename(root))throw new Error('Invalid name/folder.');
@@ -23,15 +29,14 @@ for(const m of text.matchAll(/\]\(([^)]+)\)/g))if(!/^[a-z]+:/i.test(m[1]))await 
 const yaml=await fs.readFile(path.join(root,'agents','openai.yaml'),'utf8');
 const parsed={};let scope='';
 for(const line of yaml.trim().split(/\r?\n/)) {
-  const header=line.match(/^([a-z]+):$/);if(header){scope=header[1];parsed[scope]={};continue;}
+  const header=line.match(/^([a-z]+):$/);if(header){scope=header[1];if(!['interface','policy'].includes(scope)||Object.hasOwn(parsed,scope))throw new Error('Unsupported or duplicate UI YAML section.');parsed[scope]={};continue;}
   const p=line.match(/^  ([a-z_]+): (.+)$/);if(!p||!scope)throw new Error('Unsupported UI YAML structure.');
+  if(Object.hasOwn(parsed[scope],p[1]))throw new Error('Duplicate UI YAML key.');
+  if(!(scope==='interface'?['display_name','short_description','default_prompt']:['allow_implicit_invocation']).includes(p[1]))throw new Error('Unsupported UI YAML key.');
   parsed[scope][p[1]]=p[2]==='true'?true:p[2]==='false'?false:JSON.parse(p[2]);
 }
+for(const field of ['display_name','short_description','default_prompt'])if(typeof parsed.interface?.[field]!=='string'||!parsed.interface[field].trim())throw new Error('UI '+field+' must be a string.');
 if(parsed.policy?.allow_implicit_invocation!==true)throw new Error('Implicit invocation disabled.');
 if(!parsed.interface?.default_prompt.includes(`$${data.name}`))throw new Error('Default prompt must name the skill.');
 const n=Array.from(parsed.interface?.short_description??'').length;if(n<25||n>64)throw new Error('UI short description length.');
-for(const name of compatibilityNames){
- const alias=path.join(path.dirname(root),name);
- if(await fs.access(alias).then(()=>true,()=>false))throw new Error('Retired skill entry remains in discovery: '+name);
-}
-console.log(JSON.stringify({valid:true,checker:'portable single-line metadata/link/UI subset',name:data.name,descriptionCharacters:data.description.length,implicitInvocation:true,upstreamPythonValidatorRun:false},null,2));
+const result=envelope('skill-check',{valid:true,checker:'portable single-line metadata/link/UI subset',name:data.name,descriptionCharacters:data.description.length,implicitInvocation:true,upstreamPythonValidatorRun:false});assertRecord(result,'skill-check');console.log(JSON.stringify(result,null,2));

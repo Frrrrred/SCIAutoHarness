@@ -1,24 +1,18 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {hash} from './lib/files.mjs';
+import {envelope,assertRecord} from './lib/identity.mjs';
 
 const within=(root,file)=>{const rel=path.relative(root,file);return rel===''||(!rel.startsWith('..'+path.sep)&&rel!=='..'&&!path.isAbsolute(rel));};
 const absolute=p=>path.isAbsolute(p)||path.win32.isAbsolute(p);
 const pathLike=s=>absolute(s)||/^(?:\.{1,2}[\\/])/.test(s)||/^[^\s`]+[\\/][^`]+\.[\p{L}\p{N}]+$/u.test(s)||/^[^\s`]+\.[\p{L}\p{N}]{1,12}$/u.test(s);
 
-// Deliberately bounded local-path lint, not a general Markdown parser or authorization system.
-export async function checkHarnessPaths({project,package:packageDir,planned=[],allowRoots=[]}){
- const result={ok:false,documents:0,checked:[],issues:[],uncovered:[],remoteLinksSkipped:0,limitation:'Checks inline Markdown file links and unambiguous single-backtick paths outside fenced examples. No remote fetch, anchor validation, source-content inspection or semantic approval. Unsupported reference syntax is reported, not certified.'};
- const issue=(code,extra)=>result.issues.push({code,...extra});
- project=path.resolve(project);packageDir=path.resolve(packageDir);
- let realProject,realPackage;
- try{realProject=await fs.realpath(project);realPackage=await fs.realpath(packageDir);}catch(e){issue('INVALID_PACKAGE',{message:e.message});return result;}
- if(!within(project,packageDir)||!within(realProject,realPackage)){issue('INVALID_PACKAGE',{path:packageDir,message:'Package must be inside the explicit project.'});return result;}
- const roots=[realProject];
- for(const r of allowRoots)roots.push(await fs.realpath(path.resolve(r)));
- const plannedPaths=new Set();
- for(const p of planned){const target=path.resolve(project,p);if(!within(project,target)){issue('OUTSIDE_SCOPE',{reference:p,resolved:target});continue;}plannedPaths.add(target);}
- const seen=new Set();const docs=[];
+// One raw read supplies both the scanned text and its version. Engine also uses
+// this capture for the final scan/seal comparison without parsing links again.
+export async function capturePackageDocuments(packageDir){
+ packageDir=path.resolve(packageDir);const realPackage=await fs.realpath(packageDir),seen=new Set(),docs=[],issues=[];
+ const issue=(code,extra)=>issues.push({code,...extra});
  async function collect(dir){
   const real=await fs.realpath(dir);
   if(!within(realPackage,real)){issue('OUTSIDE_DOCUMENT_PACKAGE',{path:dir});return;}
@@ -35,6 +29,25 @@ export async function checkHarnessPaths({project,package:packageDir,planned=[],a
  }
  await collect(packageDir);
  if(!docs.length)issue('NO_DOCUMENTS',{path:packageDir});
+ const files=[];
+ for(const file of docs){const bytes=await fs.readFile(file);files.push({file,path:path.relative(packageDir,file).split(path.sep).join('/'),sha256:hash(bytes),bytes});}
+ return {files,issues};
+}
+
+// Deliberately bounded local-path lint, not a general Markdown parser or authorization system.
+export async function checkHarnessPaths({project,package:packageDir,planned=[],allowRoots=[]}){
+ const result=envelope('path-check',{ok:false,documents:0,checked:[],issues:[],uncovered:[],remoteLinksSkipped:0,documentVersions:[],limitation:'Checks inline Markdown file links and unambiguous single-backtick paths outside fenced examples. No remote fetch, anchor validation, source-content inspection or semantic approval. Unsupported reference syntax is reported, not certified.'});
+ const issue=(code,extra)=>result.issues.push({code,...extra});
+ project=path.resolve(project);packageDir=path.resolve(packageDir);
+ let realProject,realPackage;
+ try{realProject=await fs.realpath(project);realPackage=await fs.realpath(packageDir);}catch(e){issue('INVALID_PACKAGE',{message:e.message});return result;}
+ if(!within(project,packageDir)||!within(realProject,realPackage)){issue('INVALID_PACKAGE',{path:packageDir,message:'Package must be inside the explicit project.'});return result;}
+ const roots=[realProject];
+ for(const r of allowRoots)roots.push(await fs.realpath(path.resolve(r)));
+ const plannedPaths=new Set();
+ for(const p of planned){const target=path.resolve(project,p);if(!within(project,target)){issue('OUTSIDE_SCOPE',{reference:p,resolved:target});continue;}plannedPaths.add(target);}
+ const captured=await capturePackageDocuments(packageDir);result.issues.push(...captured.issues);
+ result.documentVersions=captured.files.map(({path,sha256})=>({path,sha256}));
  async function reference(document,line,raw){
   let value=raw.trim();const row={document,line,reference:value};
   if(/^(?:https?:|mailto:|data:)/i.test(value)){result.remoteLinksSkipped++;return;}
@@ -51,21 +64,22 @@ export async function checkHarnessPaths({project,package:packageDir,planned=[],a
   if(plannedPaths.has(resolved)){result.checked.push({...row,status:'planned'});return;}
   try{await fs.stat(resolved);result.checked.push({...row,status:'exists'});}catch(e){issue(e.code==='ENOENT'||e.code==='ENOTDIR'?'MISSING_PATH':'UNREADABLE_PATH',{...row,...(e.code==='ENOENT'||e.code==='ENOTDIR'?{}:{message:e.message})});}
  }
- for(const document of docs){
-  result.documents++;const lines=(await fs.readFile(document,'utf8')).split(/\r?\n/);let fence=null;
+ for(const capturedDocument of captured.files){
+  const document=capturedDocument.file;
+  result.documents++;const lines=capturedDocument.bytes.toString('utf8').split(/\r?\n/);let fence=null;
   for(let i=0;i<lines.length;i++){
    let line=lines[i];const marker=line.match(/^\s*(`{3,}|~{3,})/);
    if(marker){if(!fence)fence=marker[1];else if(marker[1][0]===fence[0]&&marker[1].length>=fence.length)fence=null;continue;}if(fence)continue;
    if(/^\s*\[[^\]]+\]:/.test(line)||/\[[^\]]+\]\[[^\]]*\]/.test(line)){result.uncovered.push({document,line:i+1,reason:'Reference-style links are not covered; use explicit inline file links.'});continue;}
-   const links=[...line.matchAll(/!?\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s)]+))\s*\)/g)];
+   const links=[...line.matchAll(/!?\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s()\\]+))\s*\)/g)];
    for(const m of links)await reference(document,i+1,m[1]??m[2]);
-   line=line.replace(/!?\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s)]+))\s*\)/g,'');
+   line=line.replace(/!?\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s()\\]+))\s*\)/g,'');
    if(/!?\[[^\]]*\]\(/.test(line))result.uncovered.push({document,line:i+1,reason:'Unsupported inline link form; use [label](<literal path>) without a title.'});
    for(const m of line.matchAll(/(?<!`)`([^`\r\n]+)`(?!`)/g)){const value=m[1];if(pathLike(value))await reference(document,i+1,value);}
   }
   if(fence)result.uncovered.push({document,line:lines.length,reason:'Unclosed fenced example.'});
  }
- result.ok=result.issues.length===0&&result.uncovered.length===0;return result;
+ result.ok=result.issues.length===0&&result.uncovered.length===0;assertRecord(result,'path-check');return result;
 }
 export async function main(args){
  const o={planned:[],allowRoots:[]};
@@ -74,4 +88,4 @@ export async function main(args){
  if(!absolute(o.project)||!absolute(o.package))throw Error('Project and package must be explicit absolute paths.');
  const r=await checkHarnessPaths(o);console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main(process.argv.slice(2)).catch(e=>{console.log(JSON.stringify({ok:false,issues:[{code:'INVALID_ARGUMENTS',message:e.message}]}));process.exitCode=1;});
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main(process.argv.slice(2)).catch(e=>{console.error(e.message);process.exitCode=1;});

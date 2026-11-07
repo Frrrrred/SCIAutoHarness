@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {StringDecoder} from 'node:string_decoder';
 import {exists} from './files.mjs';
-import {templateVersion} from './templates.mjs';
+import {assertStructure} from './identity.mjs';
 import {resolveCodex} from './process.mjs';
 
 export const HOST_IDS=Object.freeze(['codex','claude-code','deepseek-harness']);
@@ -18,9 +17,8 @@ export function hostProfile(host){
  return profiles[host];
 }
 export function executionPolicy(contract){
- if(templateVersion(contract)!==4)return {allowedHosts:['codex'],defaultHost:'codex'};
- const policy=contract.execution;
- if(!policy||typeof policy!=='object'||Array.isArray(policy)||!Array.isArray(policy.allowedHosts)||!policy.allowedHosts.length||new Set(policy.allowedHosts).size!==policy.allowedHosts.length)throw new Error('Template4 requires execution.allowedHosts to be a nonempty unique host array.');
+ const policy=assertStructure(contract.execution,'hostPolicy');
+ if(!policy||typeof policy!=='object'||Array.isArray(policy)||!Array.isArray(policy.allowedHosts)||!policy.allowedHosts.length||new Set(policy.allowedHosts).size!==policy.allowedHosts.length)throw new Error('Current execution policy requires execution.allowedHosts to be a nonempty unique host array.');
  for(const host of policy.allowedHosts)hostProfile(host);
  hostProfile(policy.defaultHost);
  if(!policy.allowedHosts.includes(policy.defaultHost))throw new Error('execution.defaultHost must be a member of execution.allowedHosts.');
@@ -28,7 +26,7 @@ export function executionPolicy(contract){
 }
 export function selectHost(contract,requested){
  const policy=executionPolicy(contract),host=requested??policy.defaultHost;hostProfile(host);
- if(!policy.allowedHosts.includes(host))throw new Error(`Host ${host} is not allowed by the reviewed execution policy. Preserve old runs; obtain a revised review before enabling another host.`);
+ if(!policy.allowedHosts.includes(host))throw new Error(`Host ${host} is not allowed by the reviewed execution policy. Preserve original runs; obtain a revised review before enabling another host.`);
  return host;
 }
 export function draftPolicy({host='codex',allowHosts=[]}={}){
@@ -46,10 +44,11 @@ export function executorProfile(executor){
  throw new Error('Receipt needs one of the six declared host executors.');
 }
 export function executionBinding(host,mode='native'){
- return {version:1,host,mode,executor:executorFor(host,mode)};
+ return {host,mode,executor:executorFor(host,mode)};
 }
 export function validateExecutionBinding(binding){
- if(!binding||typeof binding!=='object'||Array.isArray(binding)||binding.version!==1||!HOST_IDS.includes(binding.host)||!['native','cli'].includes(binding.mode)||binding.executor!==executorFor(binding.host,binding.mode))throw new Error('Invalid original execution binding; preserve the run for inspection.');
+ assertStructure(binding,'executionBinding');
+ if(binding.executor!==executorFor(binding.host,binding.mode))throw new Error('Invalid original execution binding; preserve the run for inspection.');
  return binding;
 }
 export function defaultInstallRoots(host='codex',env=process.env){
@@ -61,7 +60,7 @@ export function hostRunArgs(host){return [...hostProfile(host).runArgs];}
 // Observe stdout separately from stderr. A valid DSH final can still be a failed turn.
 export function hostOutputObserver(host){
  hostProfile(host);if(host!=='deepseek-harness')return null;
- const decoder=new StringDecoder('utf8');let pending='',session=false,final=false,lastType=null,reason=null,events=0,hostError=false,finished=null;
+ const decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true});let pending='',session=false,final=false,lastType=null,reason=null,events=0,hostError=false,finished=null,decodeFailed=false;
  const errors=[];const fail=message=>{if(!errors.includes(message))errors.push(message);};
  const consume=line=>{
   if(!line.trim())return;
@@ -77,10 +76,11 @@ export function hostOutputObserver(host){
   if(value.type==='final'){if(typeof value.text!=='string')fail('Invalid DSH final answer.');final=true;}
  };
  const append=text=>{pending+=text;for(;;){const at=pending.indexOf('\n');if(at<0)break;consume(pending.slice(0,at));pending=pending.slice(at+1);}};
+ const decode=(chunk,flush=false)=>{if(decodeFailed)return;try{append(flush?decoder.decode():decoder.decode(chunk,{stream:true}));}catch{decodeFailed=true;fail('Malformed DSH UTF-8 stdout.');}};
  return {
-  write:chunk=>{if(!finished)append(decoder.write(chunk));},
+   write:chunk=>{if(!finished)decode(chunk);},
   finish:()=>{
-   if(finished)return finished;append(decoder.end());if(pending){consume(pending);pending='';}
+   if(finished)return finished;decode(undefined,true);if(pending){consume(pending);pending='';}
    if(!session)fail('Missing DSH opening session.');if(!final||lastType!=='final')fail('Missing DSH terminal final.');
    if(reason!=='completed')fail('DSH final turn did not complete.');if(hostError)fail('DSH reported a driver error.');
    finished={host,contract:'dsh-headless-json',events,session,final,turnEndReason:reason,ok:errors.length===0,errors:[...errors]};return finished;

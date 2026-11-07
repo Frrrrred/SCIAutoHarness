@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { contained, digest, safeId } from './files.mjs';
-import { validateLayered,renderLayered,layeredReviewFiles } from './context.mjs';
-import { CURRENT_TEMPLATE_VERSION, EXECUTION_SUMMARY, templateVersion } from './templates.mjs';
+import { validateContextPlan,renderCurrent,contextReviewFiles } from './context.mjs';
+import {assertRecord,envelope} from './identity.mjs';
 import {draftPolicy,executionPolicy} from './hosts.mjs';
 
 export function classify({ intent = 'implement', stages = 1, deliverables = 1, research = false, readOnly = false } = {}) {
@@ -13,18 +13,22 @@ export function skeleton(taskId, goal, domain = 'general') {
   safeId(taskId);
   if (!['software','research','general'].includes(domain)) throw new Error('Domain must be software, research or general.');
   return {
-    schemaVersion: 1, templateVersion: CURRENT_TEMPLATE_VERSION, taskId, revision: 1, domain, goal,
+    format:'sciautoharness',schemaVersion:1,kind:'contract',taskId,revision:1,domain,goal,
     execution: draftPolicy(),
     nonGoals: [], inputs: [], deliverables: [], skills: [], assumptions: [], risks: [], stops: [],
     permissions: { localWrites: true, network: false, install: false, externalWrites: false, longGpu: false },
     resources: { budget: 'not specified; ask before incurring new cost', stopConditions: [] },
-    reviewFiles: [], tasks: [],
-    ...(domain === 'research' ? { protocol: { question: '', estimand: '', dataProvenance: '', independentUnit: '', replication: '', controlsConfounding: '', primaryExploratory: '', analysis: '', leakage: '', uncertainty: '', provenanceToClaims: '', negativeResults: 'Preserve null, opposite and inconclusive findings; never repair toward positivity.' } } : {}),
+    reviewFiles:[],tasks:[],contextFiles:[],recoveryFile:'RECOVERY.md',
+    ...(domain === 'research' ? { protocol: { question:'AUTHOR_INPUT_NEEDED',estimand:'AUTHOR_INPUT_NEEDED',dataProvenance:'AUTHOR_INPUT_NEEDED',independentUnit:'AUTHOR_INPUT_NEEDED',replication:'AUTHOR_INPUT_NEEDED',controlsConfounding:'AUTHOR_INPUT_NEEDED',primaryExploratory:'AUTHOR_INPUT_NEEDED',analysis:'AUTHOR_INPUT_NEEDED',leakage:'AUTHOR_INPUT_NEEDED',uncertainty:'AUTHOR_INPUT_NEEDED',provenanceToClaims:'AUTHOR_INPUT_NEEDED', negativeResults: 'Preserve null, opposite and inconclusive findings; never repair toward positivity.' } } : {}),
   };
 }
 const requiredText = (value, label) => {
   if (typeof value !== 'string' || !value.trim() || /^(TODO|TBD|UNKNOWN|AUTHOR_INPUT_NEEDED|\u5f85\u586b\u5199|\u5f85\u786e\u8ba4)$/i.test(value.trim())) throw new Error(`BLOCKED: ${label} is missing or unresolved.`);
 };
+export function canonicalEvidencePath(relative){
+  if(typeof relative!=='string'||!relative||relative.includes('\\')||path.isAbsolute(relative)||path.win32.isAbsolute(relative)||relative.split('/').some(x=>!x||x==='.'||x==='..'||/[. ]$/.test(x)||/[:*?"<>|\x00-\x1f]/.test(x)))throw new Error('Evidence needs an unambiguous canonical project-relative path: '+relative);
+  return relative;
+}
 // IDs name artifacts; ownership must also be unique for the actual file target.
 const pathKey = file => {
   const normalized=path.normalize(file);
@@ -54,8 +58,7 @@ async function outputIdentity(file) {
   }
 }
 export function validateContract(c) {
-  if (c.schemaVersion !== 1) throw new Error('Unsupported contract schema.');
-  templateVersion(c);
+  assertRecord(c,'contract');
   executionPolicy(c);
   safeId(c.taskId);
   if (!Number.isInteger(c.revision) || c.revision < 1) throw new Error('revision must be a positive integer.');
@@ -82,6 +85,7 @@ export function validateContract(c) {
   const deliverables = new Set();const outputPaths=[];
   for (const d of c.deliverables) {
     safeId(d.id); requiredText(d.path,`deliverable ${d.id} path`);
+    canonicalEvidencePath(d.path);
     if (deliverables.has(d.id)) throw new Error('Duplicate deliverable ID.');
     deliverables.add(d.id);
     checkOutputPath(outputPaths,d.id,d.path);
@@ -98,6 +102,8 @@ export function validateContract(c) {
       safeId(a.id); requiredText(a.description,'acceptance description');
       if (ids.has(a.id)) throw new Error('Duplicate acceptance ID.'); ids.add(a.id);
       if (!['artifact','command','review'].includes(a.type)) throw new Error('Acceptance type must be artifact, command or review.');
+      if (a.type==='review' && (!Array.isArray(a.requiredFiles)||!a.requiredFiles.every(x=>typeof x==='string'&&x.trim()))) throw new Error('Review requiredFiles must be an explicit string array; [] is allowed.');
+      if (a.type==='review')for(const file of a.requiredFiles)canonicalEvidencePath(file);
       if (a.type === 'command') {
         requiredText(a.command,'validation command');
         if (!Array.isArray(a.args) || !a.args.every(x => typeof x === 'string')) throw new Error('Validation command args must be an explicit string array; no shell expansion.');
@@ -120,10 +126,10 @@ export function validateContract(c) {
   if (c.domain === 'research') {
     for (const key of ['question','estimand','dataProvenance','independentUnit','replication','controlsConfounding','primaryExploratory','analysis','leakage','uncertainty','provenanceToClaims','negativeResults']) {
       requiredText(c.protocol?.[key],`protocol.${key}`);
-      if(c.layout==='layered'&&/^(?:N\/A|not applicable|\u4e0d\u9002\u7528|\u65e0)$/i.test(c.protocol[key].trim()))throw new Error(`BLOCKED: protocol.${key} needs a reason and suitable evidence when not applicable; see references/research.md.`);
+      if(/^(?:N\/A|not applicable|\u4e0d\u9002\u7528|\u65e0)$/i.test(c.protocol[key].trim()))throw new Error(`BLOCKED: protocol.${key} needs a reason and suitable evidence when not applicable; see references/research.md.`);
     }
   }
-  validateLayered(c);
+  validateContextPlan(c);
   return c;
 }
 // Metadata only: include nested review documents and existing runtime evidence.
@@ -142,19 +148,12 @@ async function protectedIdentities(dir) {
   }
   await collect(dir);return identities;
 }
-export function renderContract(c) {
-  const version=templateVersion(c);
-  if(version===4&&c.layout!=='layered')return `# Task harness: ${c.taskId} · revision ${c.revision}\n\nGoal: ${c.goal}\n\nDomain: ${c.domain}. Status: review required before formal work.\n\n## User review\n\nReview the complete contract below, including all inputs, outputs, dependencies, permissions, host policy, methods, acceptance and recovery boundaries. Approval binds only the current complete task ID, revision and digest. Silence or agent self-assessment is not approval. Changes to reviewed files or bound inputs require a revised review. Runtime records do not authenticate an operator or provide an OS sandbox. The current host must honor actual user authorization.\n\n## Reviewed host policy\n\n${JSON.stringify(executionPolicy(c))}\n\nOnly a reviewed allowed host may begin new work. Preserve the original host, mode and executor when closing an active run, even after approval becomes stale. Hosts have different tools and permission controls; selection grants no extra rights.\n\n## Execution and evidence\n\nThe selected host performs actual work; this shared runtime records contracts, execution identity and evidence. Dependencies must be currently verified. ${EXECUTION_SUMMARY} All mandatory outputs and acceptance criteria must pass before verified. Preserve negative and inconclusive findings, original facts and recovery evidence.\n\n## Complete machine contract\n\n\`\`\`json\n${JSON.stringify(c,null,2)}\n\`\`\`\n`;
-  const executionSummary=version===1?'Exit zero means pending acceptance.':EXECUTION_SUMMARY;
-  const executionOwner=version===3?'Codex executes; the harness runtime records contracts and evidence.':'Codex executes; Ruflo records contracts and evidence.';
-  if(c.layout==='layered')return renderLayered(c);
-  return `# Task harness: ${c.taskId} · revision ${c.revision}\n\nGoal: ${c.goal}\n\nDomain: ${c.domain}. Status: review required before formal work.\n\n## User review\n\nReview the complete contract below: scope, all deliverables, inputs, dependencies, permissions, skills, acceptance, assumptions, risks and stopping rules. Approval applies only to the current review digest. Reply approve, reject, or request a revision. Silence does not approve. Changes to this file, the contract, review attachments or bound file inputs invalidate approval.\n\nThe runtime records supplied user authorization; it does not authenticate user identity or enforce all permissions at the OS level. Native Codex must obey the user's actual authorization. No model may approve its own plan.\n\n## Execution and evidence\n\n${executionOwner} Dependency tasks must be verified before dependent execution. ${executionSummary} All declared outputs and acceptance criteria must pass before verified. Relevant artifact/receipt changes invalidate verification and downstream tasks. Negative and inconclusive findings are legitimate outcomes.\n\n## Complete machine contract\n\n\`\`\`json\n${JSON.stringify(c,null,2)}\n\`\`\`\n`;
-}
+export function renderContract(c){assertRecord(c,'contract');return renderCurrent(c);}
 export async function reviewSnapshot(project, dir, c) {
   validateContract(c);
   if ((await fs.readFile(path.join(dir,'HARNESS.md'),'utf8')) !== renderContract(c)) throw new Error('HARNESS.md differs from the machine contract. Run render, then review the regenerated complete package.');
   const files = [];
-  for (const relative of ['contract.json','HARNESS.md',...await layeredReviewFiles(dir,c)]) {
+  for (const relative of ['contract.json','HARNESS.md',...await contextReviewFiles(dir,c)]) {
     if (['state.json','.writer-lock'].includes(relative)) throw new Error('Mutable state is not a review attachment.');
     const file = await contained(dir, relative);
     files.push({ path: file, sha256: await digest(file), kind: 'review' });

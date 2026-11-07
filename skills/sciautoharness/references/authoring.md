@@ -1,135 +1,45 @@
-# Layered packages: authoring, complete review and selective loading
+# Author a complete review package
 
-## Choose the medium
+Use this route for a new complex task or one without an associated Harness. Existing supplied file-backed tasks first use master/recovery → context; session-only approved work retains its complete text and provenance without disk lifecycle operations. Respect explicit project-read boundaries; resolve against the supplied task directory. Do not discover ancestor/sibling Git metadata without an in-scope baseline. Necessary authorized intake defines the complete objective and methods; missing approval does not block planning, while formal work waits for the final user.
 
-For complex read-only work without file authorization, use a complete in-session package. Authorized files/machine state use the disk route. Both require complete planning and direct final-human review; one route's tools must not block the other.
+## Session or files
 
-### In-session package
+Without file authorization, keep the complete plan in chat: full ID/revision/text, master constraints, every substantive major stage, applicable protocols, recovery, inputs, outputs, dependencies, acceptance, unknowns and actual approval provenance. Verify referenced local inputs read-only. Do not invent a disk package, machine digest or runtime context. A short explanation or isolated low-risk action can proceed directly.
 
-Present stable ID/revision and complete current text: objective/non-goals, input identities/sources, read scope/rights, every major phase's methods/assumptions/dependencies, deliverables, acceptance, failure/stops/recovery and unknowns. Navigate by substantive conversation sections, not imaginary files/state/context. Formal results wait.
+Authorized implementation includes necessary task-local Harness files. Use the current fixed `harness/id` package and namespace described in [runtime](runtime.md). A machine skeleton is an authoring aid, not a complete plan or user approval. Keep persistent state only where authorized; do not create a second ledger, daemon or scheduled task.
 
-First verify cited local inputs read-only in authorized explicit directories: existence, project-relative resolution and real containment. Record actual unknowns/results. This is input verification, not disk-package path checking. Do not create a temporary package, call draft/prepare-review/check-harness-paths, or invent a machine digest without file authorization.
+## Intake and the complete objective
 
-Present the complete version and await direct approval of its ID/revision/text. Record original user wording/source; initial requests, silence and parent self-approval do not count. Maintain current phase, accepted dependencies/evidence and next action in-session. Resume by restoring those constraints/approval, then current inputs, without repeating unchanged approval.
+Read only necessary in-scope sources. State the intended outcome, mandatory deliverables and non-goals. Identify actual tools/host, permissions, source/data identities, consequential assumptions, resources/cost limits, dependencies, acceptance and unknowns. Ask only for decisions that change the plan; continue independent authorized planning. Do not replace a difficult core requirement with an optional follow-up.
 
-Later authorized persistence requires explicit conversion scope and complete disk creation/check/binding/review before formal use. Additional rights or material methods/scope require revision. Normal progress does not automatically authorize files.
+Research includes definitions/proofs/counterexamples/manuscript where dependent; mathematical prose does not bypass review. Load [research evidence](research.md) for provenance, parameters, experimental units, uncertainty, negative results and critical release boundaries. For software/general work use [domain routing](domains.md). When methods need professional decomposition, use [outcome-oriented planning](outcome-oriented-work.md).
 
-### Disk authoring order
+## Build the layers
 
-1. Complete actual result deliverables and dependencies in contract.
-2. Immediately obtain draft's authoring.refs mapping.
-3. Write all substantive phases/protocols/recovery from that mapping.
-4. Semantically review the complete meaning, then prepare-review.
-5. Normally deliver the complete pending package and wait for the final human.
+For a replacement after infeasibility, stalled progress or persistent blockage, first complete [self-audit and replanning](replanning.md). Preserve the original objective/constraints and readable prior plan; bind lessons to actual changes, justify evidence reuse and declare invalidated dependents. Author the complete replacement through the same layers and review below, not only a change note. Follow the runtime's original-run/pending-result guards before changing live reviewed content.
 
-Do not skip refs after reading an empty contract. Recovery uses its own mapping too. A project-relative input in backticks is not a link. Output-reference repair does not repair inputs. Prefer exact inputs.absoluteMarkdown in all documents; existing reference/markdown serve deliberate relative uses. Repair diagnosed inputs using their identity/absoluteMarkdown, never planned exemptions or changed bindings. Actually rerun until success and deliver normally, not only diagnostics/status.
+The master gives the complete objective, hard boundaries, all major outputs and dependencies, overall acceptance, conditional reading and unknowns. Every substantive phase states its actual input/source identity, prerequisites, methods/assumptions, permitted reads/writes, outputs and owner, acceptance evidence, failure/stopping rules and handoff. Choose real phases; no fixed phase count, empty shells or length target.
 
-For computational research trace promised result/code/data/figure chains before prose. Bind an actual declared rerun code path or script mode that rebuilds every mandatory output from raw inputs; existing code can do it. A reproduction ID pointing only to README/environment/receipt is insufficient. Assign execution ownership; do not turn result work into plan-only delivery.
+Place shared rules once in an applicable protocol and map it to the stages that need it. Context selection uses explicit task mappings, not automatic interpretation of loadWhen prose. All reviewed documents remain digest-bound even when their bodies are deferred. Recovery names original identity, owners, real handles, active/pending/acceptance status, drift and the next permitted action.
 
-Define the whole objective, sources, mandatory outputs, rights, actual tools and unknowns before major phases. Use real dependencies, not one file per call or fixed counts. Default task directory is project harness/<id>, keeping mutable records out of protected client settings. Existing .codex/harness/<id> stays in place. Dual locations require explicit identity resolution. Preserve existing IDs/paths and other tasks. Empty headings or future planning do not complete the major plan. Unknowns state blocked phase, required evidence and resolution route without invented values/tools.
+The current contract declares explicit host policy, all inputs, deliverables, unique writing ownership, complete acyclic dependencies and typed acceptance. Review criteria always declare requiredFiles; [] is valid. Caller extensions belong only in the declared extensions object. Research protocol text must be substantive; an unresolved placeholder or unexplained N/A blocks sealing.
 
-## Master and phase content
+## Use actual document mappings
 
-Master: ID/revision, objective/non-goals, global constraints/rights, major products, dependencies, overall acceptance and phase-to-document map. No execution log. Own detailed rules once, in phase/protocol.
+Draft with an explicit project, ID, goal and domain. Fill the complete contract first. Use refs once for a stable contract to get the actual per-document input/output links, then write all major documents. Use refs --next while authoring is partial or mappings changed. A nonempty document is present, not semantically verified.
 
-Connect the requested deliverable to the decision it supports and the evidence needed for that decision. For an unclear purpose or consequential choice of methods, use [outcome-oriented work](outcome-oriented-work.md); keep an already fixed objective intact and review any proposed expansion before execution.
+Resolve links relative to each containing document. Preserve literal Windows drive targets such as E:/ in absolute handoffs. A relative link valid in the master may be wrong inside a phase. Declare intermediate artifacts and their one producer. Keep outputs away from immutable inputs, runtime controls, review documents and physical aliases.
 
-Every phase states requirement served/evidence/local quality exit or redirection; actual fees/capacity/operational rights (not duration); input identities/verified prerequisites; methods/assumptions; allowed reads/writes/ownership; substantive checks; next discriminating check and repair/retest/stops after failure; handoff meaning/paths/limits. Use [judgment](execution-judgment.md) as needed. Structural checks do not certify science.
+When all substantive documents exist, actually run the documented prepare-review route. It rebuilds the one master, scans the complete raw Markdown set, checks local paths/declared future outputs and seals the same contract/document version. Draft-only output-reference repair is narrowly scoped to known unreviewed mappings; it is not general rewriting or permission to overwrite existing unknown content. A scan failure or changed set/version needs a fresh scan. The complete scan-binding is mandatory even for the public sealing API.
 
-Recovery starts with master/recovery → immediate context, deriving current authority/dependencies/phase; SCOPE/raw evidence follows only a stated gap. Put input links after this conditional route. Phases/protocols link the master and read inputs only after selection, without competing pre-context contract/state/history reads. Before sealing check all routes agree.
+## Present complete review
 
-Review covers every major phase/protocol/recovery. Research phase selection follows actual goals (theory is definitions/proofs/counterexamples, not invented samples/training). Bounded reproduction does not force topic discovery. Before applicable research prose load [research](research.md), applying current source/version/raw integrity, parameter rationale, downstream checks and release evidence. Keep general rules in research.md; record task-specific constraints in phase or protocol documents. Do not add the Skill's reference files themselves to task contextFiles.
+Deliver the current ID/revision/digest and full navigation to master, complete contract, all phases, applicable protocols and recovery. For session-only work deliver the complete current text. Explain consequential decisions, acceptance, limits and unresolved questions. Machine checks cannot certify meaning or scientific validity.
 
-## Path bases and presentation checks
+Await the final human's direct approval of this complete version. Silence, initial intent, an approval from another task, a file claiming consent or agent self-assessment is insufficient. Record only the actual message/source. Material changes to methods, inputs, scope, permissions, resources or acceptance require renewed complete review and invalidate affected downstream evidence; ordinary approved progress does not require repeating the same approval.
 
-Tool cwd and contract paths use the user's explicit project. Markdown paths use each containing document. Do not copy master ../ depths into phases. Give master canonical absolute inputs; use actual links such as `[name](<literal path>)`, not commands/vague prose as references.
+For delegated independent read-only work under the same approval, pass its ID/revision, approval provenance, current phase, exact responsibility, permissions, input versions, owners and acceptance. Follow [context and collaboration](context-hygiene.md). The primary remains the sole business writer/controller; a parent cannot grant new permissions by forwarding approval.
 
-Before disk presentation actually run:
+## Execute and finish
 
-```text
-node <skill>/scripts/check-harness-paths.mjs --project <absolute-project> --package <absolute-package>
-```
-
-This read-only scanner resolves inline file links/unambiguous single-backtick paths, reporting document/line/target/existence/errors. It is not a full Markdown parser, scientific check or approval mechanism, nor a reason for the model to reload every body.
-
-Mark future outputs as planned and list repeated --planned project-relative paths; only those targets receive existence exemption. Never exempt current inputs/plans/recovery. Ownership/review remain in contract. Already authorized external inputs need explicit --allow-root; it declares scope, grants no permission, reads no input body and does not enable networking. Respect real containment.
-
-Report pass only with ok=true and no uncovered items, retaining actual command/results and objective coverage. Complex titled/reference-style links, wildcards/placeholders or unsupported syntax must be replaced/rechecked. Fences, remote validity and anchor correctness are outside this scanner and need other checks. Pass does not certify undeclared references or meaning.
-
-### Machine-managed authoring
-
-Finish/check contract first, then use actual draft action:
-
-```text
-node <skill>/scripts/harness.mjs refs --project <absolute-project> --id <id>
-```
-
-It returns per-document input/output target/reference/Markdown maps read-only, without future bodies/files/approval. Reuse while path mappings remain unchanged. Write all documents using returned markdown/absoluteMarkdown, not hand-calculated depths/backticks. Independent planning documents can share a native tool call, but edit contract separately and avoid placeholders. Keep substantive phase-specific content and linked common constraints; batch write/nonempty is not review.
-
-For partial/changed packages use refs --next. It reports missing/empty/present, next purpose/task/acceptance, scoped outputs/inputs and inherits links to master/applicable protocols. Write it, then ask for the next when useful. Present means nonempty; contentReviewed remains false. --document phases/actual.md selects a declared map and is mutually exclusive with --next; documents may not exist yet. External roots still need authorization/allow-root.
-
-Before sealing, trace computations/figures to declared code or explicit real archive members. Declare required loose members; produce/accept archives before first consumption. A combined entry names covered steps. Inspect first-use/prior-freeze/review rules for data/dictionaries/config/code/evidence. Specify freeze relative to acquisition, configuration or viewing results. When material is unavailable, fix scientific principles/standards now; unknown actual groups/event codes need source verification, not guessed values or impossible pre-acquisition freezes.
-
-After source audit establishes mappings, freeze dependent configurations before their use. Earlier principles must not depend on a later task supplying source facts. Do not turn before-analysis into before-materials without justification. Trace producers/availability backward; load shared rules before their first applicability. Advance-frozen artifacts need producers by that point, not later analysis owners. Prerequisites come from verified upstream; same-task artifacts require ownership and create-before-use. Acyclic graphs/output lists alone do not establish this chain. Correct prose and contract, then use draft's action:
-
-```text
-node <skill>/scripts/harness.mjs prepare-review --project <absolute-project> --id <id> --repair-output-refs --handoff-only
-```
-
-It repairs eligible output references, renders master, path-checks complete package and seals review. Planned outputs come from contract; external roots stay explicit. Failure returns nonzero/all issues/uncovered and review=null. Correct via refs and rerun this action; do not bypass with independent review.
-
-Draft-only repair requires unreviewed/unapproved/unexecuted state and writer lock. Ordinary inline labels must name a unique output ID/filename; old target absent and only leading ../ depth differs. It changes the target only. Standalone single-backtick exact unique output project paths outside fences can become canonical links only if old document-relative target is absent. Returned outputRefRepair lists documents and document/line/old/new/output; backticks add syntax=single-backtick. Other text/newlines stay intact.
-
-No guessing for inputs, input/output overlap, existing targets, remote/multiple-backtick/fenced/link-label code, commands, ambiguous or other errors. Without the flag behavior is unchanged; refs is read-only. A valid or prior review disables draft-only repair. Revised packages increment revision and use prepare-review without that flag, correcting links explicitly. refs --next's final action chooses arguments from real state; use them, not stale draft instructions.
-
-Handoff-only emits complete Markdown only after success; normal JSON/repair facts remain available. Finish content review and repairs before sealing. Received success confirms master/contract/current digest binding, not substantive correctness. Normally deliver next without redundant full reread/handoff. Only a specific new defect justifies rechecking; genuinely lost results use recovery after actual original-call terminal state.
-
-Success is pending_user_review, never scientific proof or approval. Handoff includes ID/revision/digest, contract/master/all navigation, real checks and final-human request. Deliver normally with literal Windows E:/ targets, never /E:/. Keep details in reviewed files. Generating text/starting scripts/exit0 is not actual receipt or final delivery. Interrupted calls retain original handles and actual state, not blind reruns. Legacy/non-machine packages retain separate render/path/review interfaces.
-
-With valid review but lost result, establish original end, then read-only handoff --project ABS --id ID with authorized allow-root. It rechecks bindings/paths without render/review/state writes and refuses drift/missing/conflicts. Empty output and old success text do not prove current receipt.
-
-## Machine contract and host policy
-
-New drafts explicitly use numeric templateVersion4 in either layout. Hand-authored new contracts should too. Omitted/1 stays frozen v1;2/3 retain their own full bodies. Reading adds no fields or migrations. Layout and template selection are independent. Schema remains 1.
-
-New execution.allowedHosts/defaultHost are reviewed. Draft --host selects default; repeated --allow-host adds explicit alternatives. Actual host references load conditionally: [Codex](hosts/codex.md), [Claude](hosts/claude-code.md), [DSH](hosts/deepseek-harness.md). Tools are host-specific. Old arbitrary execution data retains Codex semantics. Do not edit policy/version to clear activity/pending. Resolve them, increment revision and obtain direct-human complete review for deliberate upgrade. Stale closure restores no eligibility. See [template versions](runtime.md#master-template-versions).
-
-```text
-node <skill>/scripts/harness.mjs draft --project <project> --id <id> --goal <goal> --domain research --layout layered --host <selected-host>
-```
-
-Draft creates scaffolds and actual local command/args for refs/next/prepareReview. Complete all substantive documents before machine review. JSON examples illustrate fields; never overwrite draft's chosen template/policy with a fragment.
-
-Update existing contract with an edit preserving the file; never delete/re-add it or replace the whole package in one brittle patch. Finish contract then individual documents. On patch failure inspect affected actual files and correct locally rather than assume success or repeat stale context. Incremental authoring does not grant incremental approval. Preserve IDs/paths when adding phases, and generate master through render/prepare-review.
-
-```json
-{
-  "layout": "layered",
-  "recoveryFile": "RECOVERY.md",
-  "contextFiles": [
-    {"path":"phases/source.md","kind":"phase","tasks":["source"],"purpose":"Source and data definition","loadWhen":"Entering source"},
-    {"path":"phases/analysis.md","kind":"phase","tasks":["analysis"],"purpose":"Analysis and counterexamples","loadWhen":"Entering analysis"},
-    {"path":"protocols/method.md","kind":"reference","tasks":["analysis"],"purpose":"Method and applicability","loadWhen":"Method needed"}
-  ]
-}
-```
-
-This is incomplete. Keep actual tasks/deliverables/inputs/permissions/acceptance. Every task maps to a phase; coherent tasks can share one. Context/recovery are automatically digest-bound even absent reviewFiles. Use in-package relative Markdown, not control evidence/outside/duplicate physical identities. Research inapplicability needs specific reason/evidence, not empty/UNKNOWN. Immutable inputs bind path; generated approved data/results are outputs, not expected-to-change initial inputs.
-
-### IDs, artifacts and acceptance
-
-IDs are real strings, lowercase-letter start, lowercase/digit/hyphen,1–64 chars. No coercion of booleans/arrays/objects/numbers. Inputs and outputs require distinct normalized/case/real/dev-ino identities; hardlinks cannot disguise originals. Equal independent bytes are fine. Unreliable multiply-linked identities reject.
-
-Review attachments in both layouts exclude runtime state/locks/receipt/acceptance/check/execution evidence and aliases. Master/contract already bind and cannot be repeated. Ordinary nested attachments remain supported.
-
-For required proofs, declare definitions, actual complete proof and manuscript files with owning tasks. Proof depends on accepted definitions, manuscript on verified proof. Criteria are objects; research has review. Proof acceptance reads definitions/quantifiers/all assumptions/derivations/boundary cases and evidence positions. A plan/lemma/file/command/DAG does not replace formal proof or unlock established manuscript claims. Preserve unresolved conjectures/counterexamples. Other research uses actual matching criteria, not mechanical proof phases. Trace production → substantive acceptance → consumption before review.
-
-Every input requires real source; path additionally binds actual local existence/hash. Description/id do not substitute. Example SCOPE must exist and be read, or be replaced/removed, never fabricated. Finish contract→refs→documents→prepare-review; correct all diagnostics. Normally return full pending navigation/checks to the final human and wait, not a request for the parent to write/approve or formal results.
-
-## Enter a phase
-
-```text
-node <skill>/scripts/harness.mjs context --project <project> --id <id> --task <step>
-```
-
-Context checks whole binding read-only but emits selected phase/protocols, global constraints, current acceptance and verified dependency summaries, not future bodies/history. Resolve blockers; reading is not authority. Native and independent layered execution share this route. Select only reviewed allowed hosts; do not assume portable tool names. Read raw evidence for a specific gap. Recheck approved boundaries before work; normal progress needs no new approval. Selective loading reduces repeated execution/resume reads, not necessarily total tokens/time.
+For the authorized file-backed route after approval, context → current phase/protocols and accepted dependency summaries → actual begin → approved work → original-run submit after real end → actual acceptance. For the session-only route, continue the approved read-only work and in-chat acceptance under the original ID/revision/full text and permissions; do not invoke disk lifecycle operations. Use only needed skill references and reassess at phase transitions or changed task needs. Keep negative/inconclusive evidence and true failures. Changed closed pending/verified/stale artifacts require rework; failed execution retains its retry route. Completion requires every mandatory deliverable and acceptance plus compatibility/uncertainty reporting. See [runtime](runtime.md), [recovery](recovery-maintenance.md) and [execution judgment](execution-judgment.md).

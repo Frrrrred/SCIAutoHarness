@@ -35,6 +35,30 @@ Reassess the whole task after phase completion/unblocking, new assumptions/inter
 
 Classify implementation/data/method/tool/permission failures versus valid negative results. Retry with new evidence or reasonable transient grounds. Repair authorized issues and reaccept affected downstream work. When one branch is blocked, advance independent approved mandatory items without inventing substitute results. Core defects need repair, not only a final caveat. Reuse [recovery](recovery-maintenance.md).
 
+## Revision drift check
+
+Perform this check at the start and end of each substantive planning, implementation or rework round, before carrying unfinished work into another round, and immediately when the user identifies drift. A round is a coherent proposed change and its verification, not each tool call; a formal revision-number change is not required. Existing tasks first follow master/recovery → context, then load applicable task execution constraints. Use current acceptance summaries and specific unresolved evidence rather than rereading the full history.
+
+Before work, compare the proposed change with the complete original objective, all mandatory deliverables and the current dependency/acceptance map. State the requirement and phase served, the direct blocker, the actual consumer or dependency affected, the evidence that would change the next decision, and the local exit or redirection condition. Compare it with the most consequential remaining mandatory work; priority follows that comparison, not the most recent finding.
+
+After work, compare the intended contribution with actual evidence. In the existing progress/revision record, or in chat when no persistent record is authorized, record these five items concisely:
+
+| Item | Required judgment |
+| --- | --- |
+| Whole-task position | Current phase, accepted prerequisites and remaining mandatory delivery; use actual states |
+| This round | Requirement/blocker addressed, actual consumer and intended exit condition |
+| Evidence gained | What was established or refuted, and which acceptance gap or next decision it changes |
+| Drift assessment | Aligned, drift detected, or an explicitly unresolved alignment question, with the concrete reason |
+| Action | Continue or redirect to one concrete authorized action, its required evidence and exit condition |
+
+Treat absent requirement/consumer mapping, repeated refinements that do not change a decision, continued polishing after the local evidence standard is met, or unexplained deferral of more consequential mandatory work as drift or a specific alignment gap to resolve. File counts, test counts, elapsed effort, generated plans and repeated local passes cannot establish whole-task progress. Negative evidence can justify rejecting a route without satisfying its original acceptance criterion. Necessary low-level correctness work retains priority when its actual dependency and release condition are explicit.
+
+When drift is found, stop starting work on that branch, preserve original active processes/handles and observe their actual end, retain failures and evidence, and select the shortest authorized route to the critical blocker or an independent mandatory deliverable. Resolve an alignment gap before expanding that branch; do not label an unexplained detour aligned. Resume a parked branch only when a concrete requirement or new evidence establishes its priority. Reuse adequate unchanged evidence and proceed when the local exit condition is met. Redirection changes action priority; it does not itself authorize reverting files, changing methods or releasing downstream work.
+
+Apply this as a reasoning and execution obligation within existing records: no second state ledger, mandatory JSON form, extra approval checkpoint, fixed attempt cap or elapsed-time limit. Preserve mandatory scope, dependency order, permissions, budgets, unknown rejection, technical acceptance and final-user review. Material changes still follow the existing review route. Updating these instructions does not replace the controller of an active run or constitute machine-enforced drift detection.
+
+If local redirection is insufficient because feasibility is refuted, repeated rounds do not advance critical acceptance, the same failure recurs or a critical dependency has no viable path, escalate to [self-audit and complete replanning](replanning.md). That branch audits the full objective and converts evidenced lessons into either a justified local correction or a complete revised Harness; it does not treat elapsed effort as progress or weaken original requirements.
+
 ## Execution, resources and acceptance
 
 Task duration, network speed, tool waiting and one timeout are not stopping criteria. Continue original handles/state while approved work is executable. Actual fees, compute quota/capacity and rights constrain branches; the whole task is blocked only with no authorized route. Persistence grants no extra permission, and resource limits do not require a default duration field.

@@ -16,6 +16,8 @@ cd SCIAutoHarness
 npm run help
 ```
 
+Before upgrading an existing installation or active task, read [compatibility and upgrades](docs/COMPATIBILITY.md). The current record contract is not an automatic migration of earlier templates or installation formats.
+
 Follow [installation and daily use](docs/GETTING_STARTED.md) to preview the exact installation targets, review the plan and apply it. In a new Codex session, invoke `$sciautoharness`.
 
 ## Work with a complete task

@@ -4,7 +4,9 @@
 
 ## Prepare
 
-Use an existing Node.js environment and an available agent host. The core uses built-in modules and bundled code; no `npm install` is required. Host installation and provider setup remain separate.
+Use an existing Node.js environment and agent host. Repository CI uses Node 26. The core uses Node.js built-ins and needs no npm dependency installation. Windows installation also requires an existing PowerShell that can enumerate file and directory alternate streams. Host installation and provider setup remain separate.
+
+Clone into a new directory. Before replacing an existing installation or a checkout used by active work, read [compatibility and upgrades](COMPATIBILITY.md).
 
 ```powershell
 git clone https://github.com/Frrrrred/SCIAutoHarness.git
@@ -15,20 +17,27 @@ node $cli help
 
 ## Preview and review installation
 
-For Codex, select its instruction home and the parent skill directory:
+A preview includes complete instruction-file bytes. Keep it private. The CLI's external preview file and stdout are the caller's responsibility; the installer's private transaction storage does not protect them retroactively.
+
+Choose an existing access-controlled directory whose owner and effective permissions you have checked. Replace the placeholder below with that directory. A random filename or an ordinary temporary directory alone is not a privacy guarantee.
 
 ```powershell
 $harnessHome = Join-Path $HOME '.codex'
 $harnessSkills = Join-Path $HOME '.agents/skills'
-$harnessPlan = Join-Path ([IO.Path]::GetTempPath()) ('sciautoharness-' + [guid]::NewGuid() + '.json')
-node $cli install-preview --host codex --host-home $harnessHome --skill-root $harnessSkills --out $harnessPlan
-if ($LASTEXITCODE -ne 0) { throw 'Retain the preview diagnostics' }
-Get-Content -LiteralPath $harnessPlan -Raw
+$harnessPrivateDirectory = '<existing private directory>'
+if (!(Test-Path -LiteralPath $harnessPrivateDirectory -PathType Container)) {
+    throw 'Choose and verify private storage before creating a preview'
+}
+$harnessPlan = Join-Path $harnessPrivateDirectory ('sciautoharness-' + [guid]::NewGuid() + '.json')
+node $cli install-preview --host codex --host-home $harnessHome --skill-root $harnessSkills --out $harnessPlan > $null
+if ($LASTEXITCODE -ne 0) { throw 'Retain preview diagnostics privately' }
 ```
 
-Review every target, its content and identity, the instruction change, source, digest and recovery effect, including any directory trees to be retired. The skill root is the parent of the installed `sciautoharness` directory. New installations provide only this entry. A preview does not change the installation or grant approval.
+Review the plan locally in a trusted private viewer: exact source and targets, before/after bytes and identities, managed-rule change, digest and recovery effect. Do not put the full plan or personal instruction bytes in public logs or issues. An agent can instead hold the programmatic preview in memory through exact review and apply.
 
-Different installed content needs a fresh preview with `--replace-skill`. Migrating a recognized full or thin legacy entry additionally requires `--migrate-legacy`; review both options and the exact retirement effect together. Extra files, modified or unknown inventories, custom managed rules, nearby instruction overrides or unsafe identities require explicit treatment; these options do not bypass safeguards. Keep the diagnostics and originals instead of editing a preview to make it pass.
+The skill root is the parent of the installed sciautoharness directory. The current package has exactly 34 inventoried members. Different recognized content requires a fresh preview with --replace-skill. Unknown or extra files, unsafe identities, nearby instruction overrides and unreviewed custom rules refuse the operation. A reviewed managed-block replacement uses the programmatic API's exact reviewedRule.before/after pair; this is not a CLI flag.
+
+Old template and installation formats are not automatically converted. If an old installation fails the strict inventory, preserve it and its matching controller. Use its supported recovery route or a separately reviewed retirement plan; do not delete files or edit a plan to make validation pass.
 
 After the exact preview receives approval:
 
@@ -36,17 +45,17 @@ After the exact preview receives approval:
 node $cli install --plan $harnessPlan
 ```
 
-Keep the returned backup and rollback manifest. `already-installed` means no new changes or manifest were needed. Source or target drift requires a fresh review. A completed installation can be rolled back only after reviewing and authorizing the exact effect:
+Retain the reviewed plan, backup and rollback manifest privately. Already-installed means no changes and no new manifest. Source or target drift requires fresh review. Normal rollback accepts only a complete current installed transaction with its intact plan, backups, targets and metadata, after approval of the exact restoration:
 
 ```powershell
-node $cli rollback --manifest '<manifest returned by the completed installation>'
+node $cli rollback --manifest '<manifest from the completed current installation>'
 ```
 
-Interrupted or partial operations need diagnosis using the retained manifest, journal and originals. A nonzero exit alone does not prove that no files changed.
+Prepared, partial, unconfirmed or unsupported records require recovery with their original facts. A nonzero exit does not establish that no file changed. Do not automatically retry or perform ordinary rollback of a partial transaction.
 
 ## Use a task
 
-In a new Codex session, invoke `$sciautoharness`. Complex work receives a complete plan before execution; simple questions and isolated low-risk edits can proceed directly.
+In a new Codex session, invoke $sciautoharness. Complex work receives a complete plan before execution; simple questions and isolated low-risk edits can proceed directly.
 
 ```text
 请使用 $sciautoharness 为这项科研任务准备完整方案：……
@@ -54,19 +63,19 @@ In a new Codex session, invoke `$sciautoharness`. Complex work receives a comple
 必要权限和验收标准。先提交完整方案供我审查，批准后再执行。
 ```
 
-Use the existing environment without changing it:
+Use the existing scientific environment without changing it:
 
 ```powershell
 conda run -n research-sci python '<authorized script>' '<required argument>'
 ```
 
-The runtime can draft a local task package for the host to complete:
+The runtime can draft the fixed layered package for the host to complete:
 
 ```powershell
-node $cli draft --project '<absolute project directory>' --id research-task --goal '<intended result>' --domain research --layout layered --host codex
+node $cli draft --project '<absolute project directory>' --id research-task --goal '<intended result>' --domain research --host codex
 ```
 
-The host fills the complete contract, phases, protocols and recovery instructions, checks their paths and presents the whole plan for human review. Scaffolding is not approval. After approval, work advances by accepted dependencies. Each stage reports actual changes, evidence, compatibility and unresolved issues.
+The host fills the complete contract, substantive phases, protocols and recovery, checks their paths and presents the whole plan for human review. Scaffolding is not approval. Work then advances through accepted dependencies.
 
 ## Resume original work
 
@@ -76,6 +85,6 @@ The host fills the complete contract, phases, protocols and recovery instruction
 已验收依赖和原 run 身份；只为具体缺口读取历史原始证据。
 ```
 
-An interrupted process must be observed to its actual end before factual submission. Preserve the original run, host and executor. Acceptance failures require focused repair and revalidation. A stale factual closure does not restore approval or make old evidence current.
+Keep the controller that began the task; do not switch it to this runtime to guess unsupported old state. Spawned CLI close records process observation. The original controller separately establishes actual business end, including relevant owned activity, and submits the same run with actual end evidence. Receipt publication or exit zero alone is not acceptance.
 
-See [host profiles](HOSTS.md) for other hosts and the [runtime reference](../skills/sciautoharness/references/runtime.md) for exact command contracts.
+Changed closed pending, verified or stale results require supported rework before repair; failed execution has its direct retry route. Administrative recovery does not restore approval. See [host profiles](HOSTS.md) and the [runtime reference](../skills/sciautoharness/references/runtime.md).

@@ -1381,8 +1381,40 @@ await test('mh-shared-homes-concurrency','Two real in-flight installation operat
  const dir=path.join(root,'mh-concurrent'),homeA=path.join(dir,'a-home'),homeB=path.join(dir,'b-home'),skills=path.join(dir,'z-skills');await fs.mkdir(homeA,{recursive:true});await fs.mkdir(homeB);await fs.mkdir(skills);
  const optionsA={host:'codex',hostHome:homeA,skillRoot:skills},optionsB={host:'claude-code',hostHome:homeB,skillRoot:skills},planA=await previewInstall(optionsA),planB=await previewInstall(optionsB);let release,hit=false;const barrier=new Promise(resolve=>{release=resolve;});
  const result=await patchMethod(fs,'writeFile',old=>async function(file,...args){if(!hit&&key(file).startsWith(key(path.join(homeA,'harness-install-backups'))+path.sep)&&/^rollback\.json\..+\.tmp$/.test(path.basename(String(file)))&&JSON.parse(String(args[0])).status==='prepared'){hit=true;await barrier;}return old.call(this,file,...args);},async()=>{
-  const first=applyInstall(planA);try{for(let n=0;n<200&&!hit;n++)await pause(5);assert.equal(hit,true);const before=await publicSnapshot(homeB);await assert.rejects(applyInstall(planB),/writer|holds|lock/i);assert.deepEqual(await publicSnapshot(homeB),before);await assert.rejects(fs.stat(path.join(homeB,'.writer-lock')),{code:'ENOENT'});await fs.stat(path.join(skills,'.writer-lock'));}finally{release();}
-  return first;
+  let firstFinished=false;
+  const first=captureOutcome(applyInstall(planA)).then(outcome=>{
+   firstFinished=true;
+   return outcome;
+  });
+  let coordination,installation;
+  try{
+   coordination=await captureOutcome((async()=>{
+    for(let n=0;n<200&&!hit&&!firstFinished;n++)await pause(5);
+    if(!hit)return false;
+    const before=await publicSnapshot(homeB);
+    await assert.rejects(applyInstall(planB),/writer|holds|lock/i);
+    assert.deepEqual(await publicSnapshot(homeB),before);
+    await assert.rejects(fs.stat(path.join(homeB,'.writer-lock')),{code:'ENOENT'});
+    await fs.stat(path.join(skills,'.writer-lock'));
+    return true;
+   })());
+  }finally{
+   release();
+   installation=await first;
+  }
+  if(!installation.ok){
+   if(!coordination.ok){
+    const error=new AggregateError([installation.error,coordination.error],
+     `${installation.error.message}; coordination also failed: ${coordination.error.message}`,
+     {cause:installation.error});
+    if(installation.error.recovery)error.recovery=installation.error.recovery;
+    throw error;
+   }
+   throw installation.error;
+  }
+  if(!coordination.ok)throw coordination.error;
+  assert.equal(coordination.value,true,'The first installation did not reach the prepared journal barrier during coordination');
+  return installation.value;
  });
  assert.equal(result.status,'installed');await assert.rejects(applyInstall(planB),/changed|preview/i);const second=await applyInstall(await previewInstall(optionsB));assert.equal(second.changedFiles,1);await rollbackInstall(second.rollbackManifest);await rollbackInstall(result.rollbackManifest);await assert.rejects(fs.stat(path.join(skills,'sciautoharness')),{code:'ENOENT'});return {differentHomes:true,sharedRoot:true,oldPreviewRefused:true,completeLifecycle:true};
 });
@@ -1911,7 +1943,7 @@ await test('current-acceptance-contract-source','The execution contract and stab
 
 
 async function objectFacts(file){const s=await fs.stat(file,{bigint:true});return{dev:String(s.dev),ino:String(s.ino),mode:String(s.mode)};}
-function ntfsFacts(file){
+function ntfsFacts(file,{privateAcl=false}={}){
  const quote=s=>"'"+String(s).replaceAll("'","''")+"'";
  const script=String.raw`$ErrorActionPreference='Stop'
 function Native-Path([string]$p){if($p.StartsWith('\\?\')){return $p};if($p.StartsWith('\\')){return '\\?\UNC\'+$p.Substring(2)};return '\\?\'+$p}
@@ -1921,7 +1953,13 @@ $acl=Get-Acl -LiteralPath $taskPath
 $sections=[Security.AccessControl.AccessControlSections]::Owner -bor [Security.AccessControl.AccessControlSections]::Group -bor [Security.AccessControl.AccessControlSections]::Access
 $streams=[Collections.Generic.List[object]]::new()
 foreach($stream in @(Get-Item -LiteralPath $taskPath -Stream '*' -Force)){if($stream.Stream -ceq ':$DATA'){continue};$bytes=[IO.File]::ReadAllBytes($taskPath+':'+[string]$stream.Stream);$streams.Add([ordered]@{name=[string]$stream.Stream;bytes=[Convert]::ToBase64String($bytes)})}
-[ordered]@{ownerSid=$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value;groupSid=$acl.GetGroup([Security.Principal.SecurityIdentifier]).Value;sddl=$acl.GetSecurityDescriptorSddlForm($sections);attributes=[string][int64]$item.Attributes;streams=$streams.ToArray()}|ConvertTo-Json -Depth 8 -Compress`;
+$facts=[ordered]@{ownerSid=$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value;groupSid=$acl.GetGroup([Security.Principal.SecurityIdentifier]).Value;sddl=$acl.GetSecurityDescriptorSddlForm($sections);attributes=[string][int64]$item.Attributes;streams=$streams.ToArray()}
+if(${privateAcl?'$true':'$false'}){
+ $raw=[Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(),0)
+ $rules=@(foreach($ace in $raw.DiscretionaryAcl){@{type=[int]$ace.AceType;flags=[int]$ace.AceFlags;mask=$ace.AccessMask;sid=$ace.SecurityIdentifier.Value}})
+ $facts.privateAcl=@{present=$null -ne $raw.DiscretionaryAcl;protected=$acl.AreAccessRulesProtected;aces=$rules}
+}
+$facts|ConvertTo-Json -Depth 8 -Compress`;
  const r=spawnSync('pwsh',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{shell:false,windowsHide:true,timeout:30000});assert.ifError(r.error);assert.equal(r.status,0,r.stderr?.toString('utf8'));const value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(r.stdout));assert.ok(Array.isArray(value.streams));value.streams=Object.fromEntries(value.streams.map(s=>[s.name,s.bytes]).sort(([a],[b])=>a<b?-1:a>b?1:0));return value;
 }
 await test('current-install-empty-directories','Preexisting empty directory identities survive installation and exact rollback',async()=>{const f=await installFixture('empty-directories'),directory=path.join(f.target,'agents');await fs.mkdir(directory,{recursive:true});const tracked=[f.target,directory],before=await Promise.all(tracked.map(objectFacts)),personal=await fs.readFile(f.agents),done=await applyInstall(await previewInstall(f.options));await rollbackInstall(done.rollbackManifest);for(let i=0;i<tracked.length;i++)assert.deepEqual(await objectFacts(tracked[i]),before[i]);assert.deepEqual(await fs.readdir(f.target),['agents']);assert.deepEqual(await fs.readdir(directory),[]);assert.deepEqual(await fs.readFile(f.agents),personal);for(const name of ['references','scripts'])await assert.rejects(fs.stat(path.join(f.target,name)),{code:'ENOENT'});return{existingDirectories:2,identitiesPreserved:true,createdDirectoriesRemoved:true};});
@@ -2347,13 +2385,46 @@ Set-Acl -LiteralPath $p -AclObject $acl
 `;
  const r=spawnSync('pwsh',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{input:Buffer.from(file),windowsHide:true,shell:false});assert.ifError(r.error);assert.equal(r.status,0,r.stderr?.toString());
 }
-function assertPrivateFacts(facts,{directory=false}={}){const dacl=facts.sddl.slice(facts.sddl.indexOf('D:'));assert.ok(directory?/^D:P/.test(dacl):/^D:(?:AI)?\(/.test(dacl));const aces=[...dacl.matchAll(/\(([^()]*)\)/g)].map(x=>x[1].split(';'));const owner=facts.ownerSid,aliases=new Set([owner,...(owner.endsWith('-500')?['LA']:owner.endsWith('-501')?['LG']:[])]),principals=new Set(owner==='S-1-5-18'?['owner']:['owner','system']);assert.equal(aces.length,principals.size);for(const ace of aces){assert.equal(ace[0],'A');assert.equal(ace[1],directory?'OICI':'ID');assert.equal(ace[2],'FA');assert.equal(ace[3],'');assert.equal(ace[4],'');assert.ok(principals.delete(aliases.has(ace[5])?'owner':ace[5]==='SY'?'system':null));}assert.equal(principals.size,0);}
+function assertPrivateFacts(facts,{directory=false,owner=facts.ownerSid}={}){
+ assert.equal(facts.ownerSid,owner);
+ assert.equal(facts.privateAcl.present,true);
+ assert.equal(facts.privateAcl.protected,directory);
+ assert.deepEqual(facts.streams,{});
+ const expected=new Set([owner,'S-1-5-18']);
+ assert.equal(facts.privateAcl.aces.length,expected.size);
+ for(const ace of facts.privateAcl.aces){
+  assert.equal(ace.type,0);
+  assert.equal(ace.flags,directory?3:16);
+  assert.equal(ace.mask,0x1f01ff);
+  assert.ok(expected.delete(ace.sid));
+ }
+ assert.equal(expected.size,0);
+}
 await test('pack-f7-private-storage','All sensitive transaction bytes begin life under a private leaf even below a broad-readable parent',async()=>{
  if(process.platform!=='win32')return{notApplicable:'Actual Windows DACL check requires Windows'};
- const f=await installFixture('pack-private',{copy:true});await fs.writeFile(path.join(f.target,'LICENSE'),'SYNTHETIC private original');const parent=path.join(f.home,'harness-install-backups');await fs.mkdir(parent);setFixtureAcl(parent,{broad:true});setFixtureAcl(f.agents);const parentBefore=ntfsFacts(parent),agentsBefore=ntfsFacts(f.agents);const plan=await previewInstall(f.options);const observed=[],checkedCategories=new Set();const checkFirst=file=>{const category=file.endsWith('.tmp')?'temp':file.endsWith('.bin')?'backup':'plan';if(!checkedCategories.has(category)){assertPrivateFacts(ntfsFacts(plan.backupDirectory),{directory:true});checkedCategories.add(category);}observed.push(path.basename(file));};
- await patchMethod(fs,'open',old=>async function(file,flags,...args){if(String(file).startsWith(plan.backupDirectory+path.sep)&&flags==='wx'){checkFirst(String(file));}return old(file,flags,...args);},()=>patchMethod(fs,'writeFile',old=>async function(file,...args){if(typeof file==='string'&&file.startsWith(plan.backupDirectory+path.sep)){checkFirst(file);}return old(file,...args);},async()=>{
- const done=await applyInstall(plan);const members=await fs.readdir(plan.backupDirectory);for(const name of members){const facts=ntfsFacts(path.join(plan.backupDirectory,name));assertPrivateFacts(facts);}assert.deepEqual(ntfsFacts(parent),parentBefore);assert.deepEqual(ntfsFacts(f.agents),agentsBefore);await rollbackInstall(done.rollbackManifest);assert.deepEqual(ntfsFacts(f.agents),agentsBefore);
- }));assert.ok(observed.includes('plan.json'));assert.ok(observed.some(x=>x.endsWith('.tmp')));assert.ok(observed.some(x=>x.endsWith('.bin')));return{firstSensitiveWritePrivate:true,parentUnchanged:true,originalDaclPreserved:true,observedWrites:observed.length};
+ const f=await installFixture('pack-private',{copy:true});await fs.writeFile(path.join(f.target,'LICENSE'),'SYNTHETIC private original');const parent=path.join(f.home,'harness-install-backups');await fs.mkdir(parent);setFixtureAcl(parent,{broad:true});setFixtureAcl(f.agents);const parentBefore=ntfsFacts(parent),agentsBefore=ntfsFacts(f.agents);const plan=await previewInstall(f.options);const observed=[],checkedCategories=new Set();let storageOwner;const checkFirst=file=>{const category=file.endsWith('.tmp')?'temp':file.endsWith('.bin')?'backup':'plan';if(!checkedCategories.has(category)){const facts=ntfsFacts(plan.backupDirectory,{privateAcl:true});storageOwner??=facts.ownerSid;assertPrivateFacts(facts,{directory:true,owner:storageOwner});checkedCategories.add(category);}observed.push(path.basename(file));};
+ const checkedFiles=new Set();
+ await patchMethod(fs,'open',old=>async function(file,flags,...args){
+  const privateOpen=typeof file==='string'&&file.startsWith(plan.backupDirectory+path.sep)&&flags==='wx';
+  if(privateOpen)checkFirst(file);
+  const handle=await old(file,flags,...args);
+  if(!privateOpen)return handle;
+  return wrapHandle(handle,{writeFile:async(...writeArgs)=>{
+   const category=file.endsWith('.tmp')?'temp':file.endsWith('.bin')?'backup':'plan';
+   if(!checkedFiles.has(category)){
+    const facts=ntfsFacts(file,{privateAcl:true});
+    assert.equal((await handle.stat()).size,0);
+    assertPrivateFacts(facts,{owner:storageOwner});
+    checkedFiles.add(category);
+   }
+   return handle.writeFile(...writeArgs);
+  }});
+ },()=>patchMethod(fs,'writeFile',old=>async function(file,...args){
+  if(typeof file==='string'&&file.startsWith(plan.backupDirectory+path.sep))checkFirst(file);
+  return old(file,...args);
+ },async()=>{
+ const done=await applyInstall(plan);const members=await fs.readdir(plan.backupDirectory);for(const name of members){const facts=ntfsFacts(path.join(plan.backupDirectory,name),{privateAcl:true});assertPrivateFacts(facts,{owner:storageOwner});}assert.deepEqual(ntfsFacts(parent),parentBefore);assert.deepEqual(ntfsFacts(f.agents),agentsBefore);await rollbackInstall(done.rollbackManifest);assert.deepEqual(ntfsFacts(f.agents),agentsBefore);
+ }));assert.ok(observed.includes('plan.json'));assert.ok(observed.some(x=>x.endsWith('.tmp')));assert.ok(observed.some(x=>x.endsWith('.bin')));assert.deepEqual([...checkedFiles].sort(),['backup','plan','temp']);return{firstSensitiveWritePrivate:true,parentUnchanged:true,originalDaclPreserved:true,observedWrites:observed.length};
 });
 for(const mode of ['helper-failed','truncated','wrong-id','wrong-path','wrong-role','wrong-count','broad-acl','wrong-file-id'])await test('pack-f7-'+mode,'Private creation helper faults refuse before any sensitive or target bytes are written',async()=>{
  if(process.platform!=='win32')return{notApplicable:'Actual Windows helper interception requires Windows'};

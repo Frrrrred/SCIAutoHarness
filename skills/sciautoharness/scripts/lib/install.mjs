@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 import { randomUUID } from 'node:crypto';
 
+import { gzipSync } from 'node:zlib';
+
 import {canonicalName,assertRecord,assertStructure,envelope,canonicalJson,parseJsonBytes} from './identity.mjs';
 
 const inventory=assertRecord(parseJsonBytes(await fs.readFile(new URL('./source-inventory.json',import.meta.url))),'source-inventory');
@@ -104,6 +106,149 @@ function managedReplacement(oldBytes,rule,reviewedRule){
 
 const equalMapping=(a,b)=>JSON.stringify(Object.keys(a).sort())===JSON.stringify(Object.keys(b).sort())&&Object.keys(a).every(k=>a[k]===b[k]);
 
+const privateFileMetadataScript=String.raw`
+function Assert-PrivateFileAcl($descriptor,[string]$owner){
+ $flags=$descriptor.ControlFlags
+ if(!($flags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclPresent) -or
+    ($flags -band ([Security.AccessControl.ControlFlags]::DiscretionaryAclProtected -bor
+                   [Security.AccessControl.ControlFlags]::DiscretionaryAclAutoInheritRequired)) -or
+    $null -eq $descriptor.DiscretionaryAcl){throw 'Unexpected private file DACL'}
+ $expected=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+ [void]$expected.Add($owner)
+ [void]$expected.Add('S-1-5-18')
+ if($descriptor.DiscretionaryAcl.Count -ne $expected.Count){throw 'Unexpected private file ACE count'}
+ foreach($ace in $descriptor.DiscretionaryAcl){
+  if($ace -isnot [Security.AccessControl.CommonAce] -or
+     $ace.AceType -ne [Security.AccessControl.AceType]::AccessAllowed -or
+     [int]$ace.AceFlags -ne 16 -or $ace.AccessMask -ne 0x1f01ff -or
+     !$expected.Remove($ace.SecurityIdentifier.Value)){throw 'Unexpected private file ACE'}
+ }
+}
+
+function Set-PrivateFileOwner($fileEntry,$parentEntry,$binding,$before,[string]$defaultOwner){
+ Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+public static class SciHarnessPrivateFile {
+ [StructLayout(LayoutKind.Sequential)]
+ struct Info {
+  public uint Attributes;
+  public System.Runtime.InteropServices.ComTypes.FILETIME Creation, Access, Write;
+  public uint Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow;
+ }
+ [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+ static extern SafeFileHandle CreateFileW(string path, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+ [DllImport("kernel32.dll", SetLastError=true)]
+ static extern bool GetFileInformationByHandle(SafeFileHandle handle, out Info facts);
+
+ public static SafeFileHandle Open(string path, bool directory) {
+  const uint ReadControl = 0x20000, WriteOwner = 0x80000, GenericRead = 0x80000000;
+  const uint OpenExisting = 3, ShareReadWrite = 3, OpenReparsePoint = 0x200000, BackupSemantics = 0x2000000;
+  var access = directory ? ReadControl : GenericRead | WriteOwner;
+  var flags = directory ? OpenReparsePoint | BackupSemantics : OpenReparsePoint;
+  var handle = CreateFileW(path, access, ShareReadWrite, IntPtr.Zero, OpenExisting, flags, IntPtr.Zero);
+  if (!handle.IsInvalid) return handle;
+  var error = Marshal.GetLastWin32Error();
+  handle.Dispose();
+  throw new Win32Exception(error);
+ }
+
+ public static uint Confirm(SafeFileHandle handle, string expectedId, bool directory) {
+  Info facts;
+  if (!GetFileInformationByHandle(handle, out facts)) throw new Win32Exception(Marshal.GetLastWin32Error());
+  var id = (((ulong)facts.IndexHigh << 32) | facts.IndexLow).ToString(System.Globalization.CultureInfo.InvariantCulture);
+  if (id != expectedId || (facts.Attributes & 0x400) != 0 || ((facts.Attributes & 0x10) != 0) != directory ||
+      (!directory && (facts.Links != 1 || facts.SizeHigh != 0 || facts.SizeLow != 0)))
+   throw new InvalidOperationException("Private file or parent identity changed");
+  return facts.Volume;
+ }
+}
+'@
+ $owner=[string]$binding.parentSecurity.ownerSid
+ $parent=$null
+ $file=$null
+ $stream=$null
+ try {
+  $parent=[SciHarnessPrivateFile]::Open((Native-Path ([string]$parentEntry.path)),$true)
+  $parentVolume=[SciHarnessPrivateFile]::Confirm($parent,[string]$binding.parentId,$true)
+  $file=[SciHarnessPrivateFile]::Open((Native-Path ([string]$fileEntry.path)),$false)
+  $fileVolume=[SciHarnessPrivateFile]::Confirm($file,[string]$binding.fileId,$false)
+  if($fileVolume -ne $parentVolume){throw 'Private file volume changed'}
+  $parentNow=Read-Metadata $parentEntry
+  if(!(Same-Security $parentNow $binding.parentSecurity) -or $parentNow.attributes -cne $binding.parentSecurity.attributes){
+   throw 'Private storage security changed before file owner correction'
+  }
+  $stream=[IO.FileStream]::new($file,[IO.FileAccess]::Read)
+  $acl=[IO.FileSystemAclExtensions]::GetAccessControl($stream)
+  $original=[Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(),0)
+  Assert-PrivateFileAcl $original $owner
+  if($original.Owner.Value -cne $defaultOwner -or $original.Owner.Value -cne $before.ownerSid -or $original.Group.Value -cne $before.groupSid){
+   throw 'Private file owner or group changed before correction'
+  }
+  $access=[Security.AccessControl.AccessControlSections]::Access
+  $ownerOnly=[Security.AccessControl.FileSecurity]::new()
+  $ownerOnly.SetOwner([Security.Principal.SecurityIdentifier]::new($owner))
+  [IO.FileSystemAclExtensions]::SetAccessControl($stream,$ownerOnly)
+  $acl=[IO.FileSystemAclExtensions]::GetAccessControl($stream)
+  $after=[Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(),0)
+  Assert-PrivateFileAcl $after $owner
+  if($after.Owner.Value -cne $owner -or $after.Group.Value -cne $original.Group.Value -or
+     $after.GetSddlForm($access) -cne $original.GetSddlForm($access)){throw 'Private file security changed during owner correction'}
+  $verified=Read-Metadata $fileEntry $owner
+  if($verified.ownerSid -cne $owner -or $verified.groupSid -cne $before.groupSid -or
+     $verified.attributes -cne $before.attributes){throw 'Private file metadata changed during owner correction'}
+  $parentAfter=Read-Metadata $parentEntry
+  if(!(Same-Security $parentAfter $binding.parentSecurity) -or $parentAfter.attributes -cne $binding.parentSecurity.attributes){
+   throw 'Private storage security changed during file owner correction'
+  }
+  if([SciHarnessPrivateFile]::Confirm($file,[string]$binding.fileId,$false) -ne $fileVolume -or
+     [SciHarnessPrivateFile]::Confirm($parent,[string]$binding.parentId,$true) -ne $parentVolume){throw 'Private file volume changed during owner correction'}
+  return @{file=$verified;parent=$parentAfter}
+ } finally {
+  if($stream){$stream.Dispose()}elseif($file){$file.Dispose()}
+  if($parent){$parent.Dispose()}
+ }
+}
+
+function Read-PrivateFileMetadata($request,$binding){
+ $files=@($request.entries | Where-Object {$_.objectKind -ceq 'file'})
+ $parents=@($request.entries | Where-Object {$_.objectKind -ceq 'directory'})
+ if($request.action -cne 'capture' -or @($request.entries).Count -ne 2 -or
+    $files.Count -ne 1 -or $parents.Count -ne 1 -or
+    @($binding.PSObject.Properties.Name).Count -ne 3 -or
+    $binding.fileId -isnot [string] -or $binding.fileId -cnotmatch '^[1-9][0-9]*$' -or
+    $binding.parentId -isnot [string] -or $binding.parentId -cnotmatch '^[1-9][0-9]*$' -or
+    [IO.Path]::GetDirectoryName([string]$files[0].path) -cne [string]$parents[0].path){
+  throw 'Invalid private file capture binding'
+ }
+ $fileEntry=$files[0]
+ $parentEntry=$parents[0]
+ $expected=$binding.parentSecurity
+ $parent=Read-Metadata $parentEntry
+ if(!$expected.ownerSid -or !(Same-Security $parent $expected) -or $parent.attributes -cne $expected.attributes){
+  throw 'Private storage security changed before file write'
+ }
+ $file=Read-Metadata $fileEntry ([string]$expected.ownerSid)
+ if($file.ownerSid -cne $expected.ownerSid){
+  # Windows can assign the token's default owner rather than its user to a new file.
+  # Only that expected mismatch can be corrected, while the file is still empty.
+  $token=[Security.Principal.WindowsIdentity]::GetCurrent()
+  try{
+   $defaultOwner=$token.Owner.Value
+   if($token.User.Value -cne $expected.ownerSid -or $defaultOwner -cne $file.ownerSid){
+    throw 'Unexpected owner of private file'
+   }
+   $corrected=Set-PrivateFileOwner $fileEntry $parentEntry $binding $file $defaultOwner
+   $file=$corrected.file
+   $parent=$corrected.parent
+  }finally{$token.Dispose()}
+ }
+ return @{$fileEntry.id=$file;$parentEntry.id=$parent}
+}
+`;
+
 const metadataScript=String.raw`
 $ErrorActionPreference='Stop'
 $ProgressPreference='SilentlyContinue'
@@ -113,7 +258,7 @@ $utf8=[Text.UTF8Encoding]::new($false)
 $OutputEncoding=$utf8
 $sections=[Security.AccessControl.AccessControlSections]::Owner -bor [Security.AccessControl.AccessControlSections]::Group -bor [Security.AccessControl.AccessControlSections]::Access
 function Native-Path([string]$p){if($p.StartsWith('\\?\')){return $p};if($p.StartsWith('\\')){return '\\?\UNC\'+$p.Substring(2)};return '\\?\'+$p}
-function Read-Metadata($entry){
+function Read-Metadata($entry,[string]$privateOwner){
  $p=[string]$entry.path
  $native=Native-Path $p
  $item=Get-Item -LiteralPath $native -Force -ErrorAction Stop
@@ -121,8 +266,13 @@ function Read-Metadata($entry){
  $kind=if($item.PSIsContainer){'directory'}else{'file'}
  if($kind -cne [string]$entry.objectKind){throw 'Metadata type changed'}
  $acl=Get-Acl -LiteralPath $native -ErrorAction Stop
+ if($privateOwner){
+  $descriptor=[Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(),0)
+  Assert-PrivateFileAcl $descriptor $privateOwner
+ }
  $streams=@(Get-Item -LiteralPath $native -Stream '*' -Force -ErrorAction Stop)
  [string[]]$names=@($streams | Where-Object {$_.Stream -cne ':$DATA'} | ForEach-Object {[string]$_.Stream})
+ if($privateOwner -and $names.Count -ne 0){throw 'Unexpected private file alternate streams'}
  [Array]::Sort($names,[StringComparer]::Ordinal)
  $ads=[Collections.Generic.List[object]]::new()
  foreach($name in $names){
@@ -186,7 +336,12 @@ try{
  $request=[Console]::In.ReadToEnd() | ConvertFrom-Json -Depth 30
  if($request.format -cne 'sciautoharness' -or $request.kind -cne 'metadata-request' -or $request.schemaVersion -ne 1 -or $request.action -cnotin @('capture','restoreArchive','createPrivateStorage')){throw 'Unsupported metadata request'}
  $entries=@($request.entries);$observed=[Collections.Generic.List[object]]::new();$stage='preflight'
- if($request.action -ceq 'createPrivateStorage'){$stage='createPrivateStorage';if($entries.Count -ne 1 -or $entries[0].objectKind -cne 'directory'){throw 'Invalid private creation request'};$failedPath=[string]$entries[0].path;$created=New-PrivateStorage $entries[0];$createdObjectId=$created.objectId;$observed.Add($created.observed)}else{foreach($entry in $entries){$failedPath=[string]$entry.path;$observed.Add((Read-Metadata $entry))}}
+ if($request.action -ceq 'createPrivateStorage'){$stage='createPrivateStorage';if($entries.Count -ne 1 -or $entries[0].objectKind -cne 'directory'){throw 'Invalid private creation request'};$failedPath=[string]$entries[0].path;$created=New-PrivateStorage $entries[0];$createdObjectId=$created.objectId;$observed.Add($created.observed)}
+ elseif($null -ne $request.extensions.privateFile){
+  $failedPath=[string]($entries | Where-Object {$_.objectKind -ceq 'file'} | Select-Object -First 1).path
+  $privateMetadata=Read-PrivateFileMetadata $request $request.extensions.privateFile
+  foreach($entry in $entries){$observed.Add($privateMetadata[[string]$entry.id])}
+ }else{foreach($entry in $entries){$failedPath=[string]$entry.path;$observed.Add((Read-Metadata $entry))}}
  if($request.action -ceq 'restoreArchive'){
   $archive=[int64][IO.FileAttributes]::Archive
   for($i=0;$i -lt $entries.Count;$i++){
@@ -209,6 +364,24 @@ try{
 exit $code
 `;
 
+const encodedMetadataCommand=Buffer.from(metadataScript,'utf16le').toString('base64');
+let encodedPrivateMetadataCommand;
+function metadataCommand(privateFile){
+ if(!privateFile)return encodedMetadataCommand;
+ if(!encodedPrivateMetadataCommand){
+  // Keep the native helper below Windows' command-line length limit.
+  const payload=gzipSync(privateFileMetadataScript+'\n'+metadataScript).toString('base64');
+  const loader="$bytes=[Convert]::FromBase64String('"+payload+"');"+
+   "$source=[IO.MemoryStream]::new($bytes);"+
+   "$gzip=[IO.Compression.GZipStream]::new($source,[IO.Compression.CompressionMode]::Decompress);"+
+   "$reader=[IO.StreamReader]::new($gzip,[Text.Encoding]::UTF8);"+
+   "try{$code=$reader.ReadToEnd()}finally{$reader.Dispose()};"+
+   "& ([ScriptBlock]::Create($code));exit $LASTEXITCODE";
+  encodedPrivateMetadataCommand=Buffer.from(loader,'utf16le').toString('base64');
+ }
+ return encodedPrivateMetadataCommand;
+}
+
 let metadataExecutable;
 
 async function metadataTool(){
@@ -230,18 +403,30 @@ function failWithRecovery(error,decorate){
  const decorated=decorate(error);if(error?.lockRoots)decorated.lockRoots=error.lockRoots;throw decorated;
 }
 
-async function metadata(requested,action='capture'){
+async function metadata(requested,action='capture',privateFile=null){
  const unique=new Map();
  for(const x of requested){const p=path.resolve(x.path);if(!path.isAbsolute(x.path)||p.slice(path.parse(p).root.length).includes(':'))throw new Error('Unsafe metadata path');const key=process.platform==='win32'?p.toLowerCase():p;if(unique.has(key)){if(unique.get(key).kind!==x.kind)throw new Error('Conflicting metadata roles');continue;}unique.set(key,{...x,path:p});}
  const entries=[...unique.values()].sort((a,b)=>a.path.localeCompare(b.path)).map((x,i)=>({id:String(i),path:x.path,objectKind:x.kind,...(x.expected?{expected:x.expected}:{})}));
  if(!entries.length)return new Map();
- const request=envelope('metadata-request',{action,entries});assertRecord(request,'metadata-request');
  const creating=action==='createPrivateStorage',before=[];
  if(creating&&(entries.length!==1||entries[0].objectKind!=='directory'||await exists(entries[0].path)))throw new Error('Private transaction storage must be a new single directory.');
  for(const x of creating?[]:entries){const st=await fs.lstat(x.path,{bigint:true});if(st.isSymbolicLink()||(x.objectKind==='file'?(!st.isFile()||st.nlink!==1n):!st.isDirectory())||st.ino===0n)throw new Error('Unsafe metadata identity: '+x.path);before.push(x.objectKind==='file'?identity(st):directoryIdentity(st));}
+ let extensions;
+ if(privateFile){
+  const fileIndex=entries.findIndex(x=>x.objectKind==='file');
+  const parentIndex=entries.findIndex(x=>x.objectKind==='directory');
+  if(process.platform!=='win32'||action!=='capture'||entries.length!==2||fileIndex<0||parentIndex<0||
+     path.dirname(entries[fileIndex].path)!==entries[parentIndex].path||
+     !sameIdentity(before[fileIndex],privateFile.identity)||!sameDirectory(before[parentIndex],privateFile.parent)||
+     privateFile.identity.dev!==privateFile.parent.dev)throw new Error('Private file capture identity changed.');
+  assertRecord(privateFile.parentSecurity,'installation-metadata');
+  extensions={privateFile:{fileId:privateFile.identity.ino,parentId:privateFile.parent.ino,parentSecurity:privateFile.parentSecurity}};
+ }
+ const request=envelope('metadata-request',{action,entries,...(extensions?{extensions}:{})});
+ assertRecord(request,'metadata-request');
  let observations,createdObjectId;
  if(process.platform==='win32'){
-  const executable=await metadataTool(),p=childProcess.spawnSync(executable,['-NoLogo','-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(metadataScript,'utf16le').toString('base64')],{shell:false,windowsHide:true,input:Buffer.from(JSON.stringify(request),'utf8'),maxBuffer:16777216,timeout:30000});
+  const executable=await metadataTool(),p=childProcess.spawnSync(executable,['-NoLogo','-NoProfile','-NonInteractive','-EncodedCommand',metadataCommand(privateFile)],{shell:false,windowsHide:true,input:Buffer.from(JSON.stringify(request),'utf8'),maxBuffer:16777216,timeout:30000});
   const raw=Buffer.isBuffer(p.stdout)?p.stdout:Buffer.alloc(0),rawError=Buffer.isBuffer(p.stderr)?p.stderr:Buffer.alloc(0);
   const processFacts={status:p.status,signal:p.signal,stderr:rawError.toString('utf8'),...(p.error?{error:p.error.message}:{}),stdoutBytes:raw.length};let result;
   try{if(!Buffer.isBuffer(p.stdout))throw new Error('Collector did not preserve raw stdout bytes.');result=assertRecord(parseJsonBytes(raw),'metadata-response');}
@@ -257,20 +442,20 @@ async function metadata(requested,action='capture'){
  }else {if(creating){await fs.mkdir(entries[0].path,{mode:0o700});await fs.chmod(entries[0].path,0o700);}
  observations=await Promise.all(entries.map(async x=>{const st=await fs.lstat(x.path,{bigint:true});return envelope('installation-metadata',{platform:process.platform,coverage:'stat-only',uid:String(st.uid),gid:String(st.gid),mode:String(st.mode),limitations:['ACL','extendedAttributes','namedStreams']});}));}
  const output=new Map();
- for(let i=0;i<entries.length;i++){const x=entries[i],st=await fs.lstat(x.path,{bigint:true}),after=x.objectKind==='file'?identity(st):directoryIdentity(st);if(creating){if(!st.isDirectory()||st.isSymbolicLink()||st.ino===0n||await fs.realpath(x.path)!==x.path)throw new Error('Unsafe private storage identity.');if(process.platform==='win32'){if(String(st.ino)!==createdObjectId)throw new Error('Private creation identity changed.');assertPrivateStorageMetadata(observations[i]);}else if(st.uid!==BigInt(process.getuid())||(st.mode&0o777n)!==0o700n)throw new Error('Private storage owner/mode mismatch.');}
+ for(let i=0;i<entries.length;i++){const x=entries[i],st=await fs.lstat(x.path,{bigint:true}),after=x.objectKind==='file'?identity(st):directoryIdentity(st);if(creating){if(!st.isDirectory()||st.isSymbolicLink()||st.ino===0n||await fs.realpath(x.path)!==x.path)throw new Error('Unsafe private storage identity.');if(process.platform==='win32'){if(String(st.ino)!==createdObjectId)throw new Error('Private creation identity changed.');assertPrivateDirectoryMetadata(observations[i]);}else if(st.uid!==BigInt(process.getuid())||(st.mode&0o777n)!==0o700n)throw new Error('Private storage owner/mode mismatch.');}
   else if(!(x.objectKind==='file'?sameIdentity(before[i],after):sameDirectory(before[i],after)))throw new Error('Metadata object changed during collection: '+x.path);if(action==='restoreArchive'&&!sameSecurity(observations[i],x.expected))throw new Error('Original metadata mismatch: '+x.path);output.set(x.path,observations[i]);if(creating)output.createdIdentity=directoryIdentity(st);}
  return output;
 }
 
 
 
-function assertPrivateStorageMetadata(value,directory=true){
+function assertPrivateDirectoryMetadata(value){
  assertRecord(value,'installation-metadata');if(value.platform!=='win32'||value.coverage!=='owner-group-dacl-attributes-ads'||value.namedStreams.length)throw new Error('Private storage metadata coverage mismatch.');
 
  const owner=value.ownerSid,ownerAliases=new Set([owner,...(owner==='S-1-5-18'?['SY']:owner==='S-1-5-19'?['LS']:owner==='S-1-5-20'?['NS']:owner.endsWith('-500')?['LA']:owner.endsWith('-501')?['LG']:[])]),wanted=new Set(owner==='S-1-5-18'?['owner']:['owner','system']),dacl=value.sddl.slice(value.sddl.indexOf('D:'));
  const aces=[...dacl.matchAll(/\(([^()]*)\)/g)].map(x=>x[1]),prefix=dacl.slice(0,dacl.indexOf('('));
- if(!(directory?/^D:P(?:AI)?$/.test(prefix):/^D:(?:AI)?$/.test(prefix))||aces.length!==wanted.size||dacl!==prefix+aces.map(x=>'('+x+')').join(''))throw new Error('Private storage DACL is not protected and exact.');
- for(const raw of aces){const a=raw.split(';'),principal=ownerAliases.has(a[5])?'owner':a[5]==='SY'||a[5]==='S-1-5-18'?'system':null;if(a.length!==6||a[0]!=='A'||a[1]!== (directory?'OICI':'ID')||a[2]!=='FA'||a[3]||a[4]||!wanted.delete(principal))throw new Error('Unexpected private storage ACE.');}
+ if(!/^D:P(?:AI)?$/.test(prefix)||aces.length!==wanted.size||dacl!==prefix+aces.map(x=>'('+x+')').join(''))throw new Error('Private storage DACL is not protected and exact.');
+ for(const raw of aces){const a=raw.split(';'),principal=ownerAliases.has(a[5])?'owner':a[5]==='SY'||a[5]==='S-1-5-18'?'system':null;if(a.length!==6||a[0]!=='A'||a[1]!=='OICI'||a[2]!=='FA'||a[3]||a[4]||!wanted.delete(principal))throw new Error('Unexpected private storage ACE.');}
  if(wanted.size)throw new Error('Missing private storage principal.');
 }
 async function createPrivateTransactionStorage(directory,parentIdentity){
@@ -290,9 +475,12 @@ async function openPrivateFile(file,parentIdentity,parentSecurity){
   const opened=await handle.stat({bigint:true});if(!opened.isFile()||opened.nlink!==1n||opened.ino===0n)throw new Error('Unsafe opened private file.');
   await assertDirectory(path.dirname(file),parentIdentity);await assertTarget(file,identity(opened),hash(Buffer.alloc(0)));
   if(process.platform==='win32'){
-   const observed=await metadata([{path:file,kind:'file'},{path:path.dirname(file),kind:'directory'}]),security=observed.get(file);
-   if(!sameSecurity(observed.get(path.dirname(file)),parentSecurity))throw new Error('Private storage security changed before file write.');
-   assertPrivateStorageMetadata(security,false);if(security.ownerSid!==parentSecurity.ownerSid)throw new Error('Private file owner differs from private storage.');
+   const parent=path.dirname(file);
+   const observed=await metadata([{path:file,kind:'file'},{path:parent,kind:'directory'}],'capture',
+    {identity:identity(opened),parent:parentIdentity,parentSecurity});
+   if(!sameSecurity(observed.get(parent),parentSecurity))throw new Error('Private storage security changed before file write.');
+   const security=observed.get(file);
+   if(security.ownerSid!==parentSecurity.ownerSid||security.namedStreams.length)throw new Error('Private file security differs from private storage policy.');
   }else if(opened.uid!==BigInt(process.getuid())||(opened.mode&0o777n)!==0o600n)throw new Error('Private file owner/mode mismatch.');
   const current=await handle.stat({bigint:true});if(!sameIdentity(identity(opened),identity(current))||current.size!==0n)throw new Error('Opened private file changed.');
   await assertTarget(file,identity(opened),hash(Buffer.alloc(0)));await assertDirectory(path.dirname(file),parentIdentity);return handle;

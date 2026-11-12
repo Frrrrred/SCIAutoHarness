@@ -77,6 +77,12 @@ node $cli draft --project '<absolute project directory>' --id research-task --go
 
 The host fills the complete contract, substantive phases, protocols and recovery, checks their paths and presents the whole plan for human review. Scaffolding is not approval. Work then advances through accepted dependencies.
 
+Clarification starts with settled decisions and the consequential unknowns that remain. The agent checks accessible facts itself and asks dependency-ordered questions with a recommendation and its tradeoff. Before expanding dependent work, it checks the earliest premise that could refute the route. An additional method needs an unmet acceptance requirement and an exit condition. A local success does not by itself release the whole stage.
+
+At each substantive stage handoff, expect a short plain-language account of the result, decisive evidence and remaining limits, followed by the next stage's concrete tasks and two or three relevant questions. The agent waits for an actual reply before starting the next stage; silence and displayed default options are not replies. The final stage still asks for delivery feedback without inventing further work. These goal-alignment and dialogue rules are included in the skill and do not require a separate grill-me installation.
+
+Ordinary direction feedback is separate from technical acceptance. Material changes to the approved goal, inputs, methods, permissions, resources or acceptance criteria require review of a complete revised plan. The agent host follows the conversational wait; the CLI does not enforce unanswered questions as a machine gate. See [compatibility](COMPATIBILITY.md).
+
 ## Resume original work
 
 ```text

@@ -17,7 +17,7 @@ Exit when the requested result, supported decision and sufficient completion evi
 
 ## Depth: choose a check that can change the conclusion
 
-Use when an assumption, unexpected result or evidence gap controls the next decision.
+Use when an assumption, unexpected result or evidence gap controls the next decision. Apply the [execution order](execution-judgment.md#select-blocks-from-the-whole-objective) first so the earliest decisive prerequisite is checked before dependent expansion; reuse sufficient current evidence.
 
 - Name the material and instrument a competent practitioner would actually use: raw measurements, original definitions, source code, numerical diagnostics, a documented evaluation or a primary reference.
 - Write the leading explanation and a credible alternative. Before testing, state what observation would distinguish them. Pick the smallest authorized check with that ability.
@@ -30,7 +30,7 @@ Exit when the evidence supports the required decision or identifies a precise un
 
 ## Range: select methods for distinct questions
 
-Use when one perspective leaves a consequential failure mode unchecked. Select a useful method; a role label alone adds no evidence.
+Use when one perspective leaves an unresolved mandatory acceptance failure mode unchecked. Apply [method admission](execution-judgment.md#select-blocks-from-the-whole-objective): identify the decision it changes and why existing evidence or a smaller check cannot settle it. Then select a useful method with a discriminating observation and exit/return condition; a role label alone adds no evidence.
 
 | Method | Trigger | Distinct check | Handoff evidence |
 |---|---|---|---|

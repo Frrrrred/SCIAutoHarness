@@ -69,7 +69,7 @@ jobs:
           '@
           $program | python -
           if ($LASTEXITCODE -ne 0) { throw 'Synthetic Python verification failed' }
-      - name: Run and verify all 658 current regression cases
+      - name: Run and verify all 661 current regression cases
         run: |
           $workRoot = Join-Path $env:RUNNER_TEMP ('sciautoharness-tests-' + [guid]::NewGuid())
           if (Test-Path -LiteralPath $workRoot) { throw 'Refusing to reuse test root' }
@@ -93,15 +93,15 @@ jobs:
             throw 'Wrong suite or filtered/invalid selection'
           }
           if ($report.tests -ne ($report.passed + $report.failed + $report.skipped)) { throw 'Contradictory result counts' }
-          if ($report.tests -ne 658 -or $report.passed -ne 658 -or $report.failed -ne 0 -or $report.skipped -ne 0 -or $results.Count -ne 658) {
+          if ($report.tests -ne 661 -or $report.passed -ne 661 -or $report.failed -ne 0 -or $report.skipped -ne 0 -or $results.Count -ne 661) {
             throw 'Incomplete or failed current regression'
           }
           if (@($results | Where-Object { $_.pass -cne $true -or $_.skipped -ceq $true -or $_.id -isnot [string] -or [string]::IsNullOrWhiteSpace($_.id) }).Count -ne 0) {
             throw 'Invalid individual result'
           }
-          if (@($results.id | Sort-Object -Unique).Count -ne 658) { throw 'Duplicate case IDs' }
+          if (@($results.id | Sort-Object -Unique).Count -ne 661) { throw 'Duplicate case IDs' }
           $idsJson = ConvertTo-Json -InputObject @($results.id) -Compress
           $rosterHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($idsJson))).ToLowerInvariant()
-          if ($rosterHash -ne 'c3cc6628df09f31093ca084014828ed77707e0b0a908ba6ec0c9396a7dac890b') { throw 'Unexpected ordered case roster' }
+          if ($rosterHash -ne '0506de6faf6dc276df47145100dc6407aaf4d6daed193cdd576d8f015bb9108b') { throw 'Unexpected ordered case roster' }
           Write-Output ('Ordered case roster SHA-256: ' + $rosterHash)
-          Write-Output ('Current regression: 658/658; Node ' + $report.node + '; platform ' + $report.platform)
+          Write-Output ('Current regression: 661/661; Node ' + $report.node + '; platform ' + $report.platform)

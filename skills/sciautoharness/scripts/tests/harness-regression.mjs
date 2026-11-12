@@ -176,6 +176,51 @@ async function closeKnownLeafObservation(runtime,project,id,step,observed,eviden
 async function runLeafOn(runtime,project,id,step,options){return closeKnownLeafObservation(runtime,project,id,step,await runtime.run(project,id,step,options));}
 async function runLeafFixture(...args){return runLeafOn(engine,...args);}
 
+function assertExecutionFocus(text) {
+ assert.match(text,/unverified premise.*refute the route/);
+ assert.match(text,/supporting\/refuting\/inconclusive observations.*downstream effects/);
+ assert.match(text,/method only for an unresolved mandatory acceptance gap.*smaller check.*exit\/return condition/);
+ assert.match(text,/met mandatory criteria.*released downstream use.*remaining release blockers/);
+ assert.match(text,/local success is narrower than stage completion/);
+ assert.match(text,/independent authorized mandatory work/);
+ assert.match(text,/simple work needs no extra stage or approval/);
+ assert.match(text,/settled decisions and dependency-ordered questions/);
+ assert.match(text,/read accessible facts yourself.*recommend an option with its tradeoff/);
+ assert.match(text,/recompute the decision frontier after actual answers/);
+ assert.match(text,/brief plain-language result\/evidence\/limits report and concrete next-phase tasks/);
+ assert.match(text,/Ask two or three relevant questions.*wait for an actual user reply before starting the next phase/);
+ assert.match(text,/displayed defaults, silence and canBegin do not establish a reply/);
+ assert.match(text,/Feedback does not replace technical acceptance or approve material changes/);
+ assert.match(text,/Final phases do not invent follow-on work/);
+ assert.match(text,/still ask two or three relevant delivery-review questions and yield for feedback/);
+}
+await test('execution-focus-authoring','Missing-phase authoring carries feasibility, method and release requirements with usable links',async()=>{
+ const f=await fixture('focus-authoring',{two:false,unreviewed:true});
+ await fs.unlink(path.join(f.directory,'phases/a.md'));
+ const r=command(['refs','--project',f.project,'--id',f.id,'--next']);
+ assert.equal(r.code,0,r.stderr);const data=cliData(r.stdout);
+ assert.equal(data.next.action,'write_document');assert.equal(data.next.document,'phases/a.md');
+ assertExecutionFocus(data.next.instruction);assert.match(data.next.instruction,/stage-specific inputs\/prerequisites/);
+ const doc=data.documents[0];assert.equal(doc.kind,'phase');assert.equal(doc.tasks[0].id,'a');
+ assert.equal(doc.inherits[0].path,'HARNESS.md');
+ for(const link of [...doc.inputs,...doc.deliverables])assert.equal(path.resolve(path.dirname(doc.file),link.reference),link.target);
+ for(const link of doc.inherits)assert.equal(path.resolve(path.dirname(doc.file),link.reference),link.file);
+ return{next:data.next.action,phase:data.next.document,instruction:data.next.instruction,usableLinks:doc.inputs.length+doc.deliverables.length+doc.inherits.length,semanticEfficacyMeasured:false};
+});
+await test('execution-focus-context','Generated master and ready/blocked native contexts carry the same stage decision requirements',async()=>{
+ const f=await fixture('focus-context');await approve(f);
+ const ready=await engine.taskContext(f.project,f.id,'a'),blocked=await engine.taskContext(f.project,f.id,'b');
+ const master=await fs.readFile(path.join(f.directory,'HARNESS.md'),'utf8');assertExecutionFocus(master);
+ for(const ctx of [ready,blocked]){
+  const focus=ctx.invariants.find(x=>x.includes('unverified premise'));assert.equal(typeof focus,'string');assertExecutionFocus(focus);assert.ok(master.includes(focus));
+  assert.equal(ctx.global.taskId,f.id);assert.equal(ctx.review.approved,true);assert.equal(ctx.global.execution.host,'codex');
+ }
+ assert.equal(ready.canBegin,true);assert.deepEqual(ready.dependencies,[]);assert.equal(ready.task.id,'a');assert.equal(ready.files.length,1);assert.ok(ready.files[0].path.endsWith(path.join('phases','a.md')));
+ assert.equal(blocked.canBegin,false);assert.deepEqual(blocked.dependencies,[{id:'a',status:'todo',outputs:[]}]);assert.ok(blocked.blockers.includes('Dependency a is todo, not currently verified.'));
+ assert.equal(blocked.task.id,'b');assert.equal(blocked.files.length,1);assert.ok(blocked.files[0].path.endsWith(path.join('phases','b.md')));
+ return{ready:ready.canBegin,blocked:blocked.canBegin,selected:[...ready.files,...blocked.files].map(x=>path.basename(x.path)),invariantCount:ready.invariants.length,semanticEfficacyMeasured:false};
+});
+
 await test('unapproved-begin','Reject formal begin before approval',async()=>{const f=await fixture('unapproved');await assert.rejects(engine.begin(f.project,f.id,'a'),/approval/i);return {rejected:true};});
 
 await test('wrong-approval-binding','Reject approval bound to another digest',async()=>{const f=await fixture('bad-approval');await assert.rejects(decisionFacts(f.project,f.id,{actor:'user',decision:'approve',taskId:f.id,revision:1,digest:'0'.repeat(64),message:'SYNTHETIC',source:'SYNTHETIC'}),/different/);return {rejected:true};});
@@ -1966,6 +2011,31 @@ await test('current-install-empty-directories','Preexisting empty directory iden
 await test('current-install-directory-streams','File and directory security and ADS including named $DATA survive both directions',async()=>{if(process.platform!=='win32')return{notApplicable:'Windows named streams required'};const f=await installFixture('directory-streams'),directory=path.join(f.target,'agents'),license=path.join(f.target,'LICENSE');await fs.mkdir(directory,{recursive:true});const old=Buffer.from('SYNTHETIC original LICENSE\r\n');await fs.writeFile(license,old);const objects=[f.target,directory,license,f.agents],streams=['$DATA','current-stream'],expected=new Map(),personal=await fs.readFile(f.agents);for(const file of objects){const values={};for(const name of streams){const bytes=Buffer.from('SYNTHETIC '+path.basename(file)+' '+name);await fs.writeFile(file+':'+name,bytes);values[name]=bytes.toString('base64');}const facts=ntfsFacts(file);assert.deepEqual(Object.keys(facts.streams),streams);assert.deepEqual(facts.streams,values);expected.set(file,{id:await objectFacts(file),facts});}const plan=await previewInstall({...f.options,replaceSkill:true});for(const relative of ['', 'agents'])assert.deepEqual(plan.canonicalBefore.directories.find(d=>d.relative===relative).security.namedStreams.map(s=>s.name),streams);const done=await applyInstall(plan);for(const stage of ['installed','restored']){if(stage==='restored')await rollbackInstall(done.rollbackManifest);for(const file of objects){assert.deepEqual(await objectFacts(file),expected.get(file).id);assert.deepEqual(ntfsFacts(file),expected.get(file).facts);}}assert.deepEqual(await fs.readFile(license),old);assert.deepEqual(await fs.readFile(f.agents),personal);assert.deepEqual(await fs.readdir(directory),[]);return{ntfsChecked:true,objects:objects.length,namedDollarData:true};});
 await test('current-install-container-stream-drift','Container ADS changed during apply prevents installed acceptance',async()=>{if(process.platform!=='win32')return{notApplicable:'Windows named streams required'};const f=await installFixture('container-stream-drift',{copy:true}),license=path.join(f.target,'LICENSE');await fs.writeFile(license,'SYNTHETIC original LICENSE');const plan=await previewInstall(f.options),bytes=Buffer.from('SYNTHETIC container drift');let hit=false,error;await patchMethod(fs,'open',old=>async function(file,flags,...args){const handle=await old(file,flags,...args);if(!hit&&key(file)===key(license)&&flags==='r+'){hit=true;await fs.writeFile(f.skills+':current-drift',bytes);}return handle;},async()=>{try{await applyInstall(plan);}catch(e){error=e;}});assert.ok(hit);assert.ok(error);assert.equal(error.recovery.stage,'verify-installed');assert.equal(error.recovery.completedTargets,plan.changes.length);assert.match(error.message,/container\/anchor.*changed/i);const record=await readJson(error.recovery.manifest);assertRecord(record,'install-record');assert.equal(record.status,'prepared');assert.equal(ntfsFacts(f.skills).streams['current-drift'],bytes.toString('base64'));await assert.rejects(rollbackInstall(error.recovery.manifest),/completed installed/i);return{postflightRefused:true,actualPrefix:record.completedTargets,preparedFactsPreserved:true};});
 await test('current-install-config-drift-before-roots','Configuration drift refuses before creating target and backup parent directories',async()=>{const f=await installFixture('config-before-roots'),config=path.join(f.home,'config.toml');await fs.writeFile(config,'SYNTHETIC config\n');const options={...f.options,skillRoot:path.join(f.dir,'not-created','skills')},plan=await previewInstall(options),personal=await fs.readFile(f.agents),changed=Buffer.from('SYNTHETIC user changed config\n');await fs.writeFile(config,changed);await assert.rejects(applyInstall(plan),/changed after preview|fresh plan/i);assert.deepEqual(await fs.readFile(config),changed);assert.deepEqual(await fs.readFile(f.agents),personal);for(const file of [path.dirname(options.skillRoot),path.join(f.home,'harness-install-backups')])await assert.rejects(fs.stat(file),{code:'ENOENT'});return{configPreserved:true,rootsNotCreated:true};});
+await test('execution-focus-managed-rule','Reviewed new managed-rule preview preserves exact outside/configuration bytes without applying an install',async()=>{
+ const f=await installFixture('focus-managed-rule');
+ const before='<!-- sciautoharness:start -->\n## Complex task harness\nSYNTHETIC previous reviewed route.\n<!-- sciautoharness:end -->';
+ const after=defaultRule(f.target).trimEnd();
+ assert.match(after,/first route commitment, method additions and stage release/);
+ assert.match(after,/references\/execution-judgment\.md after context/);
+ assert.match(after,/two or three user-facing questions/);
+ assert.match(after,/wait for actual user feedback before the next phase/);
+ assert.match(after,/Technical acceptance and material-change review remain separate/);
+ const prefix=Buffer.from('\ufeffSYNTHETIC personal 中文\r\n');
+ const suffix=Buffer.from('\r\nSYNTHETIC suffix 无末尾换行');
+ const original=Buffer.concat([prefix,Buffer.from(before),suffix]);
+ await fs.writeFile(f.agents,original);
+ const config=path.join(f.home,'config.toml'),configBytes=Buffer.from('SYNTHETIC_CONFIG=true\r\n');
+ await fs.writeFile(config,configBytes);const snapshot=await publicSnapshot(f.dir);
+ const plan=await previewInstall({...f.options,reviewedRule:{before,after}});
+ assertRecord(plan,'install-plan');assert.equal(plan.summary.agentsRule,defaultRule(f.target));
+ assert.equal(plan.summary.configTomlChanged,false);
+ const change=plan.changes.find(c=>c.role==='instructions');assert.ok(change);
+ assert.deepEqual(Buffer.from(change.bytes,'base64'),Buffer.concat([prefix,Buffer.from(after),suffix]));
+ assert.deepEqual(await fs.readFile(f.agents),original);assert.deepEqual(await fs.readFile(config),configBytes);
+ assert.deepEqual(await publicSnapshot(f.dir),snapshot);
+ return{previewOnly:true,installApplied:false,rule:plan.summary.agentsRule,exactOutsideBytes:true,configurationUnchanged:true,fixtureUnchanged:true};
+});
+
 await test('current-install-reviewed-rule','Exact custom block review preserves outside bytes, inode, no-op and rollback',async()=>{const f=await installFixture('reviewed-rule'),before=defaultRule(f.target).trimEnd().replace('## Complex task harness','## SYNTHETIC custom policy'),after=before.replace('## SYNTHETIC custom policy','## SYNTHETIC reviewed policy'),prefix=Buffer.from('\ufeffSYNTHETIC personal 中文\r\n'),suffix=Buffer.from('\r\nSYNTHETIC suffix 无末尾换行'),original=Buffer.concat([prefix,Buffer.from(before),suffix]);await fs.writeFile(f.agents,original);const identity=await objectFacts(f.agents),snapshot=await publicSnapshot(f.dir);await assert.rejects(previewInstall(f.options),/custom.*reviewed/i);assert.deepEqual(await publicSnapshot(f.dir),snapshot);const done=await applyInstall(await previewInstall({...f.options,reviewedRule:{before,after}}));assert.deepEqual(await fs.readFile(f.agents),Buffer.concat([prefix,Buffer.from(after),suffix]));assert.deepEqual(await objectFacts(f.agents),identity);assert.equal((await applyInstall(await previewInstall({...f.options,reviewedRule:{before:after,after}}))).status,'already-installed');await rollbackInstall(done.rollbackManifest);assert.deepEqual(await fs.readFile(f.agents),original);assert.deepEqual(await objectFacts(f.agents),identity);return{outsideBytesExact:true,inodePreserved:true,noop:true};});
 for(const context of ['default','custom','absent'])await test('current-install-reviewed-before-'+context,'Reviewed before is bound even when the current desired block already matches',async()=>{const f=await installFixture('reviewed-before-'+context),after=defaultRule(f.target).trimEnd(),actual=context==='custom'?after.replace('## Complex task harness','## SYNTHETIC custom'):after;await fs.writeFile(f.agents,context==='absent'?'SYNTHETIC personal without a block':'SYNTHETIC prefix\r\n'+actual+'\r\nSYNTHETIC suffix');const before=await publicSnapshot(f.dir);let helpers=0;await patchMethod(childProcess,'spawnSync',old=>(...args)=>{helpers++;return old(...args);},()=>assert.rejects(previewInstall({...f.options,reviewedRule:{before:'SYNTHETIC WRONG EXACT BEFORE',after}}),/before differs|before block is absent/i));assert.equal(helpers,0);assert.deepEqual(await publicSnapshot(f.dir),before);await assert.rejects(fs.stat(path.join(f.home,'harness-install-backups')),{code:'ENOENT'});return{context,helpers};});
 for(const variant of ['missing-space','unknown-end','duplicate','unclosed','after-missing','after-duplicate','after-wrong-end'])await test('current-install-marker-'+variant,'Malformed current markers refuse without helper or installation writes',async()=>{const f=await installFixture('marker-'+variant),block=defaultRule(f.target).trimEnd();let actual=block,reviewedRule;if(variant==='missing-space')actual='<!--sciautoharness:start-->\nSYNTHETIC';if(variant==='unknown-end')actual='<!-- sciautoharness:finish -->';if(variant==='duplicate')actual=block+'\n'+block;if(variant==='unclosed')actual='<!-- sciautoharness:start -->\nSYNTHETIC';if(variant.startsWith('after-'))reviewedRule={before:block,after:variant==='after-missing'?'SYNTHETIC text without markers':variant==='after-duplicate'?block+'\n'+block:block.replace('<!-- sciautoharness:end -->','<!-- sciautoharness:finish -->')};await fs.writeFile(f.agents,'SYNTHETIC personal\r\n'+actual);const before=await publicSnapshot(f.dir);let helpers=0;await patchMethod(childProcess,'spawnSync',old=>(...args)=>{helpers++;return old(...args);},()=>assert.rejects(previewInstall({...f.options,...(reviewedRule?{reviewedRule}:{})}),/markers|marker pair/i));assert.equal(helpers,0);assert.deepEqual(await publicSnapshot(f.dir),before);for(const file of [f.target,path.join(f.home,'harness-install-backups')])await assert.rejects(fs.stat(file),{code:'ENOENT'});return{variant,helpers,writes:0};});

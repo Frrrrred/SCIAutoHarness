@@ -22,10 +22,14 @@ Follow [installation and daily use](docs/GETTING_STARTED.md) to preview the exac
 
 ## Work with a complete task
 
-1. Define the result, sources, permissions and acceptance criteria.
+1. Clarify the intended result, sources, permissions and acceptance criteria, using questions that resolve consequential unknowns in dependency order.
 2. Review the complete plan before execution.
 3. Execute approved stages and accept their evidence before dependent work.
 4. Resume through the original entry, preserving the approval and run identity.
+
+Check the earliest uncertain premise before expanding dependent work. Add a method only when it addresses an unmet acceptance requirement, and distinguish local evidence from completion of the whole stage.
+
+At each substantive stage handoff, the agent gives a short result and evidence summary, states the next tasks, asks two or three relevant questions, and waits for your actual reply before advancing. The final stage also asks for delivery feedback. This questioning approach adapts grill-me and is included in the skill; no separate grill-me installation is needed. The agent host carries out the conversational wait. See [compatibility](docs/COMPATIBILITY.md) for the distinction between feedback, technical acceptance and approval of material changes.
 
 Simple questions and isolated low-risk edits can proceed directly. For research, the plan also records source provenance, parameter choices, uncertainty and the checks needed before downstream use.
 

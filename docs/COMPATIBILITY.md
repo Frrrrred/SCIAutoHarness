@@ -12,6 +12,12 @@ Unsupported namespaces, kinds, schemas and damaged records remain unchanged and 
 
 Complete recognized records retain their defined recovery behavior. New fields and paired readers/validators must be deployed together; an older strict reader is not guaranteed to accept a new record. Missing or conflicting source, receipt, output or acceptance evidence invalidates affected dependencies.
 
+## Goal alignment and stage dialogue
+
+The skill includes dependency-aware goal questions, early feasibility checks and limits on adding methods without an unmet acceptance requirement. At each substantive stage handoff, the agent reports results and limits, describes the next tasks, asks two or three relevant questions and waits for an actual user reply. The final stage asks for delivery feedback without creating a new task. The grill-me-inspired instructions are part of this package, not a dependency on another skill or a live web page.
+
+Conversational waiting is a host instruction, not a new CLI or record-schema gate. A technical acceptance result or `canBegin` does not establish that the user replied. Conversely, ordinary direction feedback does not replace technical acceptance or approve a material change. Material changes still require the complete revised plan to receive direct user review. These instructions do not change schemaVersion, command interfaces or the obligation to preserve the original controller for active work.
+
 ## Preserve original tasks and controllers
 
 Before updating an installation or checkout, identify active and pending work and preserve its complete matching controller and records. Continue with the controller that began it; do not pull over an active controller checkout or hot-switch a run.

@@ -1,12 +1,20 @@
 # Judgment and overall progress
 
-Read when choosing actions, making judgments or responding to the overall-progress events in the entrypoint. Reuse unchanged guidance. This reference is self-contained.
+Read when prioritizing plans, first committing to a route, adding methods, reporting stage release or responding to the entrypoint's overall-progress events. Existing tasks use context first. Reuse valid evidence and unchanged guidance.
 
 ## Review and authority first
 
 For complex work prepare/present every major stage and obtain direct final-human approval of the complete current version. Before approval, only authorized intake/method choice/planning advances; formal proofs, results and comprehensive findings wait. A preference, reversibility or existing evidence grants no permission. Ordinary progress within unchanged approval needs no repeat approval; material changes follow the [entrypoint](../SKILL.md).
 
 An explanation, review or diagnosis may make an evidence-based judgment without implementing it. Simple work proceeds directly; a domain process does not replace complex-task review.
+
+## Align goals through decision-dependent questions
+
+This questioning method adapts the grill-me skill without making it an installation dependency. Start from settled decisions and consequential unknowns in the conversation and authorized artifacts: intended use, user, mandatory delivery, success conditions and hard constraints. Check accessible facts yourself; do not ask the user to locate facts you can read.
+
+Map which decisions depend on which others. Usually ask one to three related questions whose prerequisites are settled; for each, explain the next action it changes, your recommended answer and its tradeoff. Resolve an upstream choice before asking a downstream question that cannot yet be answered. After actual answers, recompute this frontier and keep goal, deliverables and acceptance consistent. Stop when the requested scope is actionable with explicit residual uncertainty; an exhaustive interview is not a deliverable.
+
+Apply relevant scientific/domain guidance for units, inference, controls and falsification rather than substituting a generic design interview. Agreement does not grant implementation rights or authorize glossary/ADR files. Simple tasks stay direct; use only the clarification they actually need.
 
 ## Evidence-based judgments
 
@@ -23,11 +31,14 @@ A stable before/after reproduction can establish one indexing failure without ex
 
 ## Select blocks from the whole objective
 
-Before substantial work check remaining mandatory outputs/acceptance and blocked critical dependencies; classify the local issue by impact; select the authorized action that most directly resolves core correctness, unblocks a dependency or completes a requirement.
+Work backward from all mandatory outputs, acceptance and actual downstream use. Prioritize invalidating defects and critical prerequisites, then required delivery, then optional optimization/style. Preserve complete execution/integration/final verification when requested; only the user can remove a core requirement or relax a hard constraint. Choose the next block in this order:
 
-Prioritize invalidating defects and critical prerequisites, then required delivery, then optional optimization/style. Recent discovery or easy fixes do not automatically confer priority. Preserve complete execution/integration/final verification when requested. Only the user changes scope; never silently turn required work into an option, future work or a known issue.
+1. Reuse sufficient current evidence. Identify the earliest unverified premise that could refute the main route or prevent its next real consumer from using the result. Before expanding dependent implementation or artifacts, choose the smallest authorized check that can decide it. Use actual inputs, platform and consumer when they control feasibility; for theory, check the relevant definitions, counterexample or proof obligation. A mock or available tool name establishes only what it actually tests.
+2. Before that check, state observable supporting, refuting and inconclusive results and what each changes downstream. Put an essential cross-task prerequisite in the existing dependsOn map; document ordering alone is insufficient. Within a phase, perform the check before the work that assumes it. Existing evidence can satisfy this need; simple work needs no added stage or approval.
+3. Admit another method, tool, agent or analytical lens only for a named unresolved mandatory acceptance gap that existing evidence or a smaller check cannot decide. State the discriminating observation and local exit/return condition, within real permission/cost/capacity limits. If the decision is already supported, deliver the next mandatory item. Normal repair within the approved method continues; material changes use the existing review gate.
+4. Match progress to release: name the mandatory criterion actually met, the downstream use now supported and the remaining conditions blocking stage release. Distinguish a verified local fact, a refuted route and all stage criteria satisfied. Negative evidence may complete a diagnostic objective but does not fulfill a still-unmet delivery objective. Counts, files and local passes may be reported as facts, without converting them into overall completion or a progress percentage.
 
-State which requirement a block serves, evidence needed, local quality/evidence exit or redirection criteria and real cost/capacity/permission limits. When sufficient, advance the next mandatory item. Continue deeper investigation while it yields decision-relevant evidence within authorization; do not impose fixed attempt counts. Repeated attempts without new information require a discriminating check or another independent mandatory item. A waiting tool/slow network is not a blind retry.
+Stop a branch when it adds no discriminating information; select the decisive check or independent mandatory work rather than accumulating methods. A refuted prerequisite stops only its dependent expansion. Continue independent authorized mandatory work whose prerequisites remain valid, preserving unresolved findings and original waiting handles. Use no fixed attempt count, method count or elapsed-time endpoint.
 
 For example, do not refine a readable legend while a required comparison is unfinished. A train/test overlap that invalidates that comparison takes priority, followed by downstream reacceptance. Examples explain priority, not permission for experiments.
 
@@ -47,9 +58,9 @@ After work, compare the intended contribution with actual evidence. In the exist
 | --- | --- |
 | Whole-task position | Current phase, accepted prerequisites and remaining mandatory delivery; use actual states |
 | This round | Requirement/blocker addressed, actual consumer and intended exit condition |
-| Evidence gained | What was established or refuted, and which acceptance gap or next decision it changes |
+| Evidence gained | What was established or refuted; the mandatory criterion actually met, downstream use released and remaining stage-release blockers; label local evidence or route rejection at its actual scope |
 | Drift assessment | Aligned, drift detected, or an explicitly unresolved alignment question, with the concrete reason |
-| Action | Continue or redirect to one concrete authorized action, its required evidence and exit condition |
+| Action | Select the smallest authorized check that can change the remaining decision, or the next mandatory delivery when evidence is sufficient; state its exit/return condition before admitting another method |
 
 Treat absent requirement/consumer mapping, repeated refinements that do not change a decision, continued polishing after the local evidence standard is met, or unexplained deferral of more consequential mandatory work as drift or a specific alignment gap to resolve. File counts, test counts, elapsed effort, generated plans and repeated local passes cannot establish whole-task progress. Negative evidence can justify rejecting a route without satisfying its original acceptance criterion. Necessary low-level correctness work retains priority when its actual dependency and release condition are explicit.
 
@@ -58,6 +69,21 @@ When drift is found, stop starting work on that branch, preserve original active
 Apply this as a reasoning and execution obligation within existing records: no second state ledger, mandatory JSON form, extra approval checkpoint, fixed attempt cap or elapsed-time limit. Preserve mandatory scope, dependency order, permissions, budgets, unknown rejection, technical acceptance and final-user review. Material changes still follow the existing review route. Updating these instructions does not replace the controller of an active run or constitute machine-enforced drift detection.
 
 If local redirection is insufficient because feasibility is refuted, repeated rounds do not advance critical acceptance, the same failure recurs or a critical dependency has no viable path, escalate to [self-audit and complete replanning](replanning.md). That branch audits the full objective and converts evidenced lessons into either a justified local correction or a complete revised Harness; it does not treat elapsed effort as progress or weaken original requirements.
+
+## Phase reports and user intervention
+
+After each substantive approved phase ends, or cannot finish on its current route, use the existing acceptance/drift facts for a user-facing checkpoint. A phase is a meaningful unit in the reviewed plan, not every tool call or local repair.
+
+1. Give three to five short plain-language statements: the user result achieved, decisive actual evidence, and unmet conditions or limits and their effect. Use an accepted-completion claim only after all mandatory acceptance; on failure, say what is unaccepted. Link detail when useful rather than dumping runtime IDs, schemas or logs.
+2. Describe the next phase's concrete tasks, order, expected output and prerequisites. At the final phase, identify the delivery endpoint instead of inventing follow-on work. Keep the checkpoint: ask two or three relevant delivery-review questions (such as fitness for intended use and which evidence or limitation needs explanation), then yield for feedback. Do not turn that feedback into authority for a new task.
+3. Ask two or three relevant, currently answerable questions about result alignment, the proposed next actions or real tradeoffs. Give recommendations and explain what each answer changes. Result feedback and whether to proceed are legitimate checkpoints even without a technical unknown; do not pad them with discoverable facts or repeat settled choices.
+4. Use actual native input tools when available, otherwise ask in chat and yield. By default, wait for an actual reply before beginning the next phase. Displayed defaults, silence, a timeout and canBegin are not replies. Finish necessary current-phase closure while waiting; independent-work priority does not waive the checkpoint.
+
+Keep technical acceptance, user direction and material-change approval distinct. An explicit user preference may change the waiting policy, but the agent cannot assume automatic advancement. Ordinary in-scope preferences need no full reapproval; changed closed artifacts still require rework. Verify factual corrections and invalidate affected evidence/dependents. Material goal/method/scope/input/permission/resource/acceptance changes require a complete revised review.
+
+If answers are incomplete or conflict, name the unresolved decision and ask only what is needed; do not silently fill the rest. A clear instruction to use the stated recommendations can resolve those options, while acknowledgement or a follow-up question may not. Record sent questions, actual answers/sources, unresolved choices and next permitted action in chat or existing authorized records, without changing sealed phase documents or creating a second ledger.
+
+On recovery, preserve original task/run/approval and that dialogue context. Recover the relevant answer from the current conversation; if unavailable, ask the specific unresolved choice before later-phase work. This is a host execution obligation, not a new CLI state or authenticated machine gate: canBegin does not prove that the user answered. User approval is not technical evidence, and a verified phase is not a user reply.
 
 ## Execution, resources and acceptance
 

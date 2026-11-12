@@ -17,7 +17,7 @@ Compare the planned route with actual evidence:
 | Review area | Required question |
 | --- | --- |
 | Outcome and critical path | What remains unaccepted, which dependency controls delivery, and where does the blocker propagate? |
-| Feasibility | Do available inputs, tools, capabilities, resources and permissions support the proposed method? |
+| Feasibility | Do actual inputs, tools, capabilities, resources and permissions support the method? Which decisive premise was checked too late, why was it deferred, and which dependent expansion could have waited? |
 | Execution and organization | Is the failure an implementation defect, an invalid method, an external dependency, or unnecessary decomposition, coordination or repeated local refinement? |
 | Evidence and acceptance | What has been established or refuted, what remains a hypothesis, and do the checks actually test the user's objective? |
 | Scientific/data validity, when applicable | Do source lineage, units, assumptions and domain failure modes still support downstream use? |
@@ -47,7 +47,7 @@ Follow [authoring](authoring.md) to produce a complete current master, all subst
 1. How every original objective and hard constraint is retained, and any explicit unresolved user decision.
 2. Which assumptions, methods or dependencies change, why, and which actual lessons drive each consequential change.
 3. Which evidence can be reused and why it still applies; invalidated results and downstream revalidation requirements.
-4. The new critical path, first discriminating evidence, stage exit/redirection conditions and remaining blockers.
+4. The new critical path and earliest potentially refuting check, before work that depends on it; observable supporting/refuting/inconclusive results, downstream consequences, stage release/exit conditions and remaining blockers. Explain how this order corrects any late feasibility check.
 
 A change summary does not replace the complete package. If another rewrite retains a refuted assumption or supplies no new testable route, identify the missing evidence or real user decision instead of cycling through plans. Continue other authorized mandatory work where possible.
 
